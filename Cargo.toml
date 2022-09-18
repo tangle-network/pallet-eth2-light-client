@@ -27,11 +27,11 @@ webb-proposals = { version = "0.5.4", default-features = false, features = ["sca
 ethereum-types = { version = "0.13.1", features = ["rlp", "codec"], default-features = false }
 eth-types = { path = "./eth-types", features = ["eth2", "eip1559"], default-features = false }
 
-merkle_proof = { path = "../lighthouse/consensus/merkle_proof", default-features = false }
-bls = { path = "../lighthouse/crypto/bls",  optional = true, default-features = false, features = ["milagro"]}
-tree_hash = { path = "../lighthouse/consensus/tree_hash" }
-tree_hash_derive = { path = "../lighthouse/consensus/tree_hash_derive", optional = true }
-eth2_serde_utils = { path = "../lighthouse/consensus/serde_utils", optional = true }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false }
+bls = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop",  optional = true, default-features = false, features = ["milagro"]}
+tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false }
+tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
+eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
 
 derive_more = "^0.99.2"
 
