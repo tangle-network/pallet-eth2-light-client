@@ -81,11 +81,14 @@ parameter_types! {
     pub const MaxAdditionalFields: u32 = 5;
     pub const MaxResources: u32 = 32;
     pub const StoragePricePerByte: u128 = 1;
+    pub const Eth2ClientPalletId: PalletId = PalletId(*b"py/eth2c");
 }
 
 impl pallet_eth2_light_client::Config for Test {
     type Event = Event;
     type StoragePricePerByte = StoragePricePerByte;
+    type PalletId = Eth2ClientPalletId;
+    type Currency = Balances;
 }
 
 // Build genesis storage according to the mock runtime.

@@ -36,7 +36,7 @@ eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branc
 derive_more = "^0.99.2"
 
 bitvec = { version = "1.0.0", optional = true, default-features = false, features = ["atomic", "alloc"] }
-rlp = { version = "0.4.2", default-features = false }
+rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 

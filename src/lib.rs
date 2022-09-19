@@ -54,7 +54,7 @@ use eth_types::{
 	BlockHeader, H256,
 };
 use frame_support::pallet_prelude::{ensure, DispatchError};
-use frame_support::traits::Get;
+use frame_support::{PalletId, traits::Get};
 use sp_runtime::traits::Saturating;
 use sp_std::collections::btree_map::BTreeMap;
 use sp_std::{convert::TryInto, prelude::*};
@@ -72,6 +72,10 @@ use crate::consensus::{
 use bitvec::prelude::BitVec;
 use bitvec::prelude::Lsb0;
 
+use sp_runtime::traits::AccountIdConversion;
+use frame_support::traits::{Currency, ExistenceRequirement};
+type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
 #[cfg(test)]
 mod mock;
 
@@ -83,6 +87,11 @@ mod test_utils;
 
 mod consensus;
 mod types;
+mod traits;
+mod prover_utils;
+
+use prover_utils::*;
+use traits::*;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -105,7 +114,12 @@ pub mod pallet {
 		/// The overarching event type.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		type StoragePricePerByte: Get<Self::Balance>;
+		#[pallet::constant]
+		type PalletId: Get<PalletId>;
+
+		type Currency: Currency<Self::AccountId>;
+
+		type StoragePricePerByte: Get<BalanceOf<Self>>;
 	}
 
 	#[pallet::genesis_config]
@@ -228,7 +242,7 @@ pub mod pallet {
 	/// The minimum balance that should be attached to register a new submitter account
 	#[pallet::storage]
 	#[pallet::getter(fn min_submitter_balance)]
-	pub(super) type MinSubmitterBalance<T: Config> = StorageMap<_, Blake2_128Concat, TypedChainId, T::Balance, ValueQuery>;
+	pub(super) type MinSubmitterBalance<T: Config> = StorageMap<_, Blake2_128Concat, TypedChainId, BalanceOf<T>, ValueQuery>;
 
 	/// Light client state
 	#[pallet::storage]
@@ -389,7 +403,14 @@ pub mod pallet {
 				!Submitters::<T>::contains_key(typed_chain_id, &submitter),
 				Error::<T>::SubmitterAlreadyRegistered
 			);
-			// TODO: Take the deposit from the submitter
+			// Transfer the deposit amount to the pallet
+			let deposit = MinSubmitterBalance::<T>::get(typed_chain_id);
+			T::Currency::transfer(
+				&submitter,
+				&Self::account_id(),
+				deposit,
+				ExistenceRequirement::KeepAlive,
+			)?;
 			// Register the submitter
 			Submitters::<T>::insert(typed_chain_id, submitter, 0);
 			Ok(().into())
@@ -410,7 +431,14 @@ pub mod pallet {
 				submitter_block_count == 0u32,
 				Error::<T>::SubmitterHasUsedStorage
 			);
-			// TODO: Send the submitter back their min storage balance
+			// Transfer the deposit amount back to the submitter
+			let deposit = MinSubmitterBalance::<T>::get(typed_chain_id);
+			T::Currency::transfer(
+				&Self::account_id(),
+				&submitter,
+				deposit,
+				ExistenceRequirement::KeepAlive,
+			)?;
 			Ok(().into())
 		}
 
@@ -493,7 +521,7 @@ pub mod pallet {
 impl<T: Config> Pallet<T> {
 	pub fn calculate_min_storage_balance_for_submitter(
 		max_submitted_blocks_by_account: u32,
-	) -> T::Balance {
+	) -> BalanceOf<T> {
 		const STORAGE_BYTES_PER_BLOCK: u32 = 105; // prefix: 3B + key: 32B + HeaderInfo 70B
 		const STORAGE_BYTES_PER_ACCOUNT: u32 = 39; // prefix: 3B + account_id: 32B + counter 4B
 		let storage_bytes_per_account = (STORAGE_BYTES_PER_BLOCK
@@ -549,7 +577,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	/// Returns the minimum balance that should be attached to register a new submitter account
-	pub fn min_storage_balance_for_submitter(typed_chain_id: TypedChainId) -> T::Balance {
+	pub fn min_storage_balance_for_submitter(typed_chain_id: TypedChainId) -> BalanceOf<T> {
 		Self::min_submitter_balance(typed_chain_id)
 	}
 
@@ -854,7 +882,6 @@ impl<T: Config> Pallet<T> {
 		}
 
 		log::debug!("Finish update finalized header..");
-
 		if finalized_execution_header_info.block_number > Self::hashes_gc_threshold(typed_chain_id)
 		{
 			Self::gc_headers(
@@ -948,5 +975,21 @@ impl<T: Config> Pallet<T> {
 
 		Submitters::<T>::insert(typed_chain_id, submitter, num_of_submitted_headers as u32);
 		Ok(())
+	}
+
+	pub fn account_id() -> T::AccountId {
+		T::PalletId::get().into_account_truncating()
+	}
+}
+
+impl<T: Config> Eth2Prover for Pallet<T> {
+	fn _verify_trie_proof(
+        expected_root: Vec<u8>,
+        key: &Vec<u8>,
+        proof: &Vec<Vec<u8>>,
+        key_index: usize,
+        proof_index: usize,
+    ) -> Vec<u8> {
+		vec![]
 	}
 }
