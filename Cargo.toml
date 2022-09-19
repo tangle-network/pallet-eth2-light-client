@@ -42,6 +42,9 @@ serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 sp-core = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28" }
+lazy_static = "1.4.0"
+serde_json = "1.0"
+hex = "0.4.0"
 
 [features]
 default = ["std", "eip1559"]
@@ -62,6 +65,7 @@ std = [
     "bls",
     "tree_hash_derive",
     "eth2_serde_utils",
+	"eth-types/std",
 ]
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
 try-runtime = ["frame-support/try-runtime"]

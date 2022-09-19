@@ -1,148 +1,461 @@
-use super::*;
-use crate as pallet_eth2_light_client;
+use crate::{test_utils::*, mock::{Origin, Eth2Client}};
+use bitvec::bitarr;
+use bitvec::order::Lsb0;
+use frame_support::assert_ok;
+use sp_runtime::AccountId32;
+use webb_proposals::TypedChainId;
+use super::consensus::*;
+use eth_types::{BlockHeader, H256, U256};
+use hex::FromHex;
+use tree_hash::TreeHash;
 
-use frame_support::{parameter_types, traits::GenesisBuild};
-use frame_system as system;
-use sp_core::H256;
-use sp_runtime::{
-    testing::Header,
-    traits::{BlakeTwo256, IdentifyAccount, IdentityLookup, Verify},
-    AccountId32, MultiSignature,
-};
-use sp_std::convert::{TryFrom, TryInto};
+const MAINNET_CHAIN: TypedChainId = TypedChainId::Evm(1);
+const KILN_CHAIN: TypedChainId = TypedChainId::Evm(1337802);
+const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
 
-pub type Signature = MultiSignature;
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
-type Block = frame_system::mocking::MockBlock<Test>;
-
-// Configure a mock runtime to test the pallet.
-frame_support::construct_runtime!(
-    pub enum Test where
-        Block = Block,
-        NodeBlock = Block,
-        UncheckedExtrinsic = UncheckedExtrinsic,
-    {
-        System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-        BridgeRegistry: pallet_eth2_light_client::{Pallet, Call, Storage, Event<T>},
-        Balances: pallet_balances::{Pallet, Call, Storage, Event<T>},
+pub fn submit_and_check_execution_headers(
+    origin: Origin,
+    typed_chain_id: TypedChainId,
+    headers: Vec<&BlockHeader>,
+) {
+    for header in headers {
+        assert_ok!(Eth2Client::submit_execution_header(origin.clone(), typed_chain_id, header.clone()));
+        assert!(Eth2Client::is_known_execution_header(typed_chain_id, header.calculate_hash()));
+        assert!(Eth2Client::block_hash_safe(typed_chain_id, header.number).is_none());
     }
-);
-
-parameter_types! {
-    pub const BlockHashCount: u64 = 250;
-    pub const SS58Prefix: u8 = 42;
 }
 
-impl system::Config for Test {
-    type AccountData = pallet_balances::AccountData<u128>;
-    type AccountId = AccountId;
-    type BaseCallFilter = frame_support::traits::Everything;
-    type BlockHashCount = BlockHashCount;
-    type BlockLength = ();
-    type BlockNumber = u64;
-    type BlockWeights = ();
-    type Call = Call;
-    type DbWeight = ();
-    type Event = Event;
-    type Hash = H256;
-    type Hashing = BlakeTwo256;
-    type Header = Header;
-    type Index = u64;
-    type Lookup = IdentityLookup<Self::AccountId>;
-    type MaxConsumers = frame_support::traits::ConstU32<16>;
-    type OnKilledAccount = ();
-    type OnNewAccount = ();
-    type OnSetCode = ();
-    type Origin = Origin;
-    type PalletInfo = PalletInfo;
-    type SS58Prefix = SS58Prefix;
-    type SystemWeightInfo = ();
-    type Version = ();
-}
+mod kiln_tests {
+    use super::*;
+    use crate::{test_utils::read_beacon_header, mock::{new_test_ext, Test, Eth2Client}, Paused};
 
-parameter_types! {
-    pub const ExistentialDeposit: u64 = 1;
-}
+    #[test]
+    pub fn test_header_root() {
+        let header = read_beacon_header(format!("./src/data/kiln/beacon_header_{}.json", 5000));
+        assert_eq!(
+            H256(header.tree_hash_root()),
+            Vec::from_hex("c613fbf1a8e95c2aa0f76a5d226ee1dc057cce18b235803f50e7a1bde050d290")
+                .unwrap()
+                .into()
+        );
 
-impl pallet_balances::Config for Test {
-    type AccountStore = System;
-    type Balance = u128;
-    type DustRemoval = ();
-    type Event = Event;
-    type ExistentialDeposit = ExistentialDeposit;
-    type MaxLocks = ();
-    type MaxReserves = ();
-    type ReserveIdentifier = [u8; 8];
-    type WeightInfo = ();
-}
-
-parameter_types! {
-    pub const MaxAdditionalFields: u32 = 5;
-    pub const MaxResources: u32 = 32;
-    pub const StoragePricePerByte: u128 = 1;
-}
-
-impl pallet_eth2_light_client::Config for Test {
-    type Event = Event;
-    type StoragePricePerByte = StoragePricePerByte;
-}
-
-// Build genesis storage according to the mock runtime.
-pub fn new_test_ext() -> sp_io::TestExternalities {
-    let mut storage = system::GenesisConfig::default()
-        .build_storage::<Test>()
-        .unwrap();
-    let _ = pallet_balances::GenesisConfig::<Test> {
-        balances: vec![
-            (AccountId32::new([1u8; 32]), 10u128.pow(18)),
-            (AccountId32::new([2u8; 32]), 20u128.pow(18)),
-            (AccountId32::new([3u8; 32]), 30u128.pow(18)),
-        ],
-        // eth_2_light_client: {
-        //     Network::Mainnet => Self {
-        //         genesis_validators_root: [
-        //             0x4b, 0x36, 0x3d, 0xb9, 0x4e, 0x28, 0x61, 0x20, 0xd7, 0x6e, 0xb9, 0x05, 0x34,
-        //             0x0f, 0xdd, 0x4e, 0x54, 0xbf, 0xe9, 0xf0, 0x6b, 0xf3, 0x3f, 0xf6, 0xcf, 0x5a,
-        //             0xd2, 0x7f, 0x51, 0x1b, 0xfe, 0x95,
-        //         ],
-        //         bellatrix_fork_version: [0x02, 0x00, 0x00, 0x00],
-        //         bellatrix_fork_epoch: 18446744073709551615,
-        //     },
-        //     Network::Goerli => Self {
-        //         genesis_validators_root: [
-        //             0x04, 0x3d, 0xb0, 0xd9, 0xa8, 0x38, 0x13, 0x55, 0x1e, 0xe2, 0xf3, 0x34, 0x50,
-        //             0xd2, 0x37, 0x97, 0x75, 0x7d, 0x43, 0x09, 0x11, 0xa9, 0x32, 0x05, 0x30, 0xad,
-        //             0x8a, 0x0e, 0xab, 0xc4, 0x3e, 0xfb,
-        //         ],
-        //         bellatrix_fork_version: [0x02, 0x00, 0x10, 0x20],
-        //         bellatrix_fork_epoch: 112260,
-        //     },
-        //     Network::Kiln => Self {
-        //         genesis_validators_root: [
-        //             0x99, 0xb0, 0x9f, 0xcd, 0x43, 0xe5, 0x90, 0x52, 0x36, 0xc3, 0x70, 0xf1, 0x84,
-        //             0x05, 0x6b, 0xec, 0x6e, 0x66, 0x38, 0xcf, 0xc3, 0x1a, 0x32, 0x3b, 0x30, 0x4f,
-        //             0xc4, 0xaa, 0x78, 0x9c, 0xb4, 0xad,
-        //         ],
-        //         bellatrix_fork_version: [0x70, 0x00, 0x00, 0x71],
-        //         bellatrix_fork_epoch: 150,
-        //     },
-        //     Network::Ropsten => Self {
-        //         genesis_validators_root: [
-        //             0x44, 0xf1, 0xe5, 0x62, 0x83, 0xca, 0x88, 0xb3, 0x5c, 0x78, 0x9f, 0x7f, 0x44,
-        //             0x9e, 0x52, 0x33, 0x9b, 0xc1, 0xfe, 0xfe, 0x3a, 0x45, 0x91, 0x3a, 0x43, 0xa6,
-        //             0xd1, 0x6e, 0xdc, 0xd3, 0x3c, 0xf1,
-        //         ],
-        //         bellatrix_fork_version: [0x80, 0x00, 0x00, 0x71],
-        //         bellatrix_fork_epoch: 750,
-        //     },
-        // }
+        let header =
+            read_beacon_header(format!("./src/data/mainnet/beacon_header_{}.json", 4100000));
+        assert_eq!(
+            H256(header.tree_hash_root()),
+            Vec::from_hex("342ca1455e976f300cc96a209106bed2cbdf87243167fab61edc6e2250a0be6c")
+                .unwrap()
+                .into()
+        );
     }
-    .assimilate_storage(&mut storage);
-    let _ = pallet_eth2_light_client::GenesisConfig::<Test> {
-        phantom: Default::default(),
-    }
-    .assimilate_storage(&mut storage);
 
-    storage.into()
+    #[test]
+    pub fn test_submit_update_two_periods() {
+        new_test_ext().execute_with(|| {
+            let (headers, updates, _init_input) = get_test_data(None);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            // After submitting the execution header, it should be present in the execution headers list
+            // but absent in canonical chain blocks (not-finalized)
+            submit_and_check_execution_headers(Origin::signed(ALICE), KILN_CHAIN, headers.iter().skip(1).collect());
+    
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+    
+            // After Beacon Chain `LightClientUpdate` is submitted,
+            // all execution headers having a height lower than the update's height,
+            // should be removed from the execution headers list. Meantime, all these
+            // removed execution headers should become a part of the canonical chain blocks (finalized)
+            for header in headers.iter().skip(1) {
+                let header_hash = header.calculate_hash();
+                assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header_hash));
+                assert!(
+                    Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() == header_hash,
+                    "Execution block hash is not finalized: {:?}",
+                    header_hash
+                );
+            }
+    
+            assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers.last().unwrap().number);
+            assert!(!Eth2Client::is_known_execution_header(
+                KILN_CHAIN,
+                Eth2Client::finalized_beacon_block_header(KILN_CHAIN).unwrap().execution_block_hash
+            ));
+    
+            assert_ok!(Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN));
+        })
+    }
+
+    #[test]
+    pub fn test_submit_execution_block_from_fork_chain() {
+        new_test_ext().execute_with(|| {
+            let (headers, updates, _init_input) = get_test_data(None);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            // After submitting the execution header, it should be present in the execution headers list
+            // but absent in canonical chain blocks (not-finalized)
+            submit_and_check_execution_headers(Origin::signed(ALICE), KILN_CHAIN, headers.iter().skip(1).collect());
+            // Submit execution header with different hash
+            let mut fork_header = headers[5].clone();
+            // Difficulty is modified just in order to get a different header hash. Any other field would be suitable too
+            fork_header.difficulty = U256::from(ethereum_types::U256::from(99));
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, fork_header.clone()));
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+
+            for header in headers.iter().skip(1) {
+                let header_hash = header.calculate_hash();
+                assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header_hash));
+                assert!(
+                    Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() == header_hash,
+                    "Execution block hash is not finalized: {:?}",
+                    header_hash
+                );
+            }
+
+            // Check that forked execution header was not finalized
+            assert!(Eth2Client::is_known_execution_header(KILN_CHAIN, fork_header.calculate_hash()));
+            assert!(
+                Eth2Client::block_hash_safe(KILN_CHAIN, fork_header.number).unwrap_or_default()
+                != fork_header.calculate_hash(),
+                "The fork's execution block header {:?} is expected not to be finalized, but it is finalized",
+                fork_header.calculate_hash()
+            );
+
+            assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers.last().unwrap().number);
+        });
+    }
+
+    #[test]
+    pub fn test_gc_headers() {
+        new_test_ext().execute_with(|| {
+            let (headers, updates, _init_input) = get_test_data(Some(InitOptions {
+                validate_updates: true,
+                verify_bls_signatures: true,
+                hashes_gc_threshold: 500,
+                max_submitted_blocks_by_account: 7000,
+                trusted_signer: None,
+            }));
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            // After submitting the execution header, it should be present in the execution headers list
+            // but absent in canonical chain blocks (not-finalized)
+            submit_and_check_execution_headers(Origin::signed(ALICE), KILN_CHAIN, headers.iter().skip(1).collect());
+
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+
+            // Last 500 execution headers are finalized
+            for header in headers.iter().skip(1).rev().take(500) {
+                assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.calculate_hash()));
+                assert!(
+                    Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default()
+                        == header.calculate_hash(),
+                    "Execution block hash is not finalized: {:?}",
+                    header.calculate_hash()
+                );
+            }
+    
+            assert_eq!(Eth2Client::last_block_number(KILN_CHAIN, ), headers.last().unwrap().number);
+    
+            // Headers older than last 500 hundred headers are both removed and are not present in execution header list
+            for header in headers.iter().skip(1).rev().skip(500) {
+                assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.calculate_hash()));
+                assert!(
+                    Eth2Client::block_hash_safe(KILN_CHAIN, header.number).is_none(),
+                    "Execution block hash was not removed: {:?}",
+                    header.calculate_hash()
+                );
+            }
+        })
+    }
+
+    #[test]
+    #[should_panic(expected = "exhausted the limit of blocks")]
+    pub fn test_panic_on_exhausted_submit_limit() {
+        new_test_ext().execute_with(|| {
+            let (headers, updates, _init_input) = get_test_data(Some(InitOptions {
+                validate_updates: true,
+                verify_bls_signatures: true,
+                hashes_gc_threshold: 7100,
+                max_submitted_blocks_by_account: 100,
+                trusted_signer: None,
+            }));
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            // After submitting the execution header, it should be present in the execution headers list
+            // but absent in canonical chain blocks (not-finalized)
+            submit_and_check_execution_headers(Origin::signed(ALICE), KILN_CHAIN, headers.iter().skip(1).collect());
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+        });
+    }
+
+    #[test]
+    pub fn test_max_submit_blocks_by_account_limit() {
+        new_test_ext().execute_with(|| {
+            let (headers, updates, _init_input) = get_test_data(Some(InitOptions {
+                validate_updates: true,
+                verify_bls_signatures: true,
+                hashes_gc_threshold: 7100,
+                max_submitted_blocks_by_account: 100,
+                trusted_signer: None,
+            }));
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            // After submitting the execution header, it should be present in the execution headers list
+            // but absent in canonical chain blocks (not-finalized)
+            submit_and_check_execution_headers(Origin::signed(ALICE), KILN_CHAIN, headers.iter().skip(1).collect());
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+            submit_and_check_execution_headers(
+                Origin::signed(ALICE),
+                KILN_CHAIN,
+                headers.iter().skip(1).take(100).collect(),
+            );
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "only trusted_signer can update the client")]
+    pub fn test_trusted_signer() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(Some(InitOptions {
+                validate_updates: true,
+                verify_bls_signatures: true,
+                hashes_gc_threshold: 7100,
+                max_submitted_blocks_by_account: 100,
+                trusted_signer: Some(AccountId32::from([1u8; 32])),
+            }));
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid finality proof")]
+    pub fn test_panic_on_invalid_finality_proof() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+            update.finality_update.finality_branch[5] = H256::from(
+                hex::decode("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+                    .unwrap(),
+            );
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid finality proof")]
+    pub fn test_panic_on_empty_finality_proof() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+            update.finality_update.finality_branch = vec![];
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid execution block hash proof")]
+    pub fn test_panic_on_invalid_execution_block_proof() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+            update.finality_update.header_update.execution_hash_branch[5] = H256::from(
+                hex::decode("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+                    .unwrap(),
+            );
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid execution block hash proof")]
+    pub fn test_panic_on_empty_execution_block_proof() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+            update.finality_update.header_update.execution_hash_branch = vec![];
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "The acceptable update periods are")]
+    pub fn test_panic_on_skip_update_period() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+            update.finality_update.header_update.beacon_header.slot =
+            update.signature_slot + EPOCHS_PER_SYNC_COMMITTEE_PERIOD * SLOTS_PER_EPOCH * 10;
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Unknown execution block hash")]
+    pub fn test_panic_on_submit_update_with_missing_execution_blocks() {
+        new_test_ext().execute_with(|| {
+            let (headers, updates, _init_input) = get_test_data(None);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            submit_and_check_execution_headers(
+                Origin::signed(ALICE),
+                KILN_CHAIN,
+                headers.iter().skip(1).take(5).collect(),
+            );
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[1].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "already submitted")]
+    pub fn test_panic_on_submit_same_execution_blocks() {
+        new_test_ext().execute_with(|| {
+            let (headers, _updates, _init_input) = get_test_data(None);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "can't submit blocks because it is not registered")]
+    pub fn test_panic_on_submit_execution_block_after_submitter_unregistered() {
+        new_test_ext().execute_with(|| {
+            let (headers, _updates, _init_input) = get_test_data(None);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            assert_ok!(Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "paused")]
+    pub fn test_panic_on_submit_update_paused() {
+        new_test_ext().execute_with(|| {
+            let (headers, _updates, _init_input) = get_test_data(None);
+            Paused::<Test>::insert(KILN_CHAIN, true);
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "The active header slot number should be higher than the finalized slot"
+    )]
+    pub fn test_panic_on_submit_outdated_update() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            Paused::<Test>::insert(KILN_CHAIN, true);
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[0].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Parent should be submitted first")]
+    pub fn test_panic_on_submit_blocks_with_unknown_parent() {
+        new_test_ext().execute_with(|| {
+            let (headers, _updates, _init_input) = get_test_data(None);
+            assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
+            // Skip 2th block
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[3].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "Can't unregister the account with used storage")]
+    pub fn test_panic_on_unregister_submitter() {
+        new_test_ext().execute_with(|| {
+            let (headers, _updates, _init_input) = get_test_data(None);
+            assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
+            assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+            submit_and_check_execution_headers(
+                Origin::signed(ALICE),
+                KILN_CHAIN,
+                headers.iter().skip(1).take(5).collect(),
+            );
+
+            assert_ok!(Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "can't submit blocks because it is not registered")]
+    pub fn test_panic_on_skipping_register_submitter() {
+        new_test_ext().execute_with(|| {
+            let (headers, _updates, _init_input) = get_test_data(None);
+            assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
+            assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
+        });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Sync committee bits sum is less than 2/3 threshold, bits sum: 341"
+    )]
+    pub fn test_panic_on_sync_committee_bits_is_less_than_threshold() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+
+            let mut sync_committee_bits = bitarr![u8, Lsb0; 0; 512];
+
+            // The number of participants should satisfy the inequality:
+            // num_of_participants * 3 >= sync_committee_bits_size * 2
+            // If the sync_committee_bits_size = 512, then
+            // the minimum allowed value of num_of_participants is 342.
+
+            // Fill the sync_committee_bits with 341 participants to trigger panic
+            let num_of_participants = (((512.0 * 2.0 / 3.0) as f32).ceil() - 1.0) as usize;
+            sync_committee_bits
+                .get_mut(0..num_of_participants)
+                .unwrap()
+                .fill(true);
+            update.sync_aggregate.sync_committee_bits =
+                sync_committee_bits.as_raw_mut_slice().to_vec().into();
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "The sync committee update is missed")]
+    pub fn test_panic_on_missing_sync_committee_update() {
+        new_test_ext().execute_with(|| {
+            let (_headers, updates, _init_input) = get_test_data(None);
+            let mut update = updates[1].clone();
+            update.sync_committee_update = None;
+
+            assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
+        });
+    }
+}
+
+mod mainnet_tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(
+        expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
+    )]
+    pub fn test_panic_on_init_in_trustless_mode_without_bls_on_mainnet() {
+        let (_headers, _updates, _init_input) = get_test_data(Some(InitOptions {
+            validate_updates: true,
+            verify_bls_signatures: false,
+            hashes_gc_threshold: 500,
+            max_submitted_blocks_by_account: 7000,
+            trusted_signer: None,
+        }));
+
+        assert_ok!(Eth2Client::init(Origin::signed(ALICE), MAINNET_CHAIN, _init_input));
+    }
+
+    #[test]
+    #[cfg_attr(feature = "bls", ignore)]
+    #[should_panic(
+        expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
+    )]
+    pub fn test_panic_on_init_in_trustless_mode_without_bls_feature_flag() {
+        let (_headers, _updates, _init_input) = get_test_data(Some(InitOptions {
+            validate_updates: true,
+            verify_bls_signatures: true,
+            hashes_gc_threshold: 500,
+            max_submitted_blocks_by_account: 7000,
+            trusted_signer: None,
+        }));
+
+        assert_ok!(Eth2Client::init(Origin::signed(ALICE), MAINNET_CHAIN, _init_input));
+    }
 }
