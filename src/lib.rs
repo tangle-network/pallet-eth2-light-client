@@ -90,8 +90,7 @@ mod types;
 mod traits;
 mod prover_utils;
 
-use prover_utils::*;
-use traits::*;
+pub use traits::*;
 
 #[frame_support::pallet]
 pub mod pallet {
