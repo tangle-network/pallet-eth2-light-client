@@ -989,7 +989,10 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> VerifyBlockHeaderExists for Pallet<T> {
-    fn verify_block_header_exists(header: BlockHeader, typed_chain_id: TypedChainId) {
+    fn verify_block_header_exists(
+        header: BlockHeader,
+        typed_chain_id: TypedChainId,
+    ) -> Result<bool, DispatchError> {
         let block_number = header.number;
         ensure!(header.hash.is_some(), Error::<T>::HeaderHashDoesNotExist);
         let block_hash = header.hash.unwrap();
@@ -1006,6 +1009,6 @@ impl<T: Config> VerifyBlockHeaderExists for Pallet<T> {
             Error::<T>::BlockHashesDoNotMatch
         );
 
-        BlockHeader::calculate_hash(&header) == block_hash
+        Ok(BlockHeader::calculate_hash(&header) == block_hash)
     }
 }
