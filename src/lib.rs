@@ -981,14 +981,24 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> Eth2Prover for Pallet<T> {
-	fn _verify_trie_proof(
-        expected_root: Vec<u8>,
-        key: &Vec<u8>,
-        proof: &Vec<Vec<u8>>,
-        key_index: usize,
-        proof_index: usize,
-    ) -> Vec<u8> {
-		vec![]
+impl<T: Config> VerifyBlockHeaderExists for Pallet<T> {
+	fn verify_block_header_exists(header: BlockHeader, typed_chain_id: TypedChainId) {
+    	let block_number = header.number;
+    	ensure!(header.hash.is_some(), Error::<T>::HeaderHashDoesNotExist);
+    	let block_hash = header.hash.unwrap();
+
+    	let block_hash_from_storage =
+    	FinalizedExecutionBlocks::<T>::get(typed_chain_id, block_number);
+
+    	ensure!(
+        	block_hash_from_storage.is_some(),
+        	Error::<T>::HeaderHashDoesNotExist
+    	);
+    	ensure!(
+    		block_hash_from_storage.unwrap() == block_hash,
+        	Error::<T>::BlockHashesDoNotMatch
+    	);
+
+    	BlockHeader::calculate_hash(&header) == block_hash
 	}
 }
