@@ -1,7 +1,6 @@
 use super::*;
 use eth_types::{LogEntry, Receipt};
 use rlp::{Rlp, Encodable, Decodable};
-
 pub trait Eth2Prover {
     fn verify_trie_proof(
         expected_root: H256,

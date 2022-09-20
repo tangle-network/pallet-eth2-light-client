@@ -85,10 +85,10 @@ mod tests;
 #[cfg(test)]
 mod test_utils;
 
-mod consensus;
-mod types;
-mod traits;
-mod prover_utils;
+pub mod consensus;
+pub mod types;
+pub mod traits;
+pub mod prover_utils;
 
 pub use traits::*;
 
@@ -342,7 +342,7 @@ pub mod pallet {
 			args: InitInput<T::AccountId>,
 		) -> DispatchResultWithPostInfo {
 			let signer = ensure_signed(origin)?;
-
+			println!("{:?}, {:?}", typed_chain_id, args);
 			let min_storage_balance_for_submitter =
 				Self::calculate_min_storage_balance_for_submitter(args.max_submitted_blocks_by_account);
 			if typed_chain_id == TypedChainId::Evm(1) {
@@ -468,18 +468,15 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let submitter = ensure_signed(origin)?;
 
-			ensure!(
-				Self::finalized_beacon_header(typed_chain_id).is_some(),
-				Error::<T>::LightClientUpdateNotAllowed
-			);
-			let finalized_beacon_header = Self::finalized_beacon_header(typed_chain_id).unwrap();
-			log::debug!("Submitted header number {}", block_header.number);
-			if finalized_beacon_header.execution_block_hash != block_header.parent_hash {
-				ensure!(
-					UnfinalizedHeaders::<T>::get(typed_chain_id, &block_header.parent_hash)
-						.is_some(),
-					Error::<T>::UnknownParentHeader,
-				);
+			if let Some(finalized_beacon_header) = Self::finalized_beacon_header(typed_chain_id) {
+				log::debug!("Submitted header number {}", block_header.number);
+				if finalized_beacon_header.execution_block_hash != block_header.parent_hash {
+					ensure!(
+						UnfinalizedHeaders::<T>::get(typed_chain_id, &block_header.parent_hash)
+							.is_some(),
+						Error::<T>::UnknownParentHeader,
+					);
+				}	
 			}
 
 			Self::update_submitter(typed_chain_id, &submitter, 1)?;
@@ -613,7 +610,7 @@ impl<T: Config> Pallet<T> {
 		typed_chain_id: TypedChainId,
 	) -> Result<(), DispatchError> {
 		ensure!(
-			Paused::<T>::get(typed_chain_id),
+			!Paused::<T>::get(typed_chain_id),
 			Error::<T>::LightClientUpdateNotAllowed
 		);
 		ensure!(
@@ -963,7 +960,7 @@ impl<T: Config> Pallet<T> {
 		let mut num_of_submitted_headers: i64 =
 			Self::submitters(typed_chain_id, submitter).unwrap().into();
 		num_of_submitted_headers += value;
-
+		println!("{:?}, {:?}", typed_chain_id, Self::max_unfinalized_blocks_per_submitter(typed_chain_id));
 		ensure!(
 			num_of_submitted_headers
 				<= Self::max_unfinalized_blocks_per_submitter(typed_chain_id).into(),

@@ -1,11 +1,11 @@
-use crate::{test_utils::*, mock::{Origin, Eth2Client}};
+use crate::{test_utils::*, mock::{Origin, Eth2Client}, types::InitInput};
 use bitvec::bitarr;
 use bitvec::order::Lsb0;
 use frame_support::assert_ok;
 use sp_runtime::AccountId32;
 use webb_proposals::TypedChainId;
 use super::consensus::*;
-use eth_types::{BlockHeader, H256, U256};
+use eth_types::{BlockHeader, H256, U256, eth2::LightClientUpdate};
 use hex::FromHex;
 use tree_hash::TreeHash;
 
@@ -23,6 +23,18 @@ pub fn submit_and_check_execution_headers(
         assert!(Eth2Client::is_known_execution_header(typed_chain_id, header.calculate_hash()));
         assert!(Eth2Client::block_hash_safe(typed_chain_id, header.number).is_none());
     }
+}
+
+pub fn get_test_context(
+    init_options: Option<InitOptions<AccountId32>>,
+) -> (
+    &'static Vec<BlockHeader>,
+    &'static Vec<LightClientUpdate>,
+    InitInput<AccountId32>,
+) {
+    let (headers, updates, init_input) = get_test_data(init_options);
+    assert_ok!(Eth2Client::init(Origin::signed(ALICE.clone()), KILN_CHAIN, init_input.clone()));
+    (headers, updates, init_input)
 }
 
 mod kiln_tests {
@@ -52,7 +64,7 @@ mod kiln_tests {
     #[test]
     pub fn test_submit_update_two_periods() {
         new_test_ext().execute_with(|| {
-            let (headers, updates, _init_input) = get_test_data(None);
+            let (headers, updates, _init_input) = get_test_context(None);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             // After submitting the execution header, it should be present in the execution headers list
             // but absent in canonical chain blocks (not-finalized)
@@ -87,7 +99,7 @@ mod kiln_tests {
     #[test]
     pub fn test_submit_execution_block_from_fork_chain() {
         new_test_ext().execute_with(|| {
-            let (headers, updates, _init_input) = get_test_data(None);
+            let (headers, updates, _init_input) = get_test_context(None);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             // After submitting the execution header, it should be present in the execution headers list
             // but absent in canonical chain blocks (not-finalized)
@@ -125,7 +137,7 @@ mod kiln_tests {
     #[test]
     pub fn test_gc_headers() {
         new_test_ext().execute_with(|| {
-            let (headers, updates, _init_input) = get_test_data(Some(InitOptions {
+            let (headers, updates, _init_input) = get_test_context(Some(InitOptions {
                 validate_updates: true,
                 verify_bls_signatures: true,
                 hashes_gc_threshold: 500,
@@ -168,7 +180,7 @@ mod kiln_tests {
     #[should_panic(expected = "exhausted the limit of blocks")]
     pub fn test_panic_on_exhausted_submit_limit() {
         new_test_ext().execute_with(|| {
-            let (headers, updates, _init_input) = get_test_data(Some(InitOptions {
+            let (headers, updates, _init_input) = get_test_context(Some(InitOptions {
                 validate_updates: true,
                 verify_bls_signatures: true,
                 hashes_gc_threshold: 7100,
@@ -186,7 +198,7 @@ mod kiln_tests {
     #[test]
     pub fn test_max_submit_blocks_by_account_limit() {
         new_test_ext().execute_with(|| {
-            let (headers, updates, _init_input) = get_test_data(Some(InitOptions {
+            let (headers, updates, _init_input) = get_test_context(Some(InitOptions {
                 validate_updates: true,
                 verify_bls_signatures: true,
                 hashes_gc_threshold: 7100,
@@ -210,7 +222,7 @@ mod kiln_tests {
     #[should_panic(expected = "only trusted_signer can update the client")]
     pub fn test_trusted_signer() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(Some(InitOptions {
+            let (_headers, updates, _init_input) = get_test_context(Some(InitOptions {
                 validate_updates: true,
                 verify_bls_signatures: true,
                 hashes_gc_threshold: 7100,
@@ -225,7 +237,7 @@ mod kiln_tests {
     #[should_panic(expected = "Invalid finality proof")]
     pub fn test_panic_on_invalid_finality_proof() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
             update.finality_update.finality_branch[5] = H256::from(
                 hex::decode("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
@@ -239,7 +251,7 @@ mod kiln_tests {
     #[should_panic(expected = "Invalid finality proof")]
     pub fn test_panic_on_empty_finality_proof() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
             update.finality_update.finality_branch = vec![];
             assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
@@ -250,7 +262,7 @@ mod kiln_tests {
     #[should_panic(expected = "Invalid execution block hash proof")]
     pub fn test_panic_on_invalid_execution_block_proof() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
             update.finality_update.header_update.execution_hash_branch[5] = H256::from(
                 hex::decode("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
@@ -264,7 +276,7 @@ mod kiln_tests {
     #[should_panic(expected = "Invalid execution block hash proof")]
     pub fn test_panic_on_empty_execution_block_proof() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
             update.finality_update.header_update.execution_hash_branch = vec![];
             assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, update));
@@ -275,7 +287,7 @@ mod kiln_tests {
     #[should_panic(expected = "The acceptable update periods are")]
     pub fn test_panic_on_skip_update_period() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
             update.finality_update.header_update.beacon_header.slot =
             update.signature_slot + EPOCHS_PER_SYNC_COMMITTEE_PERIOD * SLOTS_PER_EPOCH * 10;
@@ -287,7 +299,7 @@ mod kiln_tests {
     #[should_panic(expected = "Unknown execution block hash")]
     pub fn test_panic_on_submit_update_with_missing_execution_blocks() {
         new_test_ext().execute_with(|| {
-            let (headers, updates, _init_input) = get_test_data(None);
+            let (headers, updates, _init_input) = get_test_context(None);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             submit_and_check_execution_headers(
                 Origin::signed(ALICE),
@@ -302,7 +314,7 @@ mod kiln_tests {
     #[should_panic(expected = "already submitted")]
     pub fn test_panic_on_submit_same_execution_blocks() {
         new_test_ext().execute_with(|| {
-            let (headers, _updates, _init_input) = get_test_data(None);
+            let (headers, _updates, _init_input) = get_test_context(None);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
             assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
@@ -313,7 +325,7 @@ mod kiln_tests {
     #[should_panic(expected = "can't submit blocks because it is not registered")]
     pub fn test_panic_on_submit_execution_block_after_submitter_unregistered() {
         new_test_ext().execute_with(|| {
-            let (headers, _updates, _init_input) = get_test_data(None);
+            let (headers, _updates, _init_input) = get_test_context(None);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             assert_ok!(Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN));
             assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
@@ -324,7 +336,7 @@ mod kiln_tests {
     #[should_panic(expected = "paused")]
     pub fn test_panic_on_submit_update_paused() {
         new_test_ext().execute_with(|| {
-            let (headers, _updates, _init_input) = get_test_data(None);
+            let (headers, _updates, _init_input) = get_test_context(None);
             Paused::<Test>::insert(KILN_CHAIN, true);
             assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
         });
@@ -336,7 +348,7 @@ mod kiln_tests {
     )]
     pub fn test_panic_on_submit_outdated_update() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             Paused::<Test>::insert(KILN_CHAIN, true);
             assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(Origin::signed(ALICE), KILN_CHAIN, updates[0].clone()));
         });
@@ -346,7 +358,7 @@ mod kiln_tests {
     #[should_panic(expected = "Parent should be submitted first")]
     pub fn test_panic_on_submit_blocks_with_unknown_parent() {
         new_test_ext().execute_with(|| {
-            let (headers, _updates, _init_input) = get_test_data(None);
+            let (headers, _updates, _init_input) = get_test_context(None);
             assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
@@ -359,7 +371,7 @@ mod kiln_tests {
     #[should_panic(expected = "Can't unregister the account with used storage")]
     pub fn test_panic_on_unregister_submitter() {
         new_test_ext().execute_with(|| {
-            let (headers, _updates, _init_input) = get_test_data(None);
+            let (headers, _updates, _init_input) = get_test_context(None);
             assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
             assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
             submit_and_check_execution_headers(
@@ -376,7 +388,7 @@ mod kiln_tests {
     #[should_panic(expected = "can't submit blocks because it is not registered")]
     pub fn test_panic_on_skipping_register_submitter() {
         new_test_ext().execute_with(|| {
-            let (headers, _updates, _init_input) = get_test_data(None);
+            let (headers, _updates, _init_input) = get_test_context(None);
             assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
             assert_ok!(Eth2Client::submit_execution_header(Origin::signed(ALICE), KILN_CHAIN, headers[1].clone()));
         });
@@ -388,7 +400,7 @@ mod kiln_tests {
     )]
     pub fn test_panic_on_sync_committee_bits_is_less_than_threshold() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
 
             let mut sync_committee_bits = bitarr![u8, Lsb0; 0; 512];
@@ -414,7 +426,7 @@ mod kiln_tests {
     #[should_panic(expected = "The sync committee update is missed")]
     pub fn test_panic_on_missing_sync_committee_update() {
         new_test_ext().execute_with(|| {
-            let (_headers, updates, _init_input) = get_test_data(None);
+            let (_headers, updates, _init_input) = get_test_context(None);
             let mut update = updates[1].clone();
             update.sync_committee_update = None;
 
@@ -431,7 +443,7 @@ mod mainnet_tests {
         expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
     )]
     pub fn test_panic_on_init_in_trustless_mode_without_bls_on_mainnet() {
-        let (_headers, _updates, _init_input) = get_test_data(Some(InitOptions {
+        let (_headers, _updates, _init_input) = get_test_context(Some(InitOptions {
             validate_updates: true,
             verify_bls_signatures: false,
             hashes_gc_threshold: 500,
@@ -448,7 +460,7 @@ mod mainnet_tests {
         expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
     )]
     pub fn test_panic_on_init_in_trustless_mode_without_bls_feature_flag() {
-        let (_headers, _updates, _init_input) = get_test_data(Some(InitOptions {
+        let (_headers, _updates, _init_input) = get_test_context(Some(InitOptions {
             validate_updates: true,
             verify_bls_signatures: true,
             hashes_gc_threshold: 500,

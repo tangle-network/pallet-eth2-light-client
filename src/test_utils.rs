@@ -1,3 +1,6 @@
+use crate::mock::Eth2Client;
+use crate::mock::Origin;
+
 use super::types::InitInput;
 use eth_types::eth2::*;
 use eth_types::BlockHeader;
