@@ -1,7 +1,6 @@
 #![feature(slice_pattern)]
 
-use codec::{Encode, Decode};
-use scale_info::TypeInfo;
+use codec::{Decode, Encode};
 use derive_more::{
     Add, AddAssign, Display, Div, DivAssign, From, Into, Mul, MulAssign, Rem, RemAssign, Sub,
     SubAssign,
@@ -11,6 +10,7 @@ use rlp::{
     Encodable as RlpEncodable, Rlp, RlpStream,
 };
 use rlp_derive::RlpDecodable as RlpDecodableDerive;
+use scale_info::TypeInfo;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -77,7 +77,7 @@ macro_rules! uint_declare_wrapper_and_serde_codec_typeinfo {
             Into,
             Encode,
             Decode,
-            TypeInfo
+            TypeInfo,
         )]
         #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
         pub struct $name(pub ethereum_types::$name);

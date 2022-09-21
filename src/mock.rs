@@ -116,8 +116,9 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
                     0xd2, 0x7f, 0x51, 0x1b, 0xfe, 0x95,
                 ],
                 [0x02, 0x00, 0x00, 0x00],
-                18446744073709551615
-            ), (
+                18446744073709551615,
+            ),
+            (
                 // Goerli
                 TypedChainId::Evm(5),
                 [
@@ -127,7 +128,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
                 ],
                 [0x02, 0x00, 0x10, 0x20],
                 112260,
-            ), (
+            ),
+            (
                 // Kiln
                 TypedChainId::Evm(1337802),
                 [
@@ -137,7 +139,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
                 ],
                 [0x70, 0x00, 0x00, 0x71],
                 150,
-            ), (
+            ),
+            (
                 // Ropsten
                 TypedChainId::Evm(3),
                 [

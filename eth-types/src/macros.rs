@@ -56,7 +56,10 @@ macro_rules! arr_wrapper_impl_tree_hash {
 
         #[cfg(feature = "std")]
         impl Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+            fn serialize<S>(
+                &self,
+                serializer: S,
+            ) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
             where
                 S: Serializer,
             {
@@ -103,7 +106,20 @@ macro_rules! vec_wrapper_impl_tree_hash {
 #[macro_export]
 macro_rules! arr_ethereum_types_wrapper_impl {
     ($name: ident, $len: expr) => {
-        #[derive(Default, Clone, Copy, Eq, PartialEq, Debug, Display, From, Into, Encode, Decode, TypeInfo)]
+        #[derive(
+            Default,
+            Clone,
+            Copy,
+            Eq,
+            PartialEq,
+            Debug,
+            Display,
+            From,
+            Into,
+            Encode,
+            Decode,
+            TypeInfo,
+        )]
         #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
         pub struct $name(pub ethereum_types::$name);
 
