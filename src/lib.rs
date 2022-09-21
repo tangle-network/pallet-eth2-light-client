@@ -45,7 +45,6 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use types::{ExecutionHeaderInfo, InitInput};
 use eth_types::{
 	eth2::{
 		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,
@@ -53,12 +52,15 @@ use eth_types::{
 	},
 	BlockHeader, H256,
 };
-use frame_support::pallet_prelude::{ensure, DispatchError};
-use frame_support::{PalletId, traits::Get};
+use frame_support::{
+	pallet_prelude::{ensure, DispatchError},
+	traits::Get,
+	PalletId,
+};
 use sp_runtime::traits::Saturating;
-use sp_std::collections::btree_map::BTreeMap;
-use sp_std::{convert::TryInto, prelude::*};
+use sp_std::{collections::btree_map::BTreeMap, convert::TryInto, prelude::*};
 use tree_hash::TreeHash;
+use types::{ExecutionHeaderInfo, InitInput};
 use webb_proposals::TypedChainId;
 
 pub use pallet::*;
@@ -69,12 +71,12 @@ use crate::consensus::{
 	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
 	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
 };
-use bitvec::prelude::BitVec;
-use bitvec::prelude::Lsb0;
+use bitvec::prelude::{BitVec, Lsb0};
 
-use sp_runtime::traits::AccountIdConversion;
 use frame_support::traits::{Currency, ExistenceRequirement};
-type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+use sp_runtime::traits::AccountIdConversion;
+type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[cfg(test)]
 mod mock;
@@ -85,10 +87,9 @@ mod tests;
 #[cfg(test)]
 mod test_utils;
 
-mod consensus;
-mod types;
-mod traits;
-mod prover_utils;
+pub mod consensus;
+pub mod traits;
+pub mod types;
 
 pub use traits::*;
 
@@ -130,10 +131,7 @@ pub mod pallet {
 	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
-			Self {
-				networks: vec![],
-				phantom: Default::default(),
-			}
+			Self { networks: vec![], phantom: Default::default() }
 		}
 	}
 
@@ -145,7 +143,7 @@ pub mod pallet {
 					TypedChainId::Evm(_) => {},
 					_ => {
 						panic!("Unsupported network type, ETH2 chains are only supported on EVM networks");
-					}
+					},
 				}
 				GenesisValidatorsRoot::<T>::insert(n.0, n.1);
 				BellatrixForkVersion::<T>::insert(n.0, n.2);
@@ -154,7 +152,7 @@ pub mod pallet {
 		}
 	}
 
-	/************* STORAGE *************/
+	/************* STORAGE ************ */
 
 	/// If set, only light client updates by the trusted signer will be accepted
 	#[pallet::storage]
@@ -189,8 +187,8 @@ pub mod pallet {
 	pub(super) type HashesGcThreshold<T: Config> =
 		StorageMap<_, Blake2_128Concat, TypedChainId, u64, ValueQuery>;
 
-	/// Hashes of the finalized execution blocks mapped to their numbers. Stores up to `hashes_gc_threshold` entries.
-	/// Execution block number -> execution block hash
+	/// Hashes of the finalized execution blocks mapped to their numbers. Stores up to
+	/// `hashes_gc_threshold` entries. Execution block number -> execution block hash
 	#[pallet::storage]
 	#[pallet::getter(fn finalized_execution_blocks)]
 	pub(super) type FinalizedExecutionBlocks<T: Config> = StorageDoubleMap<
@@ -232,7 +230,8 @@ pub mod pallet {
 	>;
 
 	/// Max number of unfinalized blocks allowed to be stored by one submitter account
-	/// This value should be at least 32 blocks (1 epoch), but the recommended value is 1024 (32 epochs
+	/// This value should be at least 32 blocks (1 epoch), but the recommended value is 1024 (32
+	/// epochs
 	#[pallet::storage]
 	#[pallet::getter(fn max_unfinalized_blocks_per_submitter)]
 	pub(super) type MaxUnfinalizedBlocksPerSubmitter<T: Config> =
@@ -241,7 +240,8 @@ pub mod pallet {
 	/// The minimum balance that should be attached to register a new submitter account
 	#[pallet::storage]
 	#[pallet::getter(fn min_submitter_balance)]
-	pub(super) type MinSubmitterBalance<T: Config> = StorageMap<_, Blake2_128Concat, TypedChainId, BalanceOf<T>, ValueQuery>;
+	pub(super) type MinSubmitterBalance<T: Config> =
+		StorageMap<_, Blake2_128Concat, TypedChainId, BalanceOf<T>, ValueQuery>;
 
 	/// Light client state
 	#[pallet::storage]
@@ -284,7 +284,7 @@ pub mod pallet {
 	pub(super) type BellatrixForkEpoch<T: Config> =
 		StorageMap<_, Blake2_128Concat, TypedChainId, u64, OptionQuery>;
 
-	/************* STORAGE *************/
+	/************* STORAGE ************ */
 
 	#[pallet::event]
 	pub enum Event<T: Config> {}
@@ -307,7 +307,8 @@ pub mod pallet {
 		NotTrustedSigner,
 		/// The updates validation can't be disabled for mainnet
 		ValidateUpdatesParameterError,
-		/// The client can't be executed in the trustless mode without BLS sigs verification on Mainnet
+		/// The client can't be executed in the trustless mode without BLS sigs verification on
+		/// Mainnet
 		TrustlessModeError,
 		InvalidSyncCommitteeBitsSum,
 		SyncCommitteeBitsSumLessThanThreshold,
@@ -326,8 +327,9 @@ pub mod pallet {
 		FinalizedBeaconHeaderNotPresent,
 		UnfinalizedHeaderNotPresent,
 		SyncCommitteeUpdateNotPresent,
-		SubmitterNotPresent,
 		SubmitterExhaustedLimit,
+		HeaderHashDoesNotExist,
+		BlockHashesDoNotMatch,
 	}
 
 	#[pallet::hooks]
@@ -342,26 +344,27 @@ pub mod pallet {
 			args: InitInput<T::AccountId>,
 		) -> DispatchResultWithPostInfo {
 			let signer = ensure_signed(origin)?;
-
 			let min_storage_balance_for_submitter =
-				Self::calculate_min_storage_balance_for_submitter(args.max_submitted_blocks_by_account);
+				Self::calculate_min_storage_balance_for_submitter(
+					args.max_submitted_blocks_by_account,
+				);
 			if typed_chain_id == TypedChainId::Evm(1) {
 				ensure!(
 					args.validate_updates,
 					// The updates validation can't be disabled for mainnet
 					Error::<T>::ValidateUpdatesParameterError,
 				);
-
 				ensure!(
 					(args.verify_bls_signatures) || args.trusted_signer.is_some(),
-					// The client can't be executed in the trustless mode without BLS sigs verification on Mainnet
+					// The client can't be executed in the trustless mode without BLS sigs
+					// verification on Mainnet
 					Error::<T>::TrustlessModeError,
 				);
 			}
 
 			ensure!(
-				args.finalized_execution_header.calculate_hash()
-					== args.finalized_beacon_header.execution_block_hash,
+				args.finalized_execution_header.calculate_hash() ==
+					args.finalized_beacon_header.execution_block_hash,
 				// Invalid execution block
 				Error::<T>::InvalidExecutionBlock,
 			);
@@ -408,7 +411,7 @@ pub mod pallet {
 				&submitter,
 				&Self::account_id(),
 				deposit,
-				ExistenceRequirement::KeepAlive,
+				ExistenceRequirement::AllowDeath,
 			)?;
 			// Register the submitter
 			Submitters::<T>::insert(typed_chain_id, submitter, 0);
@@ -426,17 +429,15 @@ pub mod pallet {
 				Error::<T>::SubmitterNotRegistered
 			);
 			let submitter_block_count = Submitters::<T>::get(typed_chain_id, &submitter).unwrap();
-			ensure!(
-				submitter_block_count == 0u32,
-				Error::<T>::SubmitterHasUsedStorage
-			);
+			ensure!(submitter_block_count == 0u32, Error::<T>::SubmitterHasUsedStorage);
+			Submitters::<T>::remove(typed_chain_id, submitter.clone());
 			// Transfer the deposit amount back to the submitter
 			let deposit = MinSubmitterBalance::<T>::get(typed_chain_id);
 			T::Currency::transfer(
 				&Self::account_id(),
 				&submitter,
 				deposit,
-				ExistenceRequirement::KeepAlive,
+				ExistenceRequirement::AllowDeath,
 			)?;
 			Ok(().into())
 		}
@@ -468,18 +469,15 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let submitter = ensure_signed(origin)?;
 
-			ensure!(
-				Self::finalized_beacon_header(typed_chain_id).is_some(),
-				Error::<T>::LightClientUpdateNotAllowed
-			);
-			let finalized_beacon_header = Self::finalized_beacon_header(typed_chain_id).unwrap();
-			log::debug!("Submitted header number {}", block_header.number);
-			if finalized_beacon_header.execution_block_hash != block_header.parent_hash {
-				ensure!(
-					UnfinalizedHeaders::<T>::get(typed_chain_id, &block_header.parent_hash)
-						.is_some(),
-					Error::<T>::UnknownParentHeader,
-				);
+			if let Some(finalized_beacon_header) = Self::finalized_beacon_header(typed_chain_id) {
+				log::debug!("Submitted header number {}", block_header.number);
+				if finalized_beacon_header.execution_block_hash != block_header.parent_hash {
+					ensure!(
+						UnfinalizedHeaders::<T>::get(typed_chain_id, &block_header.parent_hash)
+							.is_some(),
+						Error::<T>::UnknownParentHeader,
+					);
+				}
 			}
 
 			Self::update_submitter(typed_chain_id, &submitter, 1)?;
@@ -507,10 +505,7 @@ pub mod pallet {
 			trusted_signer: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
-			ensure!(
-				TrustedSigner::<T>::get() == Some(origin),
-				Error::<T>::NotTrustedSigner
-			);
+			ensure!(TrustedSigner::<T>::get() == Some(origin), Error::<T>::NotTrustedSigner);
 			TrustedSigner::<T>::put(trusted_signer);
 			Ok(().into())
 		}
@@ -523,9 +518,9 @@ impl<T: Config> Pallet<T> {
 	) -> BalanceOf<T> {
 		const STORAGE_BYTES_PER_BLOCK: u32 = 105; // prefix: 3B + key: 32B + HeaderInfo 70B
 		const STORAGE_BYTES_PER_ACCOUNT: u32 = 39; // prefix: 3B + account_id: 32B + counter 4B
-		let storage_bytes_per_account = (STORAGE_BYTES_PER_BLOCK
-			* max_submitted_blocks_by_account as u32)
-			+ STORAGE_BYTES_PER_ACCOUNT;
+		let storage_bytes_per_account = (STORAGE_BYTES_PER_BLOCK *
+			max_submitted_blocks_by_account as u32) +
+			STORAGE_BYTES_PER_ACCOUNT;
 		T::StoragePricePerByte::get().saturating_mul(storage_bytes_per_account.into())
 	}
 
@@ -586,11 +581,7 @@ impl<T: Config> Pallet<T> {
 		let current_sync_committee = Self::current_sync_committee(typed_chain_id);
 		let next_sync_committee = Self::next_sync_committee(typed_chain_id);
 
-		match (
-			finalized_beacon_header,
-			current_sync_committee,
-			next_sync_committee,
-		) {
+		match (finalized_beacon_header, current_sync_committee, next_sync_committee) {
 			(
 				Some(finalized_beacon_header),
 				Some(current_sync_committee),
@@ -612,14 +603,13 @@ impl<T: Config> Pallet<T> {
 		submitter: &T::AccountId,
 		typed_chain_id: TypedChainId,
 	) -> Result<(), DispatchError> {
-		ensure!(
-			Paused::<T>::get(typed_chain_id),
-			Error::<T>::LightClientUpdateNotAllowed
-		);
-		ensure!(
-			TrustedSigner::<T>::get() == Some(submitter.clone()),
-			Error::<T>::NotTrustedSigner
-		);
+		ensure!(!Paused::<T>::get(typed_chain_id), Error::<T>::LightClientUpdateNotAllowed);
+		if TrustedSigner::<T>::get().is_some() {
+			ensure!(
+				TrustedSigner::<T>::get() == Some(submitter.clone()),
+				Error::<T>::NotTrustedSigner
+			);
+		}
 		Ok(())
 	}
 
@@ -633,7 +623,8 @@ impl<T: Config> Pallet<T> {
 		);
 		let finalized_beacon_header = Self::finalized_beacon_header(typed_chain_id).unwrap();
 		// TODO: Generalize this over other networks once we know their parameters. This
-		// is currently configured for the Ethereum 2.0 mainnet most likely (taken from rainbow-bridge).
+		// is currently configured for the Ethereum 2.0 mainnet most likely (taken from
+		// rainbow-bridge).
 		let finalized_period = compute_sync_committee_period(finalized_beacon_header.header.slot);
 		Self::verify_finality_branch(update, finalized_period, finalized_beacon_header)?;
 
@@ -696,11 +687,8 @@ impl<T: Config> Pallet<T> {
 		);
 		let fork_version = Self::bellatrix_fork_version(typed_chain_id).unwrap();
 		let genesis_validators_root = Self::genesis_validators_root(typed_chain_id).unwrap();
-		let domain = compute_domain(
-			DOMAIN_SYNC_COMMITTEE,
-			fork_version,
-			genesis_validators_root.into(),
-		);
+		let domain =
+			compute_domain(DOMAIN_SYNC_COMMITTEE, fork_version, genesis_validators_root.into());
 		let signing_root =
 			compute_signing_root(H256(update.attested_beacon_header.tree_hash_root()), domain);
 
@@ -726,7 +714,8 @@ impl<T: Config> Pallet<T> {
 		finalized_period: u64,
 		finalized_beacon_header: ExtendedBeaconBlockHeader,
 	) -> Result<(), DispatchError> {
-		// The active header will always be the finalized header because we don't accept updates without the finality update.
+		// The active header will always be the finalized header because we don't accept updates
+		// without the finality update.
 		let active_header = &update.finality_update.header_update.beacon_header;
 		ensure!(
 			active_header.slot > finalized_beacon_header.header.slot,
@@ -749,11 +738,7 @@ impl<T: Config> Pallet<T> {
 		let branch = convert_branch(&update.finality_update.finality_branch);
 		ensure!(
 			merkle_proof::verify_merkle_proof(
-				update
-					.finality_update
-					.header_update
-					.beacon_header
-					.tree_hash_root(),
+				update.finality_update.header_update.beacon_header.tree_hash_root(),
 				&branch,
 				FINALITY_TREE_DEPTH.try_into().unwrap(),
 				FINALITY_TREE_INDEX.try_into().unwrap(),
@@ -768,13 +753,13 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InvalidExecutionBlockHashProof
 		);
 
-		// Verify that the `next_sync_committee`, if present, actually is the next sync committee saved in the
-		// state of the `active_header`
+		// Verify that the `next_sync_committee`, if present, actually is the next sync committee
+		// saved in the state of the `active_header`
 		if update_period != finalized_period {
 			ensure!(
 				update.sync_committee_update.is_some(),
 				// The next sync committee should be present
-				Error::<T>::NextSyncCommitteeNotPresent
+				Error::<T>::SyncCommitteeUpdateNotPresent
 			);
 			let sync_committee_update = update.sync_committee_update.as_ref().unwrap();
 			let branch = convert_branch(&sync_committee_update.next_sync_committee_branch);
@@ -800,7 +785,7 @@ impl<T: Config> Pallet<T> {
 		fork_version: ForkVersion,
 	) -> Option<ForkVersion> {
 		if epoch >= fork_epoch {
-			return Some(fork_version);
+			return Some(fork_version)
 		}
 
 		None
@@ -845,9 +830,8 @@ impl<T: Config> Pallet<T> {
 
 		let mut submitters_update: BTreeMap<T::AccountId, u32> = BTreeMap::new();
 		loop {
-			let num_of_removed_headers = submitters_update
-				.get(&cursor_header.submitter)
-				.unwrap_or(&0);
+			let num_of_removed_headers =
+				submitters_update.get(&cursor_header.submitter).unwrap_or(&0);
 			submitters_update.insert(cursor_header.submitter, num_of_removed_headers + 1);
 
 			UnfinalizedHeaders::<T>::remove(typed_chain_id, &cursor_header_hash);
@@ -858,7 +842,7 @@ impl<T: Config> Pallet<T> {
 			);
 
 			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash {
-				break;
+				break
 			}
 
 			cursor_header_hash = cursor_header.parent_hash;
@@ -885,8 +869,8 @@ impl<T: Config> Pallet<T> {
 		{
 			Self::gc_headers(
 				typed_chain_id,
-				finalized_execution_header_info.block_number
-					- Self::hashes_gc_threshold(typed_chain_id),
+				finalized_execution_header_info.block_number -
+					Self::hashes_gc_threshold(typed_chain_id),
 			);
 		}
 
@@ -940,12 +924,12 @@ impl<T: Config> Pallet<T> {
 				FinalizedExecutionBlocks::<T>::remove(typed_chain_id, &header_number);
 
 				if header_number == 0 {
-					break;
+					break
 				} else {
 					header_number -= 1;
 				}
 			} else {
-				break;
+				break
 			}
 		}
 	}
@@ -958,15 +942,14 @@ impl<T: Config> Pallet<T> {
 		ensure!(
 			Self::submitters(typed_chain_id, submitter).is_some(),
 			// The submitter should be present
-			Error::<T>::SubmitterNotPresent
+			Error::<T>::SubmitterNotRegistered
 		);
 		let mut num_of_submitted_headers: i64 =
 			Self::submitters(typed_chain_id, submitter).unwrap().into();
 		num_of_submitted_headers += value;
-
 		ensure!(
-			num_of_submitted_headers
-				<= Self::max_unfinalized_blocks_per_submitter(typed_chain_id).into(),
+			num_of_submitted_headers <=
+				Self::max_unfinalized_blocks_per_submitter(typed_chain_id).into(),
 			// The submitter {} exhausted the limit of blocks ({})",
 			// &submitter, self.max_submitted_blocks_by_account
 			Error::<T>::SubmitterExhaustedLimit
@@ -982,23 +965,20 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> VerifyBlockHeaderExists for Pallet<T> {
-	fn verify_block_header_exists(header: BlockHeader, typed_chain_id: TypedChainId) {
+	fn verify_block_header_exists(
+		header: BlockHeader,
+		typed_chain_id: TypedChainId,
+	) -> Result<bool, DispatchError> {
 		let block_number = header.number;
 		ensure!(header.hash.is_some(), Error::<T>::HeaderHashDoesNotExist);
 		let block_hash = header.hash.unwrap();
 
 		let block_hash_from_storage =
-		FinalizedExecutionBlocks::<T>::get(typed_chain_id, block_number);
+			FinalizedExecutionBlocks::<T>::get(typed_chain_id, block_number);
 
-		ensure!(
-			block_hash_from_storage.is_some(),
-			Error::<T>::HeaderHashDoesNotExist
-		);
-		ensure!(
-			block_hash_from_storage.unwrap() == block_hash,
-			Error::<T>::BlockHashesDoNotMatch
-		);
+		ensure!(block_hash_from_storage.is_some(), Error::<T>::HeaderHashDoesNotExist);
+		ensure!(block_hash_from_storage.unwrap() == block_hash, Error::<T>::BlockHashesDoNotMatch);
 
-		BlockHeader::calculate_hash(&header) == block_hash
+		Ok(BlockHeader::calculate_hash(&header) == block_hash)
 	}
 }
