@@ -15,35 +15,36 @@ eth2_ssz_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch
 tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
 tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
 eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
+# eth2_ssz = { path = "../../lighthouse/consensus/ssz", default-features = false, optional = true }
+# eth2_ssz_derive = { path = "../../lighthouse/consensus/ssz_derive", default-features = false, optional = true }
+# tree_hash = { path = "../../lighthouse/consensus/tree_hash", default-features = false, optional = true }
+# tree_hash_derive = { path = "../../lighthouse/consensus/tree_hash_derive", default-features = false, optional = true }
+# eth2_serde_utils = { path = "../../lighthouse/consensus/serde_utils", default-features = false, optional = true }
 hex = "0.4.0"
 
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28" }
-frame-system = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28" }
-sp-io = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28" }
-sp-std = { version = "4.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28" }
+sp-io = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28", default-features = false }
 
-[target.'cfg(feature = "std")'.dependencies]
-serde-big-array = "0.4.1"
+serde-big-array = { version = "0.4.1", optional = true }
 
 [features]
 default = ["eip1559", "eth2", "std"]
 std = [
-    "serde",
+	"serde",
 	"codec/std",
-	"frame-support/std",
-	"frame-system/std",
 	"scale-info/std",
 	"sp-io/std",
 	"sp-std/std",
-    "ethereum-types/std",
+	"ethereum-types/std",
+	"serde-big-array",
 ]
 eip1559 = []
-eth2 = ["dep:eth2_ssz", "dep:eth2_ssz_derive", "dep:tree_hash", "dep:tree_hash_derive", "dep:eth2_serde_utils"]
-
-[patch.crates-io]
-eth2_hashing = { git = "https://github.com/sigp/lighthouse", rev = "df51a73272489fe154bd10995c96199062b6c3f7"}
-eth2_serde_utils = { git = "https://github.com/sigp/lighthouse", rev = "df51a73272489fe154bd10995c96199062b6c3f7"}
-eth2_ssz = { git = "https://github.com/sigp/lighthouse", rev = "df51a73272489fe154bd10995c96199062b6c3f7"}
-tree_hash = { git = "https://github.com/sigp/lighthouse", rev = "df51a73272489fe154bd10995c96199062b6c3f7"}
+eth2 = [
+	"eth2_ssz",
+	"eth2_ssz_derive",
+	"tree_hash",
+	"tree_hash_derive",
+	"eth2_serde_utils"
+]

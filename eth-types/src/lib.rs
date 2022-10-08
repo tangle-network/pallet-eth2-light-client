@@ -14,6 +14,7 @@ use scale_info::TypeInfo;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use tree_hash::PackedEncoding;
 
 use core::slice::SlicePattern;
 #[cfg(feature = "eth2")]
@@ -38,8 +39,8 @@ impl TreeHash for H256 {
 		TreeHashType::Vector
 	}
 
-	fn tree_hash_packed_encoding(&self) -> Vec<u8> {
-		self.0.as_bytes().to_vec()
+	fn tree_hash_packed_encoding(&self) -> PackedEncoding {
+		self.0.as_bytes().to_vec().into()
 	}
 
 	fn tree_hash_packing_factor() -> usize {
