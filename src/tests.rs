@@ -36,7 +36,11 @@ pub fn get_test_context(
 	init_options: Option<InitOptions<AccountId32>>,
 ) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<AccountId32>) {
 	let (headers, updates, init_input) = get_test_data(init_options);
-	assert_ok!(Eth2Client::init(Origin::signed(ALICE.clone()), KILN_CHAIN, init_input.clone()));
+	assert_ok!(Eth2Client::init(
+		Origin::signed(ALICE.clone()),
+		KILN_CHAIN,
+		Box::new(init_input.clone())
+	));
 	(headers, updates, init_input)
 }
 
@@ -604,7 +608,7 @@ mod mainnet_tests {
 			}));
 
 			assert_err!(
-				Eth2Client::init(Origin::signed(ALICE), MAINNET_CHAIN, init_input),
+				Eth2Client::init(Origin::signed(ALICE), MAINNET_CHAIN, Box::new(init_input)),
 				Error::<Test>::TrustlessModeError,
 			);
 		})

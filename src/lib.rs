@@ -341,7 +341,7 @@ pub mod pallet {
 		pub fn init(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
-			args: InitInput<T::AccountId>,
+			args: Box<InitInput<T::AccountId>>,
 		) -> DispatchResultWithPostInfo {
 			let signer = ensure_signed(origin)?;
 			let min_storage_balance_for_submitter =
@@ -372,7 +372,7 @@ pub mod pallet {
 			let finalized_execution_header_info = types::ExecutionHeaderInfo {
 				parent_hash: args.finalized_execution_header.parent_hash,
 				block_number: args.finalized_execution_header.number,
-				submitter: signer.clone(),
+				submitter: signer,
 			};
 
 			if let Some(account) = args.trusted_signer.clone() {
@@ -473,7 +473,7 @@ pub mod pallet {
 				log::debug!("Submitted header number {}", block_header.number);
 				if finalized_beacon_header.execution_block_hash != block_header.parent_hash {
 					ensure!(
-						UnfinalizedHeaders::<T>::get(typed_chain_id, &block_header.parent_hash)
+						UnfinalizedHeaders::<T>::get(typed_chain_id, block_header.parent_hash)
 							.is_some(),
 						Error::<T>::UnknownParentHeader,
 					);
@@ -490,12 +490,12 @@ pub mod pallet {
 				submitter,
 			};
 			ensure!(
-				UnfinalizedHeaders::<T>::get(typed_chain_id, &block_hash).is_none(),
+				UnfinalizedHeaders::<T>::get(typed_chain_id, block_hash).is_none(),
 				// The block {} already submitted!
-				// &block_hash
+				// block_hash
 				Error::<T>::BlockAlreadySubmitted,
 			);
-			UnfinalizedHeaders::<T>::insert(typed_chain_id, &block_hash, &block_info);
+			UnfinalizedHeaders::<T>::insert(typed_chain_id, block_hash, &block_info);
 			Ok(().into())
 		}
 
@@ -804,7 +804,7 @@ impl<T: Config> Pallet<T> {
 		finalized_header: ExtendedBeaconBlockHeader,
 	) -> Result<(), DispatchError> {
 		let maybe_finalized_execution_header_info =
-			Self::unfinalized_headers(typed_chain_id, &finalized_header.execution_block_hash);
+			Self::unfinalized_headers(typed_chain_id, finalized_header.execution_block_hash);
 		ensure!(
 			maybe_finalized_execution_header_info.is_some(),
 			// The finalized execution header should be present
@@ -834,10 +834,10 @@ impl<T: Config> Pallet<T> {
 				submitters_update.get(&cursor_header.submitter).unwrap_or(&0);
 			submitters_update.insert(cursor_header.submitter, num_of_removed_headers + 1);
 
-			UnfinalizedHeaders::<T>::remove(typed_chain_id, &cursor_header_hash);
+			UnfinalizedHeaders::<T>::remove(typed_chain_id, cursor_header_hash);
 			FinalizedExecutionBlocks::<T>::insert(
 				typed_chain_id,
-				&cursor_header.block_number,
+				cursor_header.block_number,
 				cursor_header_hash,
 			);
 
@@ -847,12 +847,12 @@ impl<T: Config> Pallet<T> {
 
 			cursor_header_hash = cursor_header.parent_hash;
 			ensure!(
-				Self::unfinalized_headers(typed_chain_id, &cursor_header_hash).is_some(),
+				Self::unfinalized_headers(typed_chain_id, cursor_header_hash).is_some(),
 				// The unfinalized header should be present
 				Error::<T>::UnfinalizedHeaderNotPresent
 			);
 			cursor_header =
-				Self::unfinalized_headers(typed_chain_id, &cursor_header.parent_hash).unwrap();
+				Self::unfinalized_headers(typed_chain_id, cursor_header.parent_hash).unwrap();
 		}
 		FinalizedBeaconHeader::<T>::insert(typed_chain_id, finalized_header);
 		FinalizedExecutionHeader::<T>::insert(
@@ -920,8 +920,8 @@ impl<T: Config> Pallet<T> {
 	/// Remove information about the headers that are at least as old as the given block number.
 	fn gc_headers(typed_chain_id: TypedChainId, mut header_number: u64) {
 		loop {
-			if FinalizedExecutionBlocks::<T>::contains_key(typed_chain_id, &header_number) {
-				FinalizedExecutionBlocks::<T>::remove(typed_chain_id, &header_number);
+			if FinalizedExecutionBlocks::<T>::contains_key(typed_chain_id, header_number) {
+				FinalizedExecutionBlocks::<T>::remove(typed_chain_id, header_number);
 
 				if header_number == 0 {
 					break
