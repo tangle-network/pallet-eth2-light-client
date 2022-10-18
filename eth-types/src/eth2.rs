@@ -41,13 +41,13 @@ pub struct BeaconBlockHeader {
 	pub body_root: H256,
 }
 
-#[derive(Debug, Clone, PartialEq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
+#[derive(Debug, Clone, Eq, PartialEq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
 pub struct ForkData {
 	pub current_version: ForkVersion,
 	pub genesis_validators_root: H256,
 }
 
-#[derive(Debug, PartialEq, Clone, TypeInfo, tree_hash_derive::TreeHash)]
+#[derive(Debug, Eq, PartialEq, Clone, TypeInfo, tree_hash_derive::TreeHash)]
 pub struct SigningData {
 	pub object_root: H256,
 	pub domain: H256,

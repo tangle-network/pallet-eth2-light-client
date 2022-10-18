@@ -1,5 +1,3 @@
-use crate::mock::{Eth2Client, Origin};
-
 use super::types::InitInput;
 use eth_types::{eth2::*, BlockHeader};
 use lazy_static::lazy_static;
