@@ -504,7 +504,7 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
                 }
             }
 
-            fn from_ssz_bytes(bytes: &[u8]) -> std::result::Result<Self, ssz::DecodeError> {
+            fn from_ssz_bytes(bytes: &[u8]) -> core::result::Result<Self, ssz::DecodeError> {
                 if <Self as ssz::Decode>::is_ssz_fixed_len() {
                     if bytes.len() != <Self as ssz::Decode>::ssz_fixed_len() {
                         return Err(ssz::DecodeError::InvalidByteLength {

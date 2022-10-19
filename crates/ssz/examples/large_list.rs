@@ -2,6 +2,8 @@
 //!
 //! Useful for `cargo flamegraph`.
 
+#![allow(clippy::needless_collect)]
+
 use ssz::{Decode, Encode};
 
 fn main() {
