@@ -1,0 +1,23 @@
+[package]
+name = "tree_hash"
+version = "0.4.1"
+authors = ["Paul Hauner <paul@paulhauner.com>"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Efficient Merkle-hashing as used in Ethereum 2.0"
+
+[dev-dependencies]
+rand = "0.8.5"
+tree_hash_derive = { path = "../tree_hash_derive", default-features = false }
+eth2_ssz = { path = "../ssz", default-features = false }
+eth2_ssz_derive = { path = "../ssz_derive", default-features = false }
+
+[dependencies]
+ethereum-types = { version = "0.13.1", default-features = false }
+eth2_hashing = { path = "../eth2_hashing", default-features = false }
+smallvec = { version = "1.6.1", default-features = false }
+
+[features]
+default = ["std"]
+std = []
+arbitrary = ["ethereum-types/arbitrary"]

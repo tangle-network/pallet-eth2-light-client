@@ -1,0 +1,69 @@
+[package]
+name = "pallet-eth2-light-client"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
+log = { version = "0.4.17", default-features = false }
+scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional = true, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+frame-system = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+pallet-balances = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+sp-io = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+sp-runtime = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+sp-std = { version = "4.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+webb-proposals = { version = "0.5.4", default-features = false, features = ["scale", "evm", "substrate"] }
+ethereum-types = { version = "0.13.1", features = ["rlp", "codec"], default-features = false }
+eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"], default-features = false }
+
+# merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false }
+# bls = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop",  optional = true, default-features = false, features = ["milagro"]}
+# tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
+# tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
+# eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
+
+merkle_proof = { path = "../crates/merkle_proof", default-features = false }
+bls = { path = "../crates/bls", default-features = false, features = ["milagro"] }
+tree_hash = { path = "../crates/tree_hash", default-features = false }
+tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
+eth2_serde_utils = { path = "../crates/serde_utils", default-features = false }
+
+derive_more = { version = "^0.99.2", default-features = false }
+bitvec = { version = "1.0.0", optional = true, default-features = false, features = ["atomic", "alloc"] }
+rlp = { version = "0.5.0", default-features = false }
+rlp-derive = { version = "0.1.0", default-features = false }
+serde = { version = "1.0", features = ["derive"], optional = true}
+
+[dev-dependencies]
+sp-core = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+lazy_static = "1.4.0"
+serde_json = "1.0"
+hex = "0.4.0"
+
+[features]
+default = ["std", "eip1559"]
+std = [
+	"codec/std",
+	"frame-benchmarking?/std",
+	"frame-support/std",
+	"frame-system/std",
+	"log/std",
+	"pallet-balances/std",
+	"scale-info/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-std/std",
+    "webb-proposals/std",
+    "ethereum-types/std",
+    "bitvec",
+	"eth-types/std",
+	"serde",
+]
+runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
+try-runtime = ["frame-support/try-runtime"]
+eip1559 = []
