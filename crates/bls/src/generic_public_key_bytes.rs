@@ -11,7 +11,7 @@ use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use tree_hash::TreeHash;
-use alloc::{format, vec, vec::Vec, string::{ToString, String}};
+use alloc::{format, vec::Vec, string::{ToString, String}};
 
 /// A wrapper around some bytes that may or may not be a `PublicKey` in compressed form.
 ///

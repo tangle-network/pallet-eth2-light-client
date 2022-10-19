@@ -9,7 +9,7 @@ pub mod try_from_iter;
 use alloc::{format, vec::Vec, string::String};
 
 /// Returned when SSZ decoding fails.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum DecodeError {
     /// The bytes supplied were too short to be decoded into the specified type.
     InvalidByteLength { len: usize, expected: usize },

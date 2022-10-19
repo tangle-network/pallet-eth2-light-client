@@ -5,7 +5,7 @@ use core::mem;
 
 type SmallVec8<T> = SmallVec<[T; 8]>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
     /// The maximum number of leaves defined by the initialization `depth` has been exceed.
     MaximumLeavesExceeded { max_leaves: usize },

@@ -7,7 +7,7 @@ use crate::{
 };
 use alloc::borrow::Cow;
 use core::marker::PhantomData;
-use alloc::{format, vec, vec::Vec, string::{ToString, String}};
+use alloc::{vec, vec::Vec};
 
 /// A generic way to represent a `GenericSignature` or `GenericAggregateSignature`.
 pub struct WrappedSignature<'a, Pub, AggPub, Sig, AggSig>

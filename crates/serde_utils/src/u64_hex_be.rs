@@ -40,7 +40,7 @@ impl<'de> Visitor<'de> for QuantityVisitor {
             crate::hex::decode(&format!("0{}", stripped))
                 .map_err(|e| de::Error::custom(format!("invalid hex ({:?})", e)))
         } else {
-            crate::hex::decode(&stripped).map_err(|e| de::Error::custom(format!("invalid hex ({:?})", e)))
+            crate::hex::decode(stripped).map_err(|e| de::Error::custom(format!("invalid hex ({:?})", e)))
         }
     }
 }

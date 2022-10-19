@@ -10,7 +10,7 @@ use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use tree_hash::TreeHash;
-use alloc::{format, vec, vec::Vec, string::{ToString, String}};
+use alloc::{format, vec::Vec, string::{ToString, String}};
 
 /// The byte-length of a BLS signature when serialized in compressed form.
 pub const SIGNATURE_BYTES_LEN: usize = 96;

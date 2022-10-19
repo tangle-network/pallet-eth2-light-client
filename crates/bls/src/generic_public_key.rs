@@ -7,7 +7,7 @@ use ssz::{Decode, Encode};
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use tree_hash::TreeHash;
-use alloc::{format, vec, vec::Vec, string::{ToString, String}};
+use alloc::{format, vec::Vec, string::{ToString, String}};
 
 /// The byte-length of a BLS public key when serialized in compressed form.
 pub const PUBLIC_KEY_BYTES_LEN: usize = 48;

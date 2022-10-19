@@ -1,6 +1,6 @@
 use ssz::{Decode, DecodeError, Encode, SszDecoderBuilder, SszEncoder};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Foo {
     a: u16,
     b: Vec<u8>,

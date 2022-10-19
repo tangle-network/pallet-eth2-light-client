@@ -12,7 +12,7 @@ use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use tree_hash::TreeHash;
-use alloc::{format, vec, vec::Vec, string::{ToString, String}};
+use alloc::{format, vec::Vec, string::{ToString, String}};
 
 /// The compressed bytes used to represent `GenericAggregateSignature::empty()`.
 pub const EMPTY_SIGNATURE_SERIALIZATION: [u8; SIGNATURE_BYTES_LEN] = [0; SIGNATURE_BYTES_LEN];
@@ -57,7 +57,7 @@ pub trait TAggregateSignature<Pub, AggPub, Sig>: Sized + Clone {
 ///
 /// Provides generic functionality whilst deferring all serious cryptographic operations to the
 /// generics.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct GenericAggregateSignature<Pub, AggPub, Sig, AggSig> {
     /// The underlying point which performs *actual* cryptographic operations.
     point: Option<AggSig>,
