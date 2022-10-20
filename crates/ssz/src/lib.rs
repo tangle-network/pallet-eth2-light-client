@@ -29,7 +29,6 @@
 //!
 //!     assert_eq!(foo, decoded_foo);
 //! }
-//!
 //! ```
 //!
 //! See `examples/` for manual implementations of the `Encode` and `Decode` traits.
@@ -47,8 +46,8 @@ pub mod legacy;
 mod union_selector;
 
 pub use decode::{
-    impls::decode_list_of_variable_length_items, read_offset, split_union_bytes,
-    try_from_iter::TryFromIter, Decode, DecodeError, SszDecoder, SszDecoderBuilder,
+	impls::decode_list_of_variable_length_items, read_offset, split_union_bytes,
+	try_from_iter::TryFromIter, Decode, DecodeError, SszDecoder, SszDecoderBuilder,
 };
 pub use encode::{encode_length, Encode, SszEncoder};
 pub use union_selector::UnionSelector;
@@ -57,9 +56,11 @@ pub use union_selector::UnionSelector;
 pub const BYTES_PER_LENGTH_OFFSET: usize = 4;
 /// The maximum value that can be represented using `BYTES_PER_LENGTH_OFFSET`.
 #[cfg(target_pointer_width = "32")]
-pub const MAX_LENGTH_VALUE: usize = (core::u32::MAX >> (8 * (4 - BYTES_PER_LENGTH_OFFSET))) as usize;
+pub const MAX_LENGTH_VALUE: usize =
+	(core::u32::MAX >> (8 * (4 - BYTES_PER_LENGTH_OFFSET))) as usize;
 #[cfg(target_pointer_width = "64")]
-pub const MAX_LENGTH_VALUE: usize = (core::u64::MAX >> (8 * (8 - BYTES_PER_LENGTH_OFFSET))) as usize;
+pub const MAX_LENGTH_VALUE: usize =
+	(core::u64::MAX >> (8 * (8 - BYTES_PER_LENGTH_OFFSET))) as usize;
 
 /// The number of bytes used to indicate the variant of a union.
 pub const BYTES_PER_UNION_SELECTOR: usize = 1;
@@ -72,7 +73,7 @@ pub const MAX_UNION_SELECTOR: u8 = 127;
 /// Equivalent to `val.as_ssz_bytes()`.
 pub fn ssz_encode<T>(val: &T) -> Vec<u8>
 where
-    T: Encode,
+	T: Encode,
 {
-    val.as_ssz_bytes()
+	val.as_ssz_bytes()
 }

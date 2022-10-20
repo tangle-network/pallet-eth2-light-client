@@ -15,13 +15,14 @@ derive_more = { version = "^0.99.2" }
 # tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
 # tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
 # eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
+
 eth2_ssz = { path = "../ssz", default-features = false, optional = true }
 eth2_ssz_derive = { path = "../ssz_derive", default-features = false, optional = true }
 tree_hash = { path = "../tree_hash", default-features = false, optional = true }
 tree_hash_derive = { path = "../tree_hash_derive", default-features = false, optional = true }
 eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
 
-hex = { version = "0.4.0", default-features = false }
+hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
@@ -37,6 +38,7 @@ std = [
 	"sp-io/std",
 	"sp-std/std",
 	"ethereum-types/std",
+	"eth2_serde_utils/std",
 ]
 eip1559 = []
 eth2 = [

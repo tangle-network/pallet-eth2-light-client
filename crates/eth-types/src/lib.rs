@@ -1,6 +1,5 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
-
 #![feature(slice_pattern)]
 
 extern crate alloc;
@@ -17,7 +16,6 @@ use rlp::{
 };
 use rlp_derive::RlpDecodable as RlpDecodableDerive;
 use scale_info::TypeInfo;
-
 
 use serde::{Deserialize, Serialize};
 use tree_hash::PackedEncoding;
@@ -85,8 +83,9 @@ macro_rules! uint_declare_wrapper_and_serde_codec_typeinfo {
 			Encode,
 			Decode,
 			TypeInfo,
+			Serialize,
+			Deserialize,
 		)]
-		#[derive(Serialize, Deserialize)]
 		pub struct $name(pub ethereum_types::$name);
 
 		impl RlpEncodable for $name {
@@ -113,8 +112,7 @@ pub type Signature = H520;
 
 // Block Header
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
 pub struct BlockHeader {
 	pub parent_hash: H256,
 	pub uncles_hash: H256,
@@ -124,27 +122,18 @@ pub struct BlockHeader {
 	pub receipts_root: H256,
 	pub log_bloom: Bloom,
 	pub difficulty: U256,
-	#[cfg_attr(
-		all(feature = "std"),
-		serde(with = "eth2_serde_utils::u64_hex_be")
-	)]
+	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::u64_hex_be"))]
 	pub number: u64,
 	pub gas_limit: U256,
 	pub gas_used: U256,
-	#[cfg_attr(
-		all(feature = "std"),
-		serde(with = "eth2_serde_utils::u64_hex_be")
-	)]
+	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::u64_hex_be"))]
 	pub timestamp: u64,
 	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::hex_vec"))]
 	pub extra_data: Vec<u8>,
 	pub mix_hash: H256,
 	pub nonce: H64,
 	#[cfg(feature = "eip1559")]
-	#[cfg_attr(
-		all(feature = "std"),
-		serde(with = "eth2_serde_utils::u64_hex_be")
-	)]
+	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::u64_hex_be"))]
 	pub base_fee_per_gas: u64,
 
 	pub hash: Option<H256>,

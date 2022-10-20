@@ -22,13 +22,13 @@ ethereum-types = { version = "0.13.1", features = ["rlp", "codec"], default-feat
 eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"], default-features = false }
 
 # merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false }
-# bls = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop",  optional = true, default-features = false, features = ["milagro"]}
+# bls = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop",  optional = true, default-features = false }
 # tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
 # tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
 # eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", optional = true, default-features = false }
 
 merkle_proof = { path = "../crates/merkle_proof", default-features = false }
-bls = { path = "../crates/bls", default-features = false, features = ["milagro"] }
+bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
 tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
 eth2_serde_utils = { path = "../crates/serde_utils", default-features = false }
@@ -63,6 +63,7 @@ std = [
     "bitvec",
 	"eth-types/std",
 	"serde",
+	"eth2_serde_utils/std",
 ]
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
 try-runtime = ["frame-support/try-runtime"]

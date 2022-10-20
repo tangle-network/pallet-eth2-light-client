@@ -5,46 +5,45 @@
 //! Quotes can be optional during decoding.
 
 use crate::hex;
-use serde::ser::SerializeSeq;
-use serde::{de, Deserializer, Serializer};
-use alloc::{vec, vec::Vec, string::String};
+use alloc::{string::String, vec, vec::Vec};
+use serde::{de, ser::SerializeSeq, Deserializer, Serializer};
 
 pub struct ListOfBytesListVisitor;
 impl<'a> serde::de::Visitor<'a> for ListOfBytesListVisitor {
-    type Value = Vec<Vec<u8>>;
+	type Value = Vec<Vec<u8>>;
 
-    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(formatter, "a list of 0x-prefixed byte lists")
-    }
+	fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+		write!(formatter, "a list of 0x-prefixed byte lists")
+	}
 
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'a>,
-    {
-        let mut vec = vec![];
+	fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+	where
+		A: serde::de::SeqAccess<'a>,
+	{
+		let mut vec = vec![];
 
-        while let Some(val) = seq.next_element::<String>()? {
-            vec.push(hex::decode(&val).map_err(de::Error::custom)?);
-        }
+		while let Some(val) = seq.next_element::<String>()? {
+			vec.push(hex::decode(&val).map_err(de::Error::custom)?);
+		}
 
-        Ok(vec)
-    }
+		Ok(vec)
+	}
 }
 
 pub fn serialize<S>(value: &[Vec<u8>], serializer: S) -> Result<S::Ok, S::Error>
 where
-    S: Serializer,
+	S: Serializer,
 {
-    let mut seq = serializer.serialize_seq(Some(value.len()))?;
-    for val in value {
-        seq.serialize_element(&crate::hex::encode(val))?;
-    }
-    seq.end()
+	let mut seq = serializer.serialize_seq(Some(value.len()))?;
+	for val in value {
+		seq.serialize_element(&crate::hex::encode(val))?;
+	}
+	seq.end()
 }
 
 pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Vec<u8>>, D::Error>
 where
-    D: Deserializer<'de>,
+	D: Deserializer<'de>,
 {
-    deserializer.deserialize_any(ListOfBytesListVisitor)
+	deserializer.deserialize_any(ListOfBytesListVisitor)
 }

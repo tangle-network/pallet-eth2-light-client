@@ -3,22 +3,25 @@
 //! E.g., `vec![0, 1, 2, 3]` serializes as `"0x00010203"`.
 
 use crate::hex::PrefixedHexVisitor;
+use alloc::{
+	string::{String, ToString},
+	vec::Vec,
+};
 use serde::{Deserializer, Serializer};
-use alloc::{vec::Vec, string::{String, ToString}};
 
 pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
 where
-    S: Serializer,
+	S: Serializer,
 {
-    let mut hex_string: String = "0x".to_string();
-    hex_string.push_str(&crate::hex::encode(bytes));
+	let mut hex_string: String = "0x".to_string();
+	hex_string.push_str(&crate::hex::encode(bytes));
 
-    serializer.serialize_str(&hex_string)
+	serializer.serialize_str(&hex_string)
 }
 
 pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
 where
-    D: Deserializer<'de>,
+	D: Deserializer<'de>,
 {
-    deserializer.deserialize_str(PrefixedHexVisitor)
+	deserializer.deserialize_str(PrefixedHexVisitor)
 }

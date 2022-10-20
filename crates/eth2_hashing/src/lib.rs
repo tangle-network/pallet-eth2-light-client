@@ -24,69 +24,69 @@ pub const HASH_LEN: usize = 32;
 
 /// Returns the digest of `input` using the best available implementation.
 pub fn hash(input: &[u8]) -> Vec<u8> {
-    DynamicImpl::best().hash(input)
+	DynamicImpl::best().hash(input)
 }
 
 /// Hash function returning a fixed-size array (to save on allocations).
 ///
 /// Uses the best available implementation based on CPU features.
 pub fn hash_fixed(input: &[u8]) -> [u8; HASH_LEN] {
-    DynamicImpl::best().hash_fixed(input)
+	DynamicImpl::best().hash_fixed(input)
 }
 
 /// Compute the hash of two slices concatenated.
 pub fn hash32_concat(h1: &[u8], h2: &[u8]) -> [u8; 32] {
-    let mut ctxt = DynamicContext::new();
-    ctxt.update(h1);
-    ctxt.update(h2);
-    ctxt.finalize()
+	let mut ctxt = DynamicContext::new();
+	ctxt.update(h1);
+	ctxt.update(h2);
+	ctxt.finalize()
 }
 
 /// Context trait for abstracting over implementation contexts.
 pub trait Sha256Context {
-    fn new() -> Self;
+	fn new() -> Self;
 
-    fn update(&mut self, bytes: &[u8]);
+	fn update(&mut self, bytes: &[u8]);
 
-    fn finalize(self) -> [u8; HASH_LEN];
+	fn finalize(self) -> [u8; HASH_LEN];
 }
 
 /// Top-level trait implemented by both `sha2` and `ring` implementations.
 pub trait Sha256 {
-    type Context: Sha256Context;
+	type Context: Sha256Context;
 
-    fn hash(&self, input: &[u8]) -> Vec<u8>;
+	fn hash(&self, input: &[u8]) -> Vec<u8>;
 
-    fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN];
+	fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN];
 }
 
 /// Implementation of SHA256 using the `sha2` crate (fastest on CPUs with SHA extensions).
 struct Sha2CrateImpl;
 
 impl Sha256Context for sha2::Sha256 {
-    fn new() -> Self {
-        sha2::Digest::new()
-    }
+	fn new() -> Self {
+		sha2::Digest::new()
+	}
 
-    fn update(&mut self, bytes: &[u8]) {
-        sha2::Digest::update(self, bytes)
-    }
+	fn update(&mut self, bytes: &[u8]) {
+		sha2::Digest::update(self, bytes)
+	}
 
-    fn finalize(self) -> [u8; HASH_LEN] {
-        sha2::Digest::finalize(self).into()
-    }
+	fn finalize(self) -> [u8; HASH_LEN] {
+		sha2::Digest::finalize(self).into()
+	}
 }
 
 impl Sha256 for Sha2CrateImpl {
-    type Context = sha2::Sha256;
+	type Context = sha2::Sha256;
 
-    fn hash(&self, input: &[u8]) -> Vec<u8> {
-        Self::Context::digest(input).into_iter().collect()
-    }
+	fn hash(&self, input: &[u8]) -> Vec<u8> {
+		Self::Context::digest(input).into_iter().collect()
+	}
 
-    fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN] {
-        Self::Context::digest(input).into()
-    }
+	fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN] {
+		Self::Context::digest(input).into()
+	}
 }
 
 /// Implementation of SHA256 using the `ring` crate (fastest on CPUs without SHA extensions).
@@ -95,108 +95,106 @@ pub struct RingImpl;
 
 #[cfg(feature = "std")]
 impl Sha256Context for ring::digest::Context {
-    fn new() -> Self {
-        Self::new(&ring::digest::SHA256)
-    }
+	fn new() -> Self {
+		Self::new(&ring::digest::SHA256)
+	}
 
-    fn update(&mut self, bytes: &[u8]) {
-        self.update(bytes)
-    }
+	fn update(&mut self, bytes: &[u8]) {
+		self.update(bytes)
+	}
 
-    fn finalize(self) -> [u8; HASH_LEN] {
-        let mut output = [0; HASH_LEN];
-        output.copy_from_slice(self.finish().as_ref());
-        output
-    }
+	fn finalize(self) -> [u8; HASH_LEN] {
+		let mut output = [0; HASH_LEN];
+		output.copy_from_slice(self.finish().as_ref());
+		output
+	}
 }
 
 #[cfg(feature = "std")]
 impl Sha256 for RingImpl {
-    type Context = ring::digest::Context;
+	type Context = ring::digest::Context;
 
-    fn hash(&self, input: &[u8]) -> Vec<u8> {
-        ring::digest::digest(&ring::digest::SHA256, input)
-            .as_ref()
-            .into()
-    }
+	fn hash(&self, input: &[u8]) -> Vec<u8> {
+		ring::digest::digest(&ring::digest::SHA256, input).as_ref().into()
+	}
 
-    fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN] {
-        let mut ctxt = Self::Context::new(&ring::digest::SHA256);
-        ctxt.update(input);
-        ctxt.finalize()
-    }
+	fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN] {
+		let mut ctxt = Self::Context::new(&ring::digest::SHA256);
+		ctxt.update(input);
+		ctxt.finalize()
+	}
 }
 
 /// Default dynamic implementation that switches between available implementations.
 pub enum DynamicImpl {
-    Sha2,
-    #[cfg(feature = "std")]
-    Ring,
+	Sha2,
+	#[cfg(feature = "std")]
+	Ring,
 }
 
 impl DynamicImpl {
-    /// Choose the best available implementation based on the currently executing CPU.
-    #[inline(always)]
-    pub fn best() -> Self {
-        Self::Sha2
-    }
+	/// Choose the best available implementation based on the currently executing CPU.
+	#[inline(always)]
+	pub fn best() -> Self {
+		Self::Sha2
+	}
 }
 
 impl Sha256 for DynamicImpl {
-    type Context = DynamicContext;
+	type Context = DynamicContext;
 
-    #[inline(always)]
-    fn hash(&self, input: &[u8]) -> Vec<u8> {
-        match self {
-            Self::Sha2 => Sha2CrateImpl.hash(input),
-            #[cfg(feature = "std")]
-            Self::Ring => RingImpl.hash(input),
-        }
-    }
+	#[inline(always)]
+	fn hash(&self, input: &[u8]) -> Vec<u8> {
+		match self {
+			Self::Sha2 => Sha2CrateImpl.hash(input),
+			#[cfg(feature = "std")]
+			Self::Ring => RingImpl.hash(input),
+		}
+	}
 
-    #[inline(always)]
-    fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN] {
-        match self {
-            Self::Sha2 => Sha2CrateImpl.hash_fixed(input),
-            #[cfg(feature = "std")]
-            Self::Ring => RingImpl.hash_fixed(input),
-        }
-    }
+	#[inline(always)]
+	fn hash_fixed(&self, input: &[u8]) -> [u8; HASH_LEN] {
+		match self {
+			Self::Sha2 => Sha2CrateImpl.hash_fixed(input),
+			#[cfg(feature = "std")]
+			Self::Ring => RingImpl.hash_fixed(input),
+		}
+	}
 }
 
 /// Context encapsulating all implemenation contexts.
 ///
 /// This enum ends up being 8 bytes larger than the largest inner context.
 pub enum DynamicContext {
-    Sha2(sha2::Sha256),
-    #[cfg(feature = "std")]
-    Ring(ring::digest::Context),
+	Sha2(sha2::Sha256),
+	#[cfg(feature = "std")]
+	Ring(ring::digest::Context),
 }
 
 impl Sha256Context for DynamicContext {
-    fn new() -> Self {
-        match DynamicImpl::best() {
-            DynamicImpl::Sha2 => Self::Sha2(Sha256Context::new()),
-            #[cfg(feature = "std")]
-            DynamicImpl::Ring => Self::Ring(Sha256Context::new()),
-        }
-    }
+	fn new() -> Self {
+		match DynamicImpl::best() {
+			DynamicImpl::Sha2 => Self::Sha2(Sha256Context::new()),
+			#[cfg(feature = "std")]
+			DynamicImpl::Ring => Self::Ring(Sha256Context::new()),
+		}
+	}
 
-    fn update(&mut self, bytes: &[u8]) {
-        match self {
-            Self::Sha2(ctxt) => Sha256Context::update(ctxt, bytes),
-            #[cfg(feature = "std")]
-            Self::Ring(ctxt) => Sha256Context::update(ctxt, bytes),
-        }
-    }
+	fn update(&mut self, bytes: &[u8]) {
+		match self {
+			Self::Sha2(ctxt) => Sha256Context::update(ctxt, bytes),
+			#[cfg(feature = "std")]
+			Self::Ring(ctxt) => Sha256Context::update(ctxt, bytes),
+		}
+	}
 
-    fn finalize(self) -> [u8; HASH_LEN] {
-        match self {
-            Self::Sha2(ctxt) => Sha256Context::finalize(ctxt),
-            #[cfg(feature = "std")]
-            Self::Ring(ctxt) => Sha256Context::finalize(ctxt),
-        }
-    }
+	fn finalize(self) -> [u8; HASH_LEN] {
+		match self {
+			Self::Sha2(ctxt) => Sha256Context::finalize(ctxt),
+			#[cfg(feature = "std")]
+			Self::Ring(ctxt) => Sha256Context::finalize(ctxt),
+		}
+	}
 }
 
 /// The max index that can be used with `ZERO_HASHES`.
@@ -205,44 +203,44 @@ pub const ZERO_HASHES_MAX_INDEX: usize = 48;
 
 #[cfg(feature = "zero_hash_cache")]
 lazy_static! {
-    /// Cached zero hashes where `ZERO_HASHES[i]` is the hash of a Merkle tree with 2^i zero leaves.
-    pub static ref ZERO_HASHES: Vec<Vec<u8>> = {
-        let mut hashes = vec![vec![0; 32]; ZERO_HASHES_MAX_INDEX + 1];
+	/// Cached zero hashes where `ZERO_HASHES[i]` is the hash of a Merkle tree with 2^i zero leaves.
+	pub static ref ZERO_HASHES: Vec<Vec<u8>> = {
+		let mut hashes = vec![vec![0; 32]; ZERO_HASHES_MAX_INDEX + 1];
 
-        for i in 0..ZERO_HASHES_MAX_INDEX {
-            hashes[i + 1] = hash32_concat(&hashes[i], &hashes[i])[..].to_vec();
-        }
+		for i in 0..ZERO_HASHES_MAX_INDEX {
+			hashes[i + 1] = hash32_concat(&hashes[i], &hashes[i])[..].to_vec();
+		}
 
-        hashes
-    };
+		hashes
+	};
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use rustc_hex::FromHex;
+	use super::*;
+	use rustc_hex::FromHex;
 
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen_test::*;
+	#[cfg(target_arch = "wasm32")]
+	use wasm_bindgen_test::*;
 
-    #[cfg_attr(not(target_arch = "wasm32"), test)]
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
-    fn test_hashing() {
-        let input: Vec<u8> = b"hello world".as_ref().into();
+	#[cfg_attr(not(target_arch = "wasm32"), test)]
+	#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+	fn test_hashing() {
+		let input: Vec<u8> = b"hello world".as_ref().into();
 
-        let output = hash(input.as_ref());
-        let expected_hex = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
-        let expected: Vec<u8> = expected_hex.from_hex().unwrap();
-        assert_eq!(expected, output);
-    }
+		let output = hash(input.as_ref());
+		let expected_hex = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
+		let expected: Vec<u8> = expected_hex.from_hex().unwrap();
+		assert_eq!(expected, output);
+	}
 
-    #[cfg(feature = "zero_hash_cache")]
-    mod zero_hash {
-        use super::*;
+	#[cfg(feature = "zero_hash_cache")]
+	mod zero_hash {
+		use super::*;
 
-        #[test]
-        fn zero_hash_zero() {
-            assert_eq!(ZERO_HASHES[0], vec![0; 32]);
-        }
-    }
+		#[test]
+		fn zero_hash_zero() {
+			assert_eq!(ZERO_HASHES[0], vec![0; 32]);
+		}
+	}
 }

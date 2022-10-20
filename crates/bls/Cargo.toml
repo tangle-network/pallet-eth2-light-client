@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 eth2_ssz = { path = "../ssz", default-features = false }
 tree_hash = { path = "../tree_hash", default-features = false }
-milagro_bls = { git = "https://github.com/sigp/milagro_bls", optional = true, default-features = false }
+milagro_bls = { git = "https://github.com/sigp/milagro_bls", default-features = false }
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 serde = { version = "1.0.116", default-features = false, features = ["derive"] }
@@ -17,16 +17,11 @@ eth2_hashing = { path = "../eth2_hashing", default-features = false, features = 
 ethereum-types = { version = "0.13.1", default-features = false }
 arbitrary = { version = "1.0", features = ["derive"], optional = true }
 zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
-blst = { version = "0.3.3", optional = true }
 
 [features]
-default = ["supranational", "std"]
+default = ["std"]
 std = [
     "rand/std",
     "rand_chacha/std",
+    "hex/std",
 ]
-fake_crypto = []
-milagro = ["milagro_bls"]
-supranational = ["blst"]
-supranational-portable = ["supranational", "blst/portable"]
-supranational-force-adx = ["supranational", "blst/force-adx"]

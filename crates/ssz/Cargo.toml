@@ -9,13 +9,13 @@ license = "Apache-2.0"
 [lib]
 name = "ssz"
 
-[dev-dependencies]
-eth2_ssz_derive = { path = "../ssz_derive" }
-
 [dependencies]
 ethereum-types = { version = "0.13.1", default-features = false }
 smallvec = { version = "1.6.1", features = ["const_generics"], default-features = false }
 itertools = { version = "0.10.3", default-features = false }
+
+[dev-dependencies]
+eth2_ssz_derive = { path = "../ssz_derive" }
 
 [features]
 arbitrary = ["ethereum-types/arbitrary"]
