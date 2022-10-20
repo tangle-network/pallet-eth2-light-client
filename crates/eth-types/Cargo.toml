@@ -10,11 +10,6 @@ rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 ethereum-types = { version = "0.13.1", features = ["codec", "rlp"], default-features = false }
 derive_more = { version = "^0.99.2" }
-# eth2_ssz = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
-# eth2_ssz_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
-# tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
-# tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
-# eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop", default-features = false, optional = true }
 
 eth2_ssz = { path = "../ssz", default-features = false, optional = true }
 eth2_ssz_derive = { path = "../ssz_derive", default-features = false, optional = true }
