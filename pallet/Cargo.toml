@@ -36,6 +36,11 @@ serde_json = "1.0"
 [features]
 default = ["std"]
 std = [
+	"bls/std",
+	"tree_hash/std",
+	"eth-types/std",
+
+	"bitvec/std",
 	"codec/std",
 	"scale-info/std",
 	"frame-support/std",
@@ -45,7 +50,6 @@ std = [
 	"sp-std/std",
     "webb-proposals/std",
     "ethereum-types/std",
-	"eth-types/std",
 ]
 runtime-benchmarks = [
   "frame-benchmarking",
