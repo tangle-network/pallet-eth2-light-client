@@ -470,7 +470,7 @@ pub mod pallet {
 			let submitter = ensure_signed(origin)?;
 
 			if let Some(finalized_beacon_header) = Self::finalized_beacon_header(typed_chain_id) {
-				log::debug!("Submitted header number {}", block_header.number);
+				frame_support::log::debug!("Submitted header number {}", block_header.number);
 				if finalized_beacon_header.execution_block_hash != block_header.parent_hash {
 					ensure!(
 						UnfinalizedHeaders::<T>::get(typed_chain_id, block_header.parent_hash)
@@ -482,7 +482,7 @@ pub mod pallet {
 
 			Self::update_submitter(typed_chain_id, &submitter, 1)?;
 			let block_hash = block_header.calculate_hash();
-			log::debug!("Submitted header hash {:?}", block_hash);
+			frame_support::log::debug!("Submitted header hash {:?}", block_hash);
 
 			let block_info = ExecutionHeaderInfo {
 				parent_hash: block_header.parent_hash,
@@ -819,7 +819,7 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::FinalizedBeaconHeaderNotPresent
 		);
 		let current_finalized_beacon_header = maybe_current_finalized_beacon_header.unwrap();
-		log::debug!(
+		frame_support::log::debug!(
 			"Current finalized slot: {}, New finalized slot: {}",
 			current_finalized_beacon_header.header.slot,
 			finalized_header.header.slot
@@ -864,7 +864,7 @@ impl<T: Config> Pallet<T> {
 			Self::update_submitter(typed_chain_id, submitter, -(*num_of_removed_headers as i64))?;
 		}
 
-		log::debug!("Finish update finalized header..");
+		frame_support::log::debug!("Finish update finalized header..");
 		if finalized_execution_header_info.block_number > Self::hashes_gc_threshold(typed_chain_id)
 		{
 			Self::gc_headers(
