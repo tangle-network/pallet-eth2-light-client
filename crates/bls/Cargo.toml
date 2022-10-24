@@ -25,4 +25,7 @@ std = [
     "rand_chacha/std",
     "hex/std",
     "milagro_bls/std",
+    "eth2_hashing/std",
+    "rand/std",
+    "rand_chacha/std",
 ]
