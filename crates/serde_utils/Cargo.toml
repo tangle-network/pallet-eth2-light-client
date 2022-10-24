@@ -16,6 +16,7 @@ ethereum-types = { version = "0.13.1", default-features = false, features = ["se
 default = ["std"]
 std = [
     "ethereum-types/std",
+    "serde/std",
     "serde_json/std",
     "hex/std",
 ]

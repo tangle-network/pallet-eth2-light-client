@@ -18,11 +18,11 @@ use rlp_derive::RlpDecodable as RlpDecodableDerive;
 use scale_info::TypeInfo;
 
 use serde::{Deserialize, Serialize};
-use tree_hash::PackedEncoding;
+use tiny_keccak::{Hasher, Keccak};
 
 use core::slice::SlicePattern;
 #[cfg(feature = "eth2")]
-use tree_hash::{Hash256, TreeHash, TreeHashType};
+use tree_hash::{Hash256, PackedEncoding, TreeHash, TreeHashType};
 
 #[cfg(feature = "eth2")]
 pub mod eth2;
@@ -416,20 +416,10 @@ impl From<RlpDeriveReceipt> for Receipt {
 	}
 }
 
-pub fn sha256(data: &[u8]) -> [u8; 32] {
-	let mut buffer = [0u8; 32];
-	buffer.copy_from_slice(sp_io::hashing::sha2_256(data).as_slice());
-	buffer
-}
-
 pub fn keccak256(data: &[u8]) -> [u8; 32] {
+	let mut keccak = Keccak::v256();
 	let mut buffer = [0u8; 32];
-	buffer.copy_from_slice(sp_io::hashing::keccak_256(data).as_slice());
-	buffer
-}
-
-pub fn keccak512(data: &[u8]) -> [u8; 64] {
-	let mut buffer = [0u8; 64];
-	buffer.copy_from_slice(sp_io::hashing::keccak_512(data).as_slice());
+	keccak.update(data);
+	keccak.finalize(&mut buffer);
 	buffer
 }

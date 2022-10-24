@@ -2,12 +2,12 @@
 //!
 //! E.g., `0` serializes as `"0x0000000000000000"`.
 
+use alloc::{format, vec, vec::Vec};
+use core::fmt;
 use serde::{
 	de::{self, Error, Visitor},
 	Deserializer, Serializer,
 };
-use core::fmt;
-use alloc::{format, vec, vec::Vec};
 
 const BYTES_LEN: usize = 8;
 

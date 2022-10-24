@@ -3,7 +3,7 @@
 
 extern crate alloc;
 
-use alloc::{vec, vec::Vec, boxed::Box};
+use alloc::{boxed::Box, vec, vec::Vec};
 
 use eth2_hashing::{hash, hash32_concat, ZERO_HASHES};
 use ethereum_types::H256;
