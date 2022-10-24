@@ -117,8 +117,9 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 			Encode,
 			Decode,
 			TypeInfo,
+			Serialize,
+			Deserialize,
 		)]
-		#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 		pub struct $name(pub ethereum_types::$name);
 
 		impl From<&[u8; $len]> for $name {

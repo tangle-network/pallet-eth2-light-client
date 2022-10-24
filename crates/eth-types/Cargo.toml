@@ -1,0 +1,44 @@
+[package]
+name = "eth-types"
+version = "0.1.0"
+authors = ["Near Inc <hello@nearprotocol.com>"]
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.116", default-features = false, features = ["derive"] }
+rlp = { version = "0.5.0", default-features = false }
+rlp-derive = { version = "0.1.0", default-features = false }
+ethereum-types = { version = "0.13.1", features = ["codec", "rlp", "serialize"], default-features = false }
+derive_more = { version = "^0.99.2" }
+tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
+
+eth2_ssz = { path = "../ssz", default-features = false, optional = true }
+eth2_ssz_derive = { path = "../ssz_derive", default-features = false, optional = true }
+tree_hash = { path = "../tree_hash", default-features = false, optional = true }
+tree_hash_derive = { path = "../tree_hash_derive", default-features = false, optional = true }
+eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
+
+hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
+
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
+scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+sp-std = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29", default-features = false }
+
+[features]
+default = ["eip1559", "eth2", "std"]
+std = [
+	"serde/std",
+	"codec/std",
+	"scale-info/std",
+	"sp-std/std",
+	"ethereum-types/std",
+	"eth2_serde_utils/std",
+]
+eip1559 = []
+eth2 = [
+	"eth2_ssz",
+	"eth2_ssz_derive",
+	"tree_hash",
+	"tree_hash_derive",
+	"eth2_serde_utils",
+]
