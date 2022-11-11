@@ -12,7 +12,9 @@ use core::{
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
+#[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
+#[cfg(feature = "std")]
 use serde::{
 	de::{Deserialize, Deserializer},
 	ser::{Serialize, Serializer},
@@ -159,6 +161,7 @@ impl<PublicKey, T: TSignature<PublicKey>> Hash for GenericSignature<PublicKey, T
 	}
 }
 
+#[cfg(feature = "std")]
 impl<PublicKey, T: TSignature<PublicKey>> fmt::Display for GenericSignature<PublicKey, T> {
 	impl_display!();
 }
@@ -167,14 +170,17 @@ impl<PublicKey, T: TSignature<PublicKey>> core::str::FromStr for GenericSignatur
 	impl_from_str!();
 }
 
+#[cfg(feature = "std")]
 impl<PublicKey, T: TSignature<PublicKey>> Serialize for GenericSignature<PublicKey, T> {
 	impl_serde_serialize!();
 }
 
+#[cfg(feature = "std")]
 impl<'de, PublicKey, T: TSignature<PublicKey>> Deserialize<'de> for GenericSignature<PublicKey, T> {
 	impl_serde_deserialize!();
 }
 
+#[cfg(feature = "std")]
 impl<PublicKey, T: TSignature<PublicKey>> fmt::Debug for GenericSignature<PublicKey, T> {
 	impl_debug!();
 }

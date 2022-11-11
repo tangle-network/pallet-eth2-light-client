@@ -9,7 +9,6 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-
 webb-proposals = { version = "0.5.4", default-features = false, features = ["scale", "evm", "substrate"] }
 ethereum-types = { version = "0.13.1", default-features = false }
 
@@ -19,46 +18,36 @@ bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
 
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
-
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 
-frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
-
 [dev-dependencies]
-sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 lazy_static = "1.4.0"
-serde_json = "1.0"
+serde_json = "1.0.81"
 hex = "0.4.0"
 
 [features]
 default = ["std"]
 std = [
+	"codec/std",
+	"scale-info/std",
+	"webb-proposals/std",
+	"ethereum-types/std",
+
 	"bls/std",
 	"tree_hash/std",
 	"eth-types/std",
 	"merkle_proof/std",
 	"bitvec/std",
 
-	"codec/std",
-	"scale-info/std",
-
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
 	"sp-runtime/std",
 	"sp-std/std",
+]
 
-	"webb-proposals/std",
-	"ethereum-types/std",
-]
-runtime-benchmarks = [
-	"frame-benchmarking",
-	"frame-system/runtime-benchmarks",
-	"frame-support/runtime-benchmarks",
-]
 try-runtime = ["frame-support/try-runtime"]

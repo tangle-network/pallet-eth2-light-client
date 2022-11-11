@@ -40,6 +40,7 @@ where
 	}
 }
 
+#[cfg(feature = "std")]
 impl<Pub, AggPub> Debug for GenericAggregatePublicKey<Pub, AggPub>
 where
 	AggPub: TAggregatePublicKey<Pub>,

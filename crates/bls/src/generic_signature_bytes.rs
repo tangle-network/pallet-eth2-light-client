@@ -14,7 +14,9 @@ use core::{
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
+#[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
+#[cfg(feature = "std")]
 use serde::{
 	de::{Deserialize, Deserializer},
 	ser::{Serialize, Serializer},
@@ -138,6 +140,7 @@ impl<Pub, Sig> TreeHash for GenericSignatureBytes<Pub, Sig> {
 	impl_tree_hash!(SIGNATURE_BYTES_LEN);
 }
 
+#[cfg(feature = "std")]
 impl<Pub, Sig> fmt::Display for GenericSignatureBytes<Pub, Sig> {
 	impl_display!();
 }
@@ -146,14 +149,17 @@ impl<Pub, Sig> core::str::FromStr for GenericSignatureBytes<Pub, Sig> {
 	impl_from_str!();
 }
 
+#[cfg(feature = "std")]
 impl<Pub, Sig> Serialize for GenericSignatureBytes<Pub, Sig> {
 	impl_serde_serialize!();
 }
 
+#[cfg(feature = "std")]
 impl<'de, Pub, Sig> Deserialize<'de> for GenericSignatureBytes<Pub, Sig> {
 	impl_serde_deserialize!();
 }
 
+#[cfg(feature = "std")]
 impl<Pub, Sig> fmt::Debug for GenericSignatureBytes<Pub, Sig> {
 	impl_debug!();
 }

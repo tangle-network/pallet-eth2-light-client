@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 pub use eth2_serde_utils::hex as hex_encode;
 
 /// Contains the functions required for a `TreeHash` implementation.

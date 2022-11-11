@@ -8,7 +8,9 @@ use core::{
 	fmt,
 	hash::{Hash, Hasher},
 };
+#[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
+#[cfg(feature = "std")]
 use serde::{
 	de::{Deserialize, Deserializer},
 	ser::{Serialize, Serializer},
@@ -59,6 +61,7 @@ where
 	}
 
 	/// Returns `self.serialize()` as a `0x`-prefixed hex string.
+	#[cfg(feature = "std")]
 	pub fn as_hex_string(&self) -> String {
 		format!("{:?}", self)
 	}
@@ -110,6 +113,7 @@ impl<Pub: TPublicKey> TreeHash for GenericPublicKey<Pub> {
 	impl_tree_hash!(PUBLIC_KEY_BYTES_LEN);
 }
 
+#[cfg(feature = "std")]
 impl<Pub: TPublicKey> fmt::Display for GenericPublicKey<Pub> {
 	impl_display!();
 }
@@ -118,14 +122,17 @@ impl<Pub: TPublicKey> core::str::FromStr for GenericPublicKey<Pub> {
 	impl_from_str!();
 }
 
+#[cfg(feature = "std")]
 impl<Pub: TPublicKey> Serialize for GenericPublicKey<Pub> {
 	impl_serde_serialize!();
 }
 
+#[cfg(feature = "std")]
 impl<'de, Pub: TPublicKey> Deserialize<'de> for GenericPublicKey<Pub> {
 	impl_serde_deserialize!();
 }
 
+#[cfg(feature = "std")]
 impl<Pub: TPublicKey> fmt::Debug for GenericPublicKey<Pub> {
 	impl_debug!();
 }
