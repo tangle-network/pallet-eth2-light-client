@@ -28,5 +28,5 @@ std = [
     "milagro_bls/std",
     "eth2_hashing/std",
     "ethereum-types/std",
-    "eth2_serde_utils/std"
+    "eth2_serde_utils/std",
 ]

@@ -28,6 +28,7 @@ sp-std = { git = "https://github.com/paritytech/substrate.git", default-features
 default = ["eip1559", "eth2", "std"]
 std = [
 	"serde",
+	"hex/std",
 	"codec/std",
 	"scale-info/std",
 	"sp-std/std",
