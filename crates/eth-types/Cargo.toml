@@ -22,7 +22,7 @@ hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-sp-std = { git = "https://github.com/paritytech/substrate.git", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "polkadot-v0.9.30" }
 
 [features]
 default = ["eip1559", "eth2", "std"]

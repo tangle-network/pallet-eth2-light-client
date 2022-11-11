@@ -20,17 +20,17 @@ tree_hash = { path = "../crates/tree_hash", default-features = false }
 
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
-frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 
-frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional = true, git = "https://github.com/paritytech/substrate.git" }
+frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 
 [dev-dependencies]
-sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-core = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 lazy_static = "1.4.0"
 serde_json = "1.0"
 hex = "0.4.0"
