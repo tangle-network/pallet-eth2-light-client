@@ -15,5 +15,9 @@ quickcheck = "0.9.2"
 quickcheck_macros = "0.9.1"
 
 [features]
-default = ["arbitrary"]
+default = ["std"]
+std = [
+    "eth2_hashing/std",
+    "ethereum-types/std",
+]
 arbitrary = ["ethereum-types/arbitrary"]
