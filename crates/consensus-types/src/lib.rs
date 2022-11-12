@@ -1,10 +1,11 @@
 use bitvec::{order::Lsb0, prelude::BitVec};
 use eth_types::{
-	eth2::{DomainType, ForkData, HeaderUpdate, PublicKeyBytes, SigningData, Epoch},
+	eth2::{
+		DomainType, Epoch, ForkData, ForkVersion, HeaderUpdate, PublicKeyBytes, SigningData, Slot,
+	},
 	H256,
 };
 use tree_hash::TreeHash;
-use eth_types::eth2::{ForkVersion, Slot};
 
 pub const EPOCHS_PER_SYNC_COMMITTEE_PERIOD: u64 = 256;
 pub const MIN_SYNC_COMMITTEE_PARTICIPANTS: u64 = 1;
@@ -34,20 +35,24 @@ pub const fn compute_sync_committee_period(slot: Slot) -> u64 {
 	compute_epoch_at_slot(slot) / EPOCHS_PER_SYNC_COMMITTEE_PERIOD
 }
 
-pub fn compute_fork_version(epoch: Epoch, bellatrix_epoch: Epoch, fork_version: ForkVersion) -> Option<ForkVersion> {
+pub fn compute_fork_version(
+	epoch: Epoch,
+	bellatrix_epoch: Epoch,
+	fork_version: ForkVersion,
+) -> Option<ForkVersion> {
 	if epoch >= bellatrix_epoch {
-		return Some(fork_version);
+		return Some(fork_version)
 	}
 
 	None
 }
 
-pub fn compute_fork_version_by_slot(slot: Slot, bellatrix_epoch: Epoch, bellatrix_version: ForkVersion) -> Option<ForkVersion> {
-	compute_fork_version(
-		compute_epoch_at_slot(slot),
-		bellatrix_epoch,
-		bellatrix_version
-	)
+pub fn compute_fork_version_by_slot(
+	slot: Slot,
+	bellatrix_epoch: Epoch,
+	bellatrix_version: ForkVersion,
+) -> Option<ForkVersion> {
+	compute_fork_version(compute_epoch_at_slot(slot), bellatrix_epoch, bellatrix_version)
 }
 
 // Compute floor of log2 of a u32.

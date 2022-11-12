@@ -65,13 +65,13 @@ use webb_proposals::TypedChainId;
 
 pub use pallet::*;
 
+use bitvec::prelude::{BitVec, Lsb0};
 use consensus_types::{
 	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
 	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
 	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
 	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
 };
-use bitvec::prelude::{BitVec, Lsb0};
 
 use frame_support::traits::{Currency, ExistenceRequirement};
 use sp_runtime::traits::AccountIdConversion;
@@ -111,8 +111,7 @@ pub mod pallet {
 	/// The module configuration trait.
 	pub trait Config: frame_system::Config + pallet_balances::Config {
 		/// The overarching event type.
-		type RuntimeEvent: From<Event<Self>>
-			+ IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;

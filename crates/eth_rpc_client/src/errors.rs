@@ -1,32 +1,30 @@
-use std::error::Error;
-use std::fmt;
-use std::fmt::Display;
+use std::{error::Error, fmt, fmt::Display};
 
 #[derive(Debug)]
 pub struct ExecutionPayloadError;
 
 impl Display for ExecutionPayloadError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Execution Payload not found. \
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(
+			f,
+			"Execution Payload not found. \
         Beacon Block Body in this blockchain variant doesn't contain execution payload. \
         Please use The Merge variants"
-        )
-    }
+		)
+	}
 }
 
 impl Error for ExecutionPayloadError {}
 
 #[derive(Debug)]
 pub struct FailOnGettingJson {
-    pub response: String,
+	pub response: String,
 }
 
 impl Display for FailOnGettingJson {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Fail on getting JSON, response: {}", self.response)
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Fail on getting JSON, response: {}", self.response)
+	}
 }
 
 impl Error for FailOnGettingJson {}
@@ -35,14 +33,14 @@ impl Error for FailOnGettingJson {}
 pub struct MissSyncAggregationError;
 
 impl Display for MissSyncAggregationError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Sync Aggregation not found. \
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(
+			f,
+			"Sync Aggregation not found. \
         Beacon Block Body in this blockchain variant doesn't contain sync aggregation. \
         Please use Altair or The Merge variants"
-        )
-    }
+		)
+	}
 }
 
 impl Error for MissSyncAggregationError {}
@@ -51,9 +49,9 @@ impl Error for MissSyncAggregationError {}
 pub struct NoBlockForSlotError;
 
 impl Display for NoBlockForSlotError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "No block found for slot")
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "No block found for slot")
+	}
 }
 
 impl Error for NoBlockForSlotError {}
@@ -62,9 +60,9 @@ impl Error for NoBlockForSlotError {}
 pub struct SignatureSlotNotFoundError;
 
 impl Display for SignatureSlotNotFoundError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Signature slot not found!")
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Signature slot not found!")
+	}
 }
 
 impl Error for SignatureSlotNotFoundError {}
@@ -73,9 +71,9 @@ impl Error for SignatureSlotNotFoundError {}
 pub struct ErrorOnUnwrapSignatureBit;
 
 impl Display for ErrorOnUnwrapSignatureBit {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Error on getting signature bits from sync aggregate!")
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Error on getting signature bits from sync aggregate!")
+	}
 }
 
 impl Error for ErrorOnUnwrapSignatureBit {}
@@ -84,9 +82,9 @@ impl Error for ErrorOnUnwrapSignatureBit {}
 pub struct MissNextSyncCommittee;
 
 impl Display for MissNextSyncCommittee {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Miss next sync committee in the Beacon Block State")
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Miss next sync committee in the Beacon Block State")
+	}
 }
 
 impl Error for MissNextSyncCommittee {}
@@ -95,9 +93,9 @@ impl Error for MissNextSyncCommittee {}
 pub struct ErrorOnJsonParse;
 
 impl Display for ErrorOnJsonParse {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Error during json parse")
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Error during json parse")
+	}
 }
 
 impl Error for ErrorOnJsonParse {}
@@ -106,9 +104,9 @@ impl Error for ErrorOnJsonParse {}
 pub struct MissExecutionPayload;
 
 impl Display for MissExecutionPayload {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Miss execution payload")
-    }
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Miss execution payload")
+	}
 }
 
 impl Error for MissExecutionPayload {}
