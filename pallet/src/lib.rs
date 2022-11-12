@@ -65,7 +65,7 @@ use webb_proposals::TypedChainId;
 
 pub use pallet::*;
 
-use crate::consensus::{
+use consensus_types::{
 	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
 	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
 	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
@@ -87,7 +87,6 @@ mod tests;
 #[cfg(test)]
 mod test_utils;
 
-pub mod consensus;
 pub mod traits;
 pub mod types;
 

@@ -14,6 +14,7 @@ webb-proposals = { version = "0.5.4", default-features = false, features = ["sca
 ethereum-types = { version = "0.13.1", default-features = false }
 
 eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"], default-features = false }
+consensus-types = { path = "../crates/consensus-types", default-features = false }
 merkle_proof = { path = "../crates/merkle_proof", default-features = false }
 bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
@@ -42,6 +43,7 @@ std = [
 	"tree_hash/std",
 	"eth-types/std",
 	"merkle_proof/std",
+	"consensus-types/std",
 	"bitvec/std",
 
 	"codec/std",

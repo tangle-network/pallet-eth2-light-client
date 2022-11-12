@@ -1,7 +1,7 @@
 [package]
-name = "eth-types"
+name = "consensus-types"
 version = "0.1.0"
-authors = ["Near Inc <hello@nearprotocol.com>"]
+authors = ["Webb Developers"]
 edition = "2021"
 
 [dependencies]
@@ -12,11 +12,15 @@ ethereum-types = { version = "0.13.1", features = ["codec", "rlp", "serialize"],
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
+eth-types = { path = "../eth-types", features = ["eth2", "eip1559"], default-features = false }
 eth2_ssz = { path = "../ssz", default-features = false, optional = true }
 eth2_ssz_derive = { path = "../ssz_derive", default-features = false, optional = true }
 tree_hash = { path = "../tree_hash", default-features = false, optional = true }
 tree_hash_derive = { path = "../tree_hash_derive", default-features = false, optional = true }
+merkle_proof = { path = "../merkle_proof", default-features = false, optional = true }
 eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
+
+bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
@@ -24,19 +28,15 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 
 [features]
-default = ["eip1559", "eth2", "std"]
+default = ["std"]
 std = [
-	"serde/std",
+	"tree_hash/std",
+	"eth-types/std",
+	"bitvec/std",
+    "merkle_proof/std",
+
 	"codec/std",
 	"scale-info/std",
+
 	"ethereum-types/std",
-	"eth2_serde_utils/std",
-]
-eip1559 = []
-eth2 = [
-	"eth2_ssz",
-	"eth2_ssz_derive",
-	"tree_hash",
-	"tree_hash_derive",
-	"eth2_serde_utils",
 ]

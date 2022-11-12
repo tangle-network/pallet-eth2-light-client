@@ -1,0 +1,39 @@
+[package]
+name = "eth2_to_substrate_relay"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+eth2_hashing = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+eth2_ssz = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+
+eth-types = { path = "../crates/eth-types" }
+eth_rpc_client = { package = "webb-eth-rpc-client", path = "../crates/eth_rpc_client" }
+finality-update-verify = { path = "../crates/finality-update-verify" }
+
+log = { version = "0.4", features = ["std", "serde"] }
+serde_json = "1.0.74"
+serde = { version = "1.0", features = ["derive"] }
+ethereum-types = "0.9.2"
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+clap = { version = "3.1.6", features = ["derive"] }
+tokio = { version = "1.1", features = ["macros", "rt", "time"] }
+env_logger = "0.9.0"
+futures = { version = "0.3.21", default-features = false }
+async-std = "1.12.0"
+hex = "*"
+toml = "0.5.9"
+atomic_refcell = "0.1.8"
+bitvec = "*"
+primitive-types = "0.7.3"
+
+prometheus = { version = "0.9", features = ["process"] }
+lazy_static = "1.4"
+warp = "0.2"
+thread = "*"
+
+[dev-dependencies]
+workspaces = "0.5.0"
