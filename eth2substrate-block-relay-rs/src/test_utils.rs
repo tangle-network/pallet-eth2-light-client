@@ -3,7 +3,7 @@ use crate::{
 	eth2substrate_relay::Eth2SubstrateRelay, eth_client_pallet_trait::EthClientPalletTrait,
 	test_utils,
 };
-use eth2_contract_init::init_contract;
+use bitvec::macros::internal::funty::Fundamental;
 use eth_rpc_client::{
 	beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion},
 	eth1_rpc_client::Eth1RPCClient,
@@ -15,7 +15,6 @@ use eth_types::{
 use std::{thread, time};
 use tokio::runtime::Runtime;
 use tree_hash::TreeHash;
-use workspaces::{Account, Contract};
 
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
 	let mut json_file_path = std::env::current_exe().unwrap();
@@ -27,7 +26,7 @@ pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
 }
 
 pub fn init_contract_from_files(
-	eth_client_contract: &mut EthClientContract,
+	eth_client_contract: &mut EthClientPallet,
 	config_for_test: &ConfigForTests,
 ) {
 	let execution_blocks: Vec<BlockHeader> = serde_json::from_str(
@@ -86,7 +85,7 @@ pub fn init_contract_from_files(
 }
 
 pub fn init_contract_from_specific_slot(
-	eth_client_contract: &mut EthClientContract,
+	eth_client_contract: &mut EthClientPallet,
 	finality_slot: u64,
 	config_for_test: &ConfigForTests,
 ) {
@@ -167,11 +166,9 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		path_to_signer_secret_key: "NaN".to_string(),
 		contract_account_id: "NaN".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
-		contract_type: ContractType::Near,
 		interval_between_light_client_updates_submission_in_epochs: 1,
 		max_blocks_for_finalization: 5000,
 		prometheus_metrics_port: Some(32221),
-		dao_contract_account_id: None,
 		output_dir: None,
 		path_to_attested_state: None,
 		path_to_finality_state: None,
@@ -182,18 +179,19 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		hashes_gc_threshold: None,
 		max_submitted_blocks_by_account: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
-		substrate_endpoint: todo!(),
+		substrate_endpoint: "localhost:9944".to_string(),
+		substrate_network_name: "Tangle Testnet".to_string(),
 	}
 }
 
 fn get_init_config(
 	config_for_test: &ConfigForTests,
-	eth_client_contract: &EthClientContract,
+	eth_client_contract: &EthClientPallet,
 ) -> eth2_contract_init::config::Config {
 	eth2_contract_init::config::Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
-		signer_account_id: "NaN".to_string(),
+		signer_account_id: "alice".to_string(),
 		path_to_signer_secret_key: "NaN".to_string(),
 		contract_account_id: "NaN".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
@@ -216,7 +214,7 @@ pub fn get_client_contract(
 	let (relay_account, contract) = create_contract(config_for_test);
 	let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
 
-	let mut eth_client_contract = EthClientContract::new(contract_wrapper);
+	let mut eth_client_contract = EthClientPallet::new(contract_wrapper);
 
 	let mut config = get_init_config(config_for_test, &eth_client_contract);
 	config.signer_account_id = eth_client_contract.get_signer_account_id().to_string();
@@ -274,7 +272,7 @@ pub fn get_relay_from_slot(
 	let (relay_account, contract) = create_contract(&config_for_test);
 	let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
 
-	let mut eth_client_contract = EthClientContract::new(contract_wrapper);
+	let mut eth_client_contract = EthClientPallet::new(contract_wrapper);
 
 	init_contract_from_specific_slot(&mut eth_client_contract, slot, config_for_test);
 

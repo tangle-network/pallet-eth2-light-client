@@ -21,11 +21,16 @@ use serde::{Deserialize, Serialize};
 use tiny_keccak::{Hasher, Keccak};
 
 use core::slice::SlicePattern;
+
 #[cfg(feature = "eth2")]
 use tree_hash::{Hash256, PackedEncoding, TreeHash, TreeHashType};
 
 #[cfg(feature = "eth2")]
 pub mod eth2;
+
+#[cfg(feature = "eth2")]
+pub mod pallet;
+
 #[macro_use]
 pub mod macros;
 

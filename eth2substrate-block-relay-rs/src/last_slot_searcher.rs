@@ -415,8 +415,8 @@ impl LastSlotSearcher {
 #[cfg(test)]
 mod tests {
 	use crate::{
-		config_for_tests::ConfigForTests, last_slot_searcher::LastSlotSearcher,
-		test_utils::get_client_contract,
+		config_for_tests::ConfigForTests, eth_client_pallet_trait::EthClientPalletTrait,
+		last_slot_searcher::LastSlotSearcher, test_utils::get_client_contract,
 	};
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
@@ -434,7 +434,7 @@ mod tests {
 		beacon_rpc_client: &BeaconRPCClient,
 		eth1_rpc_client: &Eth1RPCClient,
 	) -> Result<BlockHeader, Box<dyn Error>> {
-		match beacon_rpc_client.get_block_number_for_slot(types::Slot::new(slot)) {
+		match beacon_rpc_client.get_block_number_for_slot(slot) {
 			Ok(block_number) => eth1_rpc_client.get_block_header_by_number(block_number),
 			Err(err) => Err(err),
 		}

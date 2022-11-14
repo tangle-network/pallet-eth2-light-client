@@ -15,8 +15,11 @@ pub struct Config {
 	// the max number of headers submitted in one batch to eth client
 	pub headers_batch_size: u32,
 
-	// endpoint for a full node on the Substrate chain
+	// Endpoint for a full node on the Substrate chain
 	pub substrate_endpoint: String,
+
+	// The Substrate network name (Tangle, Polkadot, Kusama)
+	pub substrate_network_name: String,
 
 	// Account id from which relay make requests
 	pub signer_account_id: String,
@@ -30,9 +33,6 @@ pub struct Config {
 	// The Ethereum network name (Mainnet, Kiln, Ropsten, Goerli)
 	pub ethereum_network: String,
 
-	// Contract type (near, dao, file)
-	pub contract_type: ContractType,
-
 	// Period of submission light client updates. Once in N epochs.
 	pub interval_between_light_client_updates_submission_in_epochs: u64,
 
@@ -41,9 +41,6 @@ pub struct Config {
 
 	// Port for Prometheus
 	pub prometheus_metrics_port: Option<u16>,
-
-	// Account id for DAO on Substrate
-	pub dao_contract_account_id: Option<String>,
 
 	// Path to dir for output submitted light client updates and execution blocks
 	pub output_dir: Option<String>,

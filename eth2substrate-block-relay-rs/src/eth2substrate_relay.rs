@@ -96,6 +96,7 @@ pub struct Eth2SubstrateRelay {
 	sleep_time_on_sync_secs: u64,
 	sleep_time_after_submission_secs: u64,
 	max_submitted_blocks_by_account: u32,
+	substrate_network_name: String,
 }
 
 impl Eth2SubstrateRelay {
@@ -141,6 +142,7 @@ impl Eth2SubstrateRelay {
 			bellatrix_fork_epoch: eth2_network.bellatrix_fork_epoch,
 			bellatrix_fork_version: eth2_network.bellatrix_fork_version,
 			genesis_validators_root: eth2_network.genesis_validators_root,
+			substrate_network_name: config.substrate_network_name.clone(),
 		};
 
 		if !eth2substrate_relay
@@ -659,13 +661,14 @@ impl Eth2SubstrateRelay {
 
 			info!(target: "relay", "Sending light client update");
 
-			// if let FinalExecutionStatus::Failure(error_message) = execution_outcome.status {
-			//     FAILS_ON_UPDATES_SUBMISSION.inc();
-			//     warn!(target: "relay", "FAIL status on Light Client Update submission. Error:
-			// {:?}", error_message); }
+			if let FinalExecutionStatus::Failure(error_message) = execution_outcome.status {
+				FAILS_ON_UPDATES_SUBMISSION.inc();
+				warn!(target: "relay", "FAIL status on Light Client Update submission. Error:
+			{:?}", error_message);
+			}
 
-			// info!(target: "relay", "Successful light client update submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",
-			//                       self.near_network_name, execution_outcome.transaction.hash);
+			info!(target: "relay", "Successful light client update submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",
+			                      self.substrate_network_name, execution_outcome.transaction.hash);
 
 			let finalized_block_number = return_on_fail!(
 				self.beacon_rpc_client.get_block_number_for_slot(
@@ -689,6 +692,7 @@ mod tests {
 		eth2substrate_relay::{Eth2SubstrateRelay, ONE_EPOCH_IN_SLOTS},
 		test_utils::{get_relay, get_relay_from_slot, get_relay_with_update_from_file},
 	};
+	use bitvec::macros::internal::funty::Fundamental;
 	use eth_rpc_client::{
 		beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
 		hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,

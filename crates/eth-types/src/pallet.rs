@@ -1,5 +1,9 @@
-use super::*;
+use crate::{
+	eth2::{ExtendedBeaconBlockHeader, SyncCommittee},
+	BlockHeader,
+};
 use codec::{Decode, Encode};
+use ethereum_types::H256;
 use scale_info::TypeInfo;
 
 /// Minimal information about a header.

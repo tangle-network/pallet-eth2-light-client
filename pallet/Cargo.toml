@@ -10,7 +10,11 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 
-webb-proposals = { version = "0.5.4", default-features = false, features = ["scale", "evm", "substrate"] }
+webb-proposals = { version = "0.5.4", default-features = false, features = [
+	"scale",
+	"evm",
+	"substrate"
+] }
 ethereum-types = { version = "0.13.1", default-features = false }
 
 eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"], default-features = false }
