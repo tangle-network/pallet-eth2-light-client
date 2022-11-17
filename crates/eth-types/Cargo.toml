@@ -5,7 +5,7 @@ authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.116", default-features = false, features = ["derive"], optional = true }
+serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 ethereum-types = { version = "0.13.1", features = ["codec", "rlp", "serialize"], default-features = false }
@@ -23,7 +23,7 @@ scale-info = { version = "2.1.1", default-features = false, features = ["derive"
 [features]
 default = ["eip1559", "eth2", "std"]
 std = [
-	"serde",
+	"serde/std",
 	"codec/std",
 	"scale-info/std",
 	"eth2_serde_utils/std",

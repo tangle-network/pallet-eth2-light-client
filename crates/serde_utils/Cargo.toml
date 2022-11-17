@@ -7,7 +7,7 @@ description = "Serialization and deserialization utilities useful for JSON repre
 license = "Apache-2.0"
 
 [dependencies]
-serde = { version = "1.0.116", default-features = false, features = ["derive"], optional = true }
+serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 serde_json = { version = "1.0.58", default-features = false, features = ["alloc"], optional = true }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 ethereum-types = { version = "0.13.1", default-features = false, features = ["serialize"] }
@@ -16,7 +16,7 @@ ethereum-types = { version = "0.13.1", default-features = false, features = ["se
 default = ["std"]
 std = [
     "ethereum-types/std",
-    "serde",
+    "serde/std",
     "serde_json/std",
     "hex/std",
 ]
