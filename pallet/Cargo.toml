@@ -7,56 +7,53 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
-log = { version = "0.4.17", default-features = false }
+serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
+codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-
 webb-proposals = { version = "0.5.4", default-features = false, features = ["scale", "evm", "substrate"] }
-ethereum-types = { version = "0.13.1", features = ["rlp", "codec", "serialize"], default-features = false }
-
-eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"], default-features = false }
+ethereum-types = { version = "0.13.1", default-features = false }
+derive_more = { version = "^0.99.2", default-features = false }
+rlp = { version = "0.5.0", default-features = false }
+rlp-derive = { version = "0.1.0", default-features = false }
+tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 merkle_proof = { path = "../crates/merkle_proof", default-features = false }
 bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
-tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
-eth2_serde_utils = { path = "../crates/serde_utils", default-features = false }
-
-derive_more = { version = "^0.99.2", default-features = false }
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
-rlp = { version = "0.5.0", default-features = false }
-rlp-derive = { version = "0.1.0", default-features = false }
-serde = { version = "1.0.116", default-features = false, features = ["derive"] }
-
-frame-support = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
-frame-system = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
-pallet-balances = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
-sp-runtime = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
-sp-std = { version = "4.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
-
-frame-benchmarking = { version = "4.0.0-dev", default-features = false, optional = true, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
+eth2_ssz = { path = "../crates/ssz", default-features = false }
+tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
+hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
-sp-core = { version = "6.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.29" }
 lazy_static = "1.4.0"
-serde_json = "1.0"
-hex = "0.4.0"
+serde_json = { version = "1.0.58", default-features = false, features = ["alloc"] }
 
 [features]
-default = ["std", "eip1559"]
+default = ["std"]
 std = [
 	"codec/std",
 	"scale-info/std",
+	"webb-proposals/std",
+	"tree_hash/std",
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
 	"sp-runtime/std",
 	"sp-std/std",
-	"log/std",
-    "webb-proposals/std",
-    "ethereum-types/std",
-	"eth-types/std",
-	"eth2_serde_utils/std",
+	"ethereum-types/std",
+	"merkle_proof/std",
+	"bls/std",
+	"bitvec/std",
+	"rlp/std",
+	"serde/std",
+	"hex/std",
+	"sp-core/std",
 ]
-runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
+
 try-runtime = ["frame-support/try-runtime"]
-eip1559 = []
