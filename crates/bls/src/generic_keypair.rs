@@ -34,6 +34,7 @@ where
 	}
 }
 
+#[cfg(feature = "std")]
 impl<Pub, Sec, Sig> fmt::Debug for GenericKeypair<Pub, Sec, Sig>
 where
 	Pub: TPublicKey,

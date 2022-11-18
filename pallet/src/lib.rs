@@ -44,7 +44,9 @@
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
+#![feature(slice_pattern)]
 
+mod eth_types;
 use eth_types::{
 	eth2::{
 		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,

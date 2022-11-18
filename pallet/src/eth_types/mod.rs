@@ -1,11 +1,10 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(slice_pattern)]
 
 extern crate alloc;
-
 use alloc::vec::Vec;
 use codec::{Decode, Encode};
+use core::slice::SlicePattern;
 use derive_more::{
 	Add, AddAssign, Display, Div, DivAssign, From, Into, Mul, MulAssign, Rem, RemAssign, Sub,
 	SubAssign,
@@ -20,29 +19,25 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use tiny_keccak::{Hasher, Keccak};
 
-use core::slice::SlicePattern;
-
-#[cfg(feature = "eth2")]
+// use core::slice::SlicePattern;
 use tree_hash::{Hash256, PackedEncoding, TreeHash, TreeHashType};
-
-#[cfg(feature = "eth2")]
 pub mod eth2;
-
-#[cfg(feature = "eth2")]
-pub mod pallet;
-
 #[macro_use]
 pub mod macros;
+#[cfg(not(feature = "std"))]
+use ethereum_types::{Bloom, H520, H64};
 
+#[cfg(feature = "std")]
 arr_ethereum_types_wrapper_impl!(H64, 8);
 arr_ethereum_types_wrapper_impl!(H128, 16);
 arr_ethereum_types_wrapper_impl!(H160, 20);
 arr_ethereum_types_wrapper_impl!(H256, 32);
 arr_ethereum_types_wrapper_impl!(H512, 64);
+#[cfg(feature = "std")]
 arr_ethereum_types_wrapper_impl!(H520, 65);
+#[cfg(feature = "std")]
 arr_ethereum_types_wrapper_impl!(Bloom, 256);
 
-#[cfg(feature = "eth2")]
 impl TreeHash for H256 {
 	fn tree_hash_type() -> TreeHashType {
 		TreeHashType::Vector
@@ -117,7 +112,6 @@ pub type Signature = H520;
 // Block Header
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BlockHeader {
 	pub parent_hash: H256,
 	pub uncles_hash: H256,
@@ -127,18 +121,16 @@ pub struct BlockHeader {
 	pub receipts_root: H256,
 	pub log_bloom: Bloom,
 	pub difficulty: U256,
-	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::u64_hex_be"))]
+
 	pub number: u64,
 	pub gas_limit: U256,
 	pub gas_used: U256,
-	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::u64_hex_be"))]
+
 	pub timestamp: u64,
-	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::hex_vec"))]
 	pub extra_data: Vec<u8>,
 	pub mix_hash: H256,
 	pub nonce: H64,
 	#[cfg(feature = "eip1559")]
-	#[cfg_attr(all(feature = "std"), serde(with = "eth2_serde_utils::u64_hex_be"))]
 	pub base_fee_per_gas: u64,
 
 	pub hash: Option<H256>,

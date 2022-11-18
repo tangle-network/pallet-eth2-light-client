@@ -1,4 +1,3 @@
-#[cfg(feature = "eth2")]
 #[macro_export]
 macro_rules! arr_wrapper_impl_tree_hash {
 	($name: ident, $len: expr) => {
@@ -69,7 +68,6 @@ macro_rules! arr_wrapper_impl_tree_hash {
 	};
 }
 
-#[cfg(feature = "eth2")]
 #[macro_export]
 macro_rules! vec_wrapper_impl_tree_hash {
 	($name: ident) => {
@@ -118,7 +116,6 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 			Decode,
 			TypeInfo,
 		)]
-		#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 		pub struct $name(pub ethereum_types::$name);
 
 		impl From<&[u8; $len]> for $name {
@@ -167,7 +164,6 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 			}
 		}
 
-		#[cfg(feature = "eth2")]
 		impl ssz::Decode for $name {
 			fn is_ssz_fixed_len() -> bool {
 				true
@@ -189,7 +185,6 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 			}
 		}
 
-		#[cfg(feature = "eth2")]
 		impl ssz::Encode for $name {
 			fn is_ssz_fixed_len() -> bool {
 				true

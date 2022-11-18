@@ -19,5 +19,6 @@ default = ["std"]
 std = [
     "eth2_hashing/std",
     "ethereum-types/std",
+    "eth2_hashing/std",
 ]
 arbitrary = ["ethereum-types/arbitrary"]

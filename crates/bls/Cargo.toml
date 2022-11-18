@@ -10,12 +10,11 @@ tree_hash = { path = "../tree_hash", default-features = false }
 milagro_bls = { git = "https://github.com/webb-tools/milagro_bls", default-features = false }
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
-serde = { version = "1.0.116", default-features = false, features = ["derive"] }
-eth2_serde_utils = { path = "../serde_utils", default-features = false }
+serde = { version = "1.0.101", features = ["derive"], optional = true, default-features = false}
+eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 eth2_hashing = { path = "../eth2_hashing", default-features = false, features = ["zero_hash_cache"] }
 ethereum-types = { version = "0.13.1", default-features = false }
-arbitrary = { version = "1.0", features = ["derive"], optional = true }
 zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
 
 [features]
@@ -27,6 +26,6 @@ std = [
     "hex/std",
     "milagro_bls/std",
     "eth2_hashing/std",
-    "rand/std",
-    "rand_chacha/std",
+    "ethereum-types/std",
+    "eth2_serde_utils/std",
 ]

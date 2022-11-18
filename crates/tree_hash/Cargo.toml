@@ -19,5 +19,8 @@ eth2_ssz_derive = { path = "../ssz_derive", default-features = false }
 
 [features]
 default = ["std"]
-std = []
+std = [
+    "ethereum-types/std",
+    "eth2_hashing/std",
+]
 arbitrary = ["ethereum-types/arbitrary"]

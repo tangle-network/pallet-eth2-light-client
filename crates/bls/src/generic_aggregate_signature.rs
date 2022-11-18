@@ -14,7 +14,9 @@ use core::{
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
+#[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
+#[cfg(feature = "std")]
 use serde::{
 	de::{Deserialize, Deserializer},
 	ser::{Serialize, Serializer},
@@ -286,6 +288,7 @@ where
 	}
 }
 
+#[cfg(feature = "std")]
 impl<Pub, AggPub, Sig, AggSig> fmt::Display for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
@@ -303,6 +306,7 @@ where
 	impl_from_str!();
 }
 
+#[cfg(feature = "std")]
 impl<Pub, AggPub, Sig, AggSig> Serialize for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
@@ -311,6 +315,7 @@ where
 	impl_serde_serialize!();
 }
 
+#[cfg(feature = "std")]
 impl<'de, Pub, AggPub, Sig, AggSig> Deserialize<'de>
 	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
@@ -320,6 +325,7 @@ where
 	impl_serde_deserialize!();
 }
 
+#[cfg(feature = "std")]
 impl<Pub, AggPub, Sig, AggSig> fmt::Debug for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
