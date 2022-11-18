@@ -16,18 +16,20 @@ derive_more = { version = "^0.99.2", default-features = false }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
+bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
+
+eth2_ssz = { path = "../crates/ssz", default-features = false }
 merkle_proof = { path = "../crates/merkle_proof", default-features = false }
 bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
-bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
+tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
+
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
 sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.30" }
-eth2_ssz = { path = "../crates/ssz", default-features = false }
-tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 [dev-dependencies]

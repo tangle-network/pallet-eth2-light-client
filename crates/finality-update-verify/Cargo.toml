@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 eth-types = { path = "../../../pallet-eth2-light-client/crates/eth-types" }
-consensus-types = { path = "../../../pallet-eth2-light-client/crates/consensus-types" }
+consensus_types = { path = "../../../pallet-eth2-light-client/crates/consensus_types" }
 bls = { path = "../../../pallet-eth2-light-client/crates/bls" }
 tree_hash = { path = "../../../pallet-eth2-light-client/crates/tree_hash" }
 bitvec = "1.0.0"

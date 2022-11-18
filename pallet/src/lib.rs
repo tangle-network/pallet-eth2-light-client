@@ -52,6 +52,7 @@ use eth_types::{
 		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,
 		SyncCommittee,
 	},
+	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader, H256,
 };
 use frame_support::{
@@ -62,18 +63,11 @@ use frame_support::{
 use sp_runtime::traits::Saturating;
 use sp_std::{collections::btree_map::BTreeMap, convert::TryInto, prelude::*};
 use tree_hash::TreeHash;
-use types::{ExecutionHeaderInfo, InitInput};
 use webb_proposals::TypedChainId;
 
 pub use pallet::*;
 
 use bitvec::prelude::{BitVec, Lsb0};
-use consensus_types::{
-	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
-	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
-	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
-	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
-};
 
 use frame_support::traits::{Currency, ExistenceRequirement};
 use sp_runtime::traits::AccountIdConversion;
@@ -88,6 +82,14 @@ mod tests;
 
 #[cfg(test)]
 mod test_utils;
+
+pub mod consensus;
+use consensus::{
+	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
+	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
+	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
+	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
+};
 
 pub mod traits;
 
@@ -211,7 +213,7 @@ pub mod pallet {
 		TypedChainId,
 		Blake2_128Concat,
 		H256,
-		types::ExecutionHeaderInfo<T::AccountId>,
+		ExecutionHeaderInfo<T::AccountId>,
 		OptionQuery,
 	>;
 
@@ -255,7 +257,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		TypedChainId,
-		types::ExecutionHeaderInfo<T::AccountId>,
+		ExecutionHeaderInfo<T::AccountId>,
 		OptionQuery,
 	>;
 
@@ -369,7 +371,7 @@ pub mod pallet {
 				Error::<T>::InvalidExecutionBlock,
 			);
 
-			let finalized_execution_header_info = types::ExecutionHeaderInfo {
+			let finalized_execution_header_info = ExecutionHeaderInfo {
 				parent_hash: args.finalized_execution_header.parent_hash,
 				block_number: args.finalized_execution_header.number,
 				submitter: signer,
@@ -672,7 +674,7 @@ impl<T: Config> Pallet<T> {
 		};
 
 		let participant_pubkeys =
-			get_participant_pubkeys(&sync_committee.pubkeys.0, &sync_committee_bits);
+			get_participant_pubkeys(sync_committee.pubkeys.0.as_slice(), &sync_committee_bits);
 		ensure!(
 			Self::bellatrix_fork_version(typed_chain_id).is_some(),
 			Error::<T>::ForkVersionNotFound
@@ -688,7 +690,7 @@ impl<T: Config> Pallet<T> {
 		let fork_version = Self::bellatrix_fork_version(typed_chain_id).unwrap();
 		let genesis_validators_root = Self::genesis_validators_root(typed_chain_id).unwrap();
 		let domain =
-			compute_domain(DOMAIN_SYNC_COMMITTEE, fork_version, genesis_validators_root.into());
+			compute_domain(DOMAIN_SYNC_COMMITTEE, fork_version, H256::from(genesis_validators_root));
 		let signing_root =
 			compute_signing_root(H256(update.attested_beacon_header.tree_hash_root()), domain);
 

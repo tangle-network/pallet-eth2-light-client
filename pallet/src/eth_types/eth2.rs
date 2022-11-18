@@ -34,7 +34,6 @@ arr_wrapper_impl_tree_hash!(SyncCommitteeBits, SYNC_COMMITTEE_BITS_SIZE_IN_BYTES
 
 pub struct BeaconBlockHeader {
 	pub slot: Slot,
-
 	pub proposer_index: u64,
 	pub parent_root: H256,
 	pub state_root: H256,

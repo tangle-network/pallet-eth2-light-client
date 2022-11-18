@@ -22,6 +22,8 @@ use tiny_keccak::{Hasher, Keccak};
 // use core::slice::SlicePattern;
 use tree_hash::{Hash256, PackedEncoding, TreeHash, TreeHashType};
 pub mod eth2;
+pub mod pallet;
+
 #[macro_use]
 pub mod macros;
 #[cfg(not(feature = "std"))]

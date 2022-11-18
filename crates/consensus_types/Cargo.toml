@@ -1,5 +1,5 @@
 [package]
-name = "consensus-types"
+name = "consensus_types"
 version = "0.1.0"
 authors = ["Webb Developers"]
 edition = "2021"

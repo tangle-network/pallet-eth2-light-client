@@ -1,11 +1,11 @@
-use super::consensus::*;
 use crate::{
 	mock::{Eth2Client, Origin},
 	test_utils::*,
-	types::InitInput,
 };
 use bitvec::{bitarr, order::Lsb0};
-use eth_types::{eth2::LightClientUpdate, BlockHeader, H256, U256};
+use crate::eth_types::{
+	eth2::LightClientUpdate, BlockHeader, H256, U256, pallet::InitInput,
+};
 use frame_support::{assert_err, assert_ok};
 use hex::FromHex;
 use sp_runtime::AccountId32;
@@ -45,7 +45,9 @@ pub fn get_test_context(
 }
 
 mod kiln_tests {
-	use super::*;
+	use crate::consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
+
+use super::*;
 	use crate::{
 		mock::{new_test_ext, Eth2Client, Test},
 		test_utils::read_beacon_header,
