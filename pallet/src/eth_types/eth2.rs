@@ -1,8 +1,8 @@
 use super::*;
+use crate::{arr_wrapper_impl_tree_hash, vec_wrapper_impl_tree_hash};
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use tree_hash::MerkleHasher;
-use crate::{vec_wrapper_impl_tree_hash, arr_wrapper_impl_tree_hash};
 
 #[cfg(feature = "std")]
 use {
@@ -33,9 +33,8 @@ arr_wrapper_impl_tree_hash!(SyncCommitteeBits, SYNC_COMMITTEE_BITS_SIZE_IN_BYTES
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
 
 pub struct BeaconBlockHeader {
-	
 	pub slot: Slot,
-	
+
 	pub proposer_index: u64,
 	pub parent_root: H256,
 	pub state_root: H256,
@@ -112,7 +111,7 @@ pub struct FinalizedHeaderUpdate {
 pub struct LightClientUpdate {
 	pub attested_beacon_header: BeaconBlockHeader,
 	pub sync_aggregate: SyncAggregate,
-	
+
 	pub signature_slot: Slot,
 	pub finality_update: FinalizedHeaderUpdate,
 	pub sync_committee_update: Option<SyncCommitteeUpdate>,

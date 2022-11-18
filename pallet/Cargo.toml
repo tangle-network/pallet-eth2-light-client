@@ -11,8 +11,8 @@ serde = { version = "1.0.101", default-features = false, features = ["derive"], 
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 webb-proposals = { version = "0.5.4", default-features = false, features = ["scale", "evm", "substrate"] }
-# ethereum-types = { version = "0.13.1", default-features = false }
-derive_more = { version = "^0.99.2" }
+ethereum-types = { version = "0.13.1", default-features = false }
+derive_more = { version = "^0.99.2", default-features = false }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
@@ -33,7 +33,6 @@ hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 [dev-dependencies]
 lazy_static = "1.4.0"
 serde_json = { version = "1.0.58", default-features = false, features = ["alloc"] }
-hex = { version = "0.4.2", default-features = false }
 
 [features]
 default = ["std"]
@@ -47,14 +46,14 @@ std = [
 	"pallet-balances/std",
 	"sp-runtime/std",
 	"sp-std/std",
-	# "ethereum-types/std",
+	"ethereum-types/std",
 	"merkle_proof/std",
 	"bls/std",
 	"bitvec/std",
 	"rlp/std",
 	"serde/std",
 	"hex/std",
-	"sp-core/std"
+	"sp-core/std",
 ]
 
 try-runtime = ["frame-support/try-runtime"]

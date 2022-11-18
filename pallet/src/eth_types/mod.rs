@@ -1,11 +1,10 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(slice_pattern)]
 
 extern crate alloc;
-
 use alloc::vec::Vec;
 use codec::{Decode, Encode};
+use core::slice::SlicePattern;
 use derive_more::{
 	Add, AddAssign, Display, Div, DivAssign, From, Into, Mul, MulAssign, Rem, RemAssign, Sub,
 	SubAssign,
@@ -26,8 +25,7 @@ pub mod eth2;
 #[macro_use]
 pub mod macros;
 #[cfg(not(feature = "std"))]
-use ethereum_types::{H64, Bloom, H520};
-
+use ethereum_types::{Bloom, H520, H64};
 
 #[cfg(feature = "std")]
 arr_ethereum_types_wrapper_impl!(H64, 8);
@@ -39,7 +37,6 @@ arr_ethereum_types_wrapper_impl!(H512, 64);
 arr_ethereum_types_wrapper_impl!(H520, 65);
 #[cfg(feature = "std")]
 arr_ethereum_types_wrapper_impl!(Bloom, 256);
-
 
 impl TreeHash for H256 {
 	fn tree_hash_type() -> TreeHashType {
@@ -124,17 +121,16 @@ pub struct BlockHeader {
 	pub receipts_root: H256,
 	pub log_bloom: Bloom,
 	pub difficulty: U256,
-	
+
 	pub number: u64,
 	pub gas_limit: U256,
 	pub gas_used: U256,
-	
+
 	pub timestamp: u64,
 	pub extra_data: Vec<u8>,
 	pub mix_hash: H256,
 	pub nonce: H64,
 	#[cfg(feature = "eip1559")]
-	
 	pub base_fee_per_gas: u64,
 
 	pub hash: Option<H256>,
@@ -238,53 +234,53 @@ impl From<BlockHeaderPreLondon> for BlockHeader {
 	}
 }
 
-// impl BlockHeader {
-// 	pub fn extra_data(&self) -> H256 {
-// 		let mut data = [0u8; 32];
-// 		data.copy_from_slice(self.extra_data.as_slice());
-// 		H256(data.into())
-// 	}
+impl BlockHeader {
+	pub fn extra_data(&self) -> H256 {
+		let mut data = [0u8; 32];
+		data.copy_from_slice(self.extra_data.as_slice());
+		H256(data.into())
+	}
 
-// 	fn stream_rlp(&self, stream: &mut RlpStream, partial: bool) {
-// 		#[cfg(feature = "eip1559")]
-// 		let list_size = 14 + if !partial { 2 } else { 0 };
-// 		#[cfg(not(feature = "eip1559"))]
-// 		let list_size = 13 + if !partial { 2 } else { 0 };
+	fn stream_rlp(&self, stream: &mut RlpStream, partial: bool) {
+		#[cfg(feature = "eip1559")]
+		let list_size = 14 + if !partial { 2 } else { 0 };
+		#[cfg(not(feature = "eip1559"))]
+		let list_size = 13 + if !partial { 2 } else { 0 };
 
-// 		stream.begin_list(list_size);
+		stream.begin_list(list_size);
 
-// 		stream.append(&self.parent_hash);
-// 		stream.append(&self.uncles_hash);
-// 		stream.append(&self.author);
-// 		stream.append(&self.state_root);
-// 		stream.append(&self.transactions_root);
-// 		stream.append(&self.receipts_root);
-// 		stream.append(&self.log_bloom);
-// 		stream.append(&self.difficulty);
-// 		stream.append(&self.number);
-// 		stream.append(&self.gas_limit);
-// 		stream.append(&self.gas_used);
-// 		stream.append(&self.timestamp);
-// 		stream.append(&self.extra_data);
+		stream.append(&self.parent_hash);
+		stream.append(&self.uncles_hash);
+		stream.append(&self.author);
+		stream.append(&self.state_root);
+		stream.append(&self.transactions_root);
+		stream.append(&self.receipts_root);
+		stream.append(&self.log_bloom);
+		stream.append(&self.difficulty);
+		stream.append(&self.number);
+		stream.append(&self.gas_limit);
+		stream.append(&self.gas_used);
+		stream.append(&self.timestamp);
+		stream.append(&self.extra_data);
 
-// 		if !partial {
-// 			stream.append(&self.mix_hash);
-// 			stream.append(&self.nonce);
-// 		}
+		if !partial {
+			stream.append(&self.mix_hash);
+			stream.append(&self.nonce);
+		}
 
-// 		#[cfg(feature = "eip1559")]
-// 		stream.append(&self.base_fee_per_gas);
-// 	}
+		#[cfg(feature = "eip1559")]
+		stream.append(&self.base_fee_per_gas);
+	}
 
-// 	pub fn calculate_hash(&self) -> H256 {
-// 		keccak256({
-// 			let mut stream = RlpStream::new();
-// 			self.stream_rlp(&mut stream, false);
-// 			stream.out().as_slice()
-// 		})
-// 		.into()
-// 	}
-// }
+	pub fn calculate_hash(&self) -> H256 {
+		keccak256({
+			let mut stream = RlpStream::new();
+			self.stream_rlp(&mut stream, false);
+			stream.out().as_slice()
+		})
+		.into()
+	}
+}
 
 impl RlpEncodable for BlockHeader {
 	fn rlp_append(&self, stream: &mut RlpStream) {
@@ -292,55 +288,55 @@ impl RlpEncodable for BlockHeader {
 	}
 }
 
-// impl RlpDecodable for BlockHeader {
-// 	fn decode(serialized: &Rlp) -> Result<Self, RlpDecoderError> {
-// 		let mut block_header = BlockHeader {
-// 			parent_hash: serialized.val_at(0)?,
-// 			uncles_hash: serialized.val_at(1)?,
-// 			author: serialized.val_at(2)?,
-// 			state_root: serialized.val_at(3)?,
-// 			transactions_root: serialized.val_at(4)?,
-// 			receipts_root: serialized.val_at(5)?,
-// 			log_bloom: serialized.val_at(6)?,
-// 			difficulty: serialized.val_at(7)?,
-// 			number: serialized.val_at(8)?,
-// 			gas_limit: serialized.val_at(9)?,
-// 			gas_used: serialized.val_at(10)?,
-// 			timestamp: serialized.val_at(11)?,
-// 			extra_data: serialized.val_at(12)?,
-// 			mix_hash: serialized.val_at(13)?,
-// 			nonce: serialized.val_at(14)?,
-// 			#[cfg(feature = "eip1559")]
-// 			base_fee_per_gas: serialized.val_at(15)?,
-// 			hash: None,
-// 			partial_hash: None,
-// 		};
+impl RlpDecodable for BlockHeader {
+	fn decode(serialized: &Rlp) -> Result<Self, RlpDecoderError> {
+		let mut block_header = BlockHeader {
+			parent_hash: serialized.val_at(0)?,
+			uncles_hash: serialized.val_at(1)?,
+			author: serialized.val_at(2)?,
+			state_root: serialized.val_at(3)?,
+			transactions_root: serialized.val_at(4)?,
+			receipts_root: serialized.val_at(5)?,
+			log_bloom: serialized.val_at(6)?,
+			difficulty: serialized.val_at(7)?,
+			number: serialized.val_at(8)?,
+			gas_limit: serialized.val_at(9)?,
+			gas_used: serialized.val_at(10)?,
+			timestamp: serialized.val_at(11)?,
+			extra_data: serialized.val_at(12)?,
+			mix_hash: serialized.val_at(13)?,
+			nonce: serialized.val_at(14)?,
+			#[cfg(feature = "eip1559")]
+			base_fee_per_gas: serialized.val_at(15)?,
+			hash: None,
+			partial_hash: None,
+		};
 
-// 		block_header.hash = Some(
-// 			keccak256({
-// 				let mut stream = RlpStream::new();
-// 				block_header.stream_rlp(&mut stream, false);
-// 				stream.out().as_slice()
-// 			})
-// 			.into(),
-// 		);
+		block_header.hash = Some(
+			keccak256({
+				let mut stream = RlpStream::new();
+				block_header.stream_rlp(&mut stream, false);
+				stream.out().as_slice()
+			})
+			.into(),
+		);
 
-// 		if block_header.hash.unwrap() != keccak256(serialized.as_raw()).into() {
-// 			return Err(RlpDecoderError::RlpInconsistentLengthAndData)
-// 		}
+		if block_header.hash.unwrap() != keccak256(serialized.as_raw()).into() {
+			return Err(RlpDecoderError::RlpInconsistentLengthAndData)
+		}
 
-// 		block_header.partial_hash = Some(
-// 			keccak256({
-// 				let mut stream = RlpStream::new();
-// 				block_header.stream_rlp(&mut stream, true);
-// 				stream.out().as_slice()
-// 			})
-// 			.into(),
-// 		);
+		block_header.partial_hash = Some(
+			keccak256({
+				let mut stream = RlpStream::new();
+				block_header.stream_rlp(&mut stream, true);
+				stream.out().as_slice()
+			})
+			.into(),
+		);
 
-// 		Ok(block_header)
-// 	}
-// }
+		Ok(block_header)
+	}
+}
 
 // Log
 
