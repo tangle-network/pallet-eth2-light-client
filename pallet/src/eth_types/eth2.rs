@@ -31,7 +31,7 @@ arr_wrapper_impl_tree_hash!(SignatureBytes, SIGNATURE_BYTES_LEN);
 arr_wrapper_impl_tree_hash!(SyncCommitteeBits, SYNC_COMMITTEE_BITS_SIZE_IN_BYTES);
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
-
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BeaconBlockHeader {
 	pub slot: Slot,
 	pub proposer_index: u64,
@@ -72,28 +72,33 @@ impl From<HeaderUpdate> for ExtendedBeaconBlockHeader {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SyncCommitteePublicKeys(pub Vec<PublicKeyBytes>);
 vec_wrapper_impl_tree_hash!(SyncCommitteePublicKeys);
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SyncCommittee {
 	pub pubkeys: SyncCommitteePublicKeys,
 	pub aggregate_pubkey: PublicKeyBytes,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SyncAggregate {
 	pub sync_committee_bits: SyncCommitteeBits,
 	pub sync_committee_signature: SignatureBytes,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SyncCommitteeUpdate {
 	pub next_sync_committee: SyncCommittee,
 	pub next_sync_committee_branch: Vec<H256>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct HeaderUpdate {
 	pub beacon_header: BeaconBlockHeader,
 	pub execution_block_hash: H256,
@@ -101,12 +106,14 @@ pub struct HeaderUpdate {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct FinalizedHeaderUpdate {
 	pub header_update: HeaderUpdate,
 	pub finality_branch: Vec<H256>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct LightClientUpdate {
 	pub attested_beacon_header: BeaconBlockHeader,
 	pub sync_aggregate: SyncAggregate,

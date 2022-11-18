@@ -689,8 +689,11 @@ impl<T: Config> Pallet<T> {
 		);
 		let fork_version = Self::bellatrix_fork_version(typed_chain_id).unwrap();
 		let genesis_validators_root = Self::genesis_validators_root(typed_chain_id).unwrap();
-		let domain =
-			compute_domain(DOMAIN_SYNC_COMMITTEE, fork_version, H256::from(genesis_validators_root));
+		let domain = compute_domain(
+			DOMAIN_SYNC_COMMITTEE,
+			fork_version,
+			H256::from(genesis_validators_root),
+		);
 		let signing_root =
 			compute_signing_root(H256(update.attested_beacon_header.tree_hash_root()), domain);
 

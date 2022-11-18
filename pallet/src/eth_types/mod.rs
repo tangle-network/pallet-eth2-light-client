@@ -107,13 +107,11 @@ uint_declare_wrapper_and_serde_codec_typeinfo!(U128, 2);
 uint_declare_wrapper_and_serde_codec_typeinfo!(U256, 4);
 
 pub type Address = H160;
-pub type Secret = H256;
-pub type Public = H512;
-pub type Signature = H520;
 
 // Block Header
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BlockHeader {
 	pub parent_hash: H256,
 	pub uncles_hash: H256,

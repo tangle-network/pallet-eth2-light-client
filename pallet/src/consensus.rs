@@ -1,9 +1,9 @@
 use super::*;
-use bitvec::{order::Lsb0, prelude::BitVec};
 use crate::eth_types::{
 	eth2::{DomainType, ForkData, HeaderUpdate, PublicKeyBytes, SigningData},
 	H256,
 };
+use bitvec::{order::Lsb0, prelude::BitVec};
 use tree_hash::TreeHash;
 
 pub const EPOCHS_PER_SYNC_COMMITTEE_PERIOD: u64 = 256;

@@ -1,7 +1,6 @@
 use crate::eth_types::eth2::LightClientUpdate;
 
-use crate::eth_types::pallet::InitInput;
-use crate::eth_types::{eth2::*, BlockHeader};
+use crate::eth_types::{eth2::*, pallet::InitInput, BlockHeader};
 use lazy_static::lazy_static;
 use sp_runtime::AccountId32;
 
