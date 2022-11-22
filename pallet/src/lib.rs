@@ -333,6 +333,8 @@ pub mod pallet {
 		HeaderHashDoesNotExist,
 		BlockHashesDoNotMatch,
 		InvalidSignaturePeriod,
+		CurrentSyncCommitteeNotSet,
+		NextSyncCommitteeNotSet,
 	}
 
 	#[pallet::hooks]
@@ -666,16 +668,24 @@ impl<T: Config> Pallet<T> {
 		finalized_period: u64,
 	) -> Result<(), DispatchError> {
 		let signature_period = compute_sync_committee_period(update.signature_slot);
-		// The acceptable signature periods are `signature_period`, `signature_period + 1
+		// Verify signature period does not skip a sync committee period
+		// The acceptable signature periods are `signature_period`, `signature_period + 1`
 		ensure!(
 			signature_period == finalized_period || signature_period == finalized_period + 1,
 			Error::<T>::InvalidSignaturePeriod
 		);
 		// Verify sync committee aggregate signature
-		// TODO: Ensure these storage values exist before unwrapping
 		let sync_committee = if signature_period == finalized_period {
+			ensure!(
+				Self::current_sync_committee(typed_chain_id).is_some(),
+				Error::<T>::CurrentSyncCommitteeNotSet
+			);
 			Self::current_sync_committee(typed_chain_id).unwrap()
 		} else {
+			ensure!(
+				Self::next_sync_committee(typed_chain_id).is_some(),
+				Error::<T>::NextSyncCommitteeNotSet
+			);
 			Self::next_sync_committee(typed_chain_id).unwrap()
 		};
 
