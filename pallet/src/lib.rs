@@ -332,6 +332,7 @@ pub mod pallet {
 		SubmitterExhaustedLimit,
 		HeaderHashDoesNotExist,
 		BlockHashesDoNotMatch,
+		InvalidSignaturePeriod,
 	}
 
 	#[pallet::hooks]
@@ -665,6 +666,11 @@ impl<T: Config> Pallet<T> {
 		finalized_period: u64,
 	) -> Result<(), DispatchError> {
 		let signature_period = compute_sync_committee_period(update.signature_slot);
+		// The acceptable signature periods are `signature_period`, `signature_period + 1
+		ensure!(
+			signature_period == finalized_period || signature_period == finalized_period + 1,
+			Error::<T>::InvalidSignaturePeriod
+		);
 		// Verify sync committee aggregate signature
 		// TODO: Ensure these storage values exist before unwrapping
 		let sync_committee = if signature_period == finalized_period {
