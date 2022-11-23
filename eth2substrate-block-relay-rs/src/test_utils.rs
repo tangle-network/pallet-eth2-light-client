@@ -78,7 +78,7 @@ pub fn init_contract_from_files(
 		Some(false),
 		None,
 		None,
-		Some(eth_client_contract.contract_wrapper.get_signer_account_id()),
+		Some(eth_client_contract.get_signer_account_id()),
 	);
 	thread::sleep(time::Duration::from_secs(30));
 }
@@ -210,7 +210,7 @@ pub fn get_client_contract(
 	from_file: bool,
 	config_for_test: &ConfigForTests,
 ) -> Box<dyn EthClientPalletTrait> {
-	let mut eth_client_contract = EthClientPallet::new(contract_wrapper);
+	let mut eth_client_contract = EthClientPallet::new());
 
 	let mut config = get_init_config(config_for_test, &eth_client_contract);
 	config.signer_account_id = eth_client_contract.get_signer_account_id().to_string();
@@ -264,7 +264,7 @@ pub fn get_relay_from_slot(
 	config_for_test: &ConfigForTests,
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
-	let mut eth_client_contract = EthClientPallet::new(contract_wrapper);
+	let mut eth_client_contract = EthClientPallet::new);
 
 	init_contract_from_specific_slot(&mut eth_client_contract, slot, config_for_test);
 

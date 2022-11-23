@@ -96,6 +96,12 @@ pub struct EthClientPallet {
 	signer: dyn Signer<PolkadotConfig>,
 }
 
+impl EthClientPallet {
+	pub fn new(api: OnlineClient<PolkadotConfig>) -> Self {
+		Self { api, signer }
+	}
+}
+
 #[async_trait]
 impl EthClientPalletTrait for EthClientPallet {
 	async fn get_last_submitted_slot(&self) -> u64 {
