@@ -7,7 +7,7 @@ use crate::{
 	},
 	execution_block_proof::ExecutionBlockProof,
 };
-use bitvec::macros::internal::funty::Fundamental;
+use funty::Fundamental;
 use eth_types::{
 	eth2::{
 		FinalizedHeaderUpdate, HeaderUpdate, LightClientUpdate, SignatureBytes, SyncCommittee,

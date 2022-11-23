@@ -7,7 +7,7 @@ use crate::{
 	light_client_snapshot_with_proof::LightClientSnapshotWithProof,
 	utils,
 };
-use bitvec::macros::internal::funty::Fundamental;
+use funty::Fundamental;
 use eth_types::{
 	eth2::{
 		BeaconBlockHeader, FinalizedHeaderUpdate, HeaderUpdate, LightClientUpdate, Slot,

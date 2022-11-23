@@ -1,11 +1,11 @@
 [package]
 name = "merkle_proof"
 version = "0.2.0"
-authors = ["Michael Sproul <michael@sigmaprime.io>"]
+authors = ["Michael Sproul <michael@sigmaprime.io>", "Webb Developers <drew@webb.tools>"]
 edition = "2021"
 
 [dependencies]
-ethereum-types = { version = "0.13.1", default-features = false }
+ethereum-types = { version = "0.14.0", default-features = false }
 eth2_hashing = { path = "../eth2_hashing", default-features = false, features = ["zero_hash_cache"] }
 lazy_static = { version = "1.4.0", features = ["spin_no_std"], default-features = false }
 safe_arith = { path = "../safe_arith", default-features = false }

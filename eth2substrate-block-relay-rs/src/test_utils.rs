@@ -1,7 +1,7 @@
 use crate::{
-	config::Config, config_for_tests::ConfigForTests, contract_type::ContractType,
+	config::Config, config_for_tests::ConfigForTests,
 	eth2substrate_relay::Eth2SubstrateRelay, eth_client_pallet_trait::EthClientPalletTrait,
-	test_utils,
+	test_utils, substrate_pallet_client::EthClientPallet,
 };
 use bitvec::macros::internal::funty::Fundamental;
 use eth_rpc_client::{
@@ -13,7 +13,6 @@ use eth_types::{
 	BlockHeader,
 };
 use std::{thread, time};
-use tokio::runtime::Runtime;
 use tree_hash::TreeHash;
 
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
@@ -151,7 +150,7 @@ pub fn init_contract_from_specific_slot(
 		Some(false),
 		None,
 		None,
-		Some(eth_client_contract.contract_wrapper.get_signer_account_id()),
+		Some(eth_client_contract.get_signer_account_id()),
 	);
 
 	thread::sleep(time::Duration::from_secs(30));
@@ -211,9 +210,6 @@ pub fn get_client_contract(
 	from_file: bool,
 	config_for_test: &ConfigForTests,
 ) -> Box<dyn EthClientPalletTrait> {
-	let (relay_account, contract) = create_contract(config_for_test);
-	let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
-
 	let mut eth_client_contract = EthClientPallet::new(contract_wrapper);
 
 	let mut config = get_init_config(config_for_test, &eth_client_contract);
@@ -268,10 +264,6 @@ pub fn get_relay_from_slot(
 	config_for_test: &ConfigForTests,
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
-
-	let (relay_account, contract) = create_contract(&config_for_test);
-	let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
-
 	let mut eth_client_contract = EthClientPallet::new(contract_wrapper);
 
 	init_contract_from_specific_slot(&mut eth_client_contract, slot, config_for_test);

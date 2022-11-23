@@ -5,12 +5,13 @@ edition = "2021"
 
 [dependencies]
 types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-eth2_hashing = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-eth2_ssz = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 
+webb-relayer-utils = { path = "../../relayer/crates/relayer-utils" }
 eth-types = { path = "../crates/eth-types" }
+tree_hash = { path = "../crates/tree_hash" }
+merkle_proof = { path = "../crates/merkle_proof" }
+eth2_hashing = { path = "../crates/eth2_hashing" }
+eth2_ssz = { path = "../crates/ssz" }
 eth_rpc_client = { package = "webb-eth-rpc-client", path = "../crates/eth_rpc_client" }
 finality-update-verify = { path = "../crates/finality-update-verify" }
 
@@ -20,10 +21,12 @@ webb = { path = "../../webb-rs", features = [
 ]}
 webb-proposals = { path = "../../webb-rs/proposals" }
 
+funty = "2.0.0"
+sp-keyring = { git = "https://github.com/paritytech/substrate.git" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", features = ["derive"] }
-ethereum-types = { version = "0.13.1" }
+ethereum-types = { version = "0.14.0" }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "3.1.6", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time"] }
@@ -35,7 +38,7 @@ hex = "*"
 toml = "0.5.9"
 atomic_refcell = "0.1.8"
 bitvec = "*"
-primitive-types = "0.11.1"
+primitive-types = "0.12.1"
 
 prometheus = { version = "0.9", features = ["process"] }
 lazy_static = "1.4"

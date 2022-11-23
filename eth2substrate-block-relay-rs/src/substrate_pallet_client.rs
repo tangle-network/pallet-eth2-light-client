@@ -7,13 +7,14 @@ use eth_types::{
 };
 use eth_types::BlockHeader;
 use eth_types::eth2::SyncCommittee;
+use sp_keyring::AccountKeyring;
 use webb::substrate::{
-	scale::Decode,
+	scale::{Decode, Encode},
 	subxt::{
 		self,
 		dynamic::{DecodedValue, Value},
 		metadata::DecodeWithMetadata,
-		OnlineClient, PolkadotConfig,
+		OnlineClient, PolkadotConfig, tx::{Signer, PairSigner},
 	},
 };
 use webb_proposals::TypedChainId;
@@ -37,18 +38,20 @@ async fn init(
 	hashes_gc_threshold: Option<u64>,
 	max_submitted_blocks_by_account: Option<u32>,
 	trusted_signer: Option<AccountId>,
-) -> Result<EthClientPallet, Error> {
+) -> Result<(), Error> {
 	let api = setup_api().await?;
+	let signer = PairSigner::<PolkadotConfig, _>::new(AccountKeyring::Alice.pair());
+	// let signer = PairSigner::new(AccountKeyring::Alice.pair());
 
 	let init_input: InitInput<AccountId> = InitInput {
 		finalized_execution_header,
 		finalized_beacon_header,
 		current_sync_committee,
 		next_sync_committee,
-		validate_updates.unwrap_or(true),
-		verify_bls_signatures,
-		hashes_gc_threshold,
-		max_submitted_blocks_by_account,
+		validate_updates: validate_updates.unwrap_or(true),
+		verify_bls_signatures: verify_bls_signatures.unwrap_or(true),
+		hashes_gc_threshold: hashes_gc_threshold.unwrap_or(100),
+		max_submitted_blocks_by_account: max_submitted_blocks_by_account.unwrap_or(10),
 		trusted_signer,
 	};
 	// Create a transaction to submit:
@@ -90,6 +93,7 @@ pub async fn get_last_eth2_slot_on_tangle(typed_chain_id: TypedChainId) -> Resul
 
 pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
+	signer: dyn Signer<PolkadotConfig>,
 }
 
 #[async_trait]
@@ -145,7 +149,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		);
 
 		// submit the transaction with default params:
-		let hash = self.api.tx().sign_and_submit_default(&tx, &signer).await?;
+		let hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
 		Ok(())
 	}
 
