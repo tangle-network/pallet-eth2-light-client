@@ -18,7 +18,7 @@ impl LastSlotSearcher {
 		LastSlotSearcher { enable_binsearch }
 	}
 
-	pub fn get_last_slot(
+	pub async fn get_last_slot(
 		&mut self,
 		last_eth_slot: u64,
 		beacon_rpc_client: &BeaconRPCClient,
@@ -26,11 +26,11 @@ impl LastSlotSearcher {
 	) -> Result<u64, Box<dyn Error>> {
 		info!(target: "relay", "= Search for last slot on near =");
 
-		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot()?;
+		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await?;
 		let finalized_number = beacon_rpc_client.get_block_number_for_slot(finalized_slot)?;
 		info!(target: "relay", "Finalized slot/block_number on near={}/{}", finalized_slot, finalized_number);
 
-		let last_submitted_slot = eth_client_contract.get_last_submitted_slot();
+		let last_submitted_slot = eth_client_contract.get_last_submitted_slot().await;
 		trace!(target: "relay", "Last submitted slot={}", last_submitted_slot);
 
 		let slot = cmp::max(finalized_slot, last_submitted_slot);
@@ -60,7 +60,7 @@ impl LastSlotSearcher {
 	//     (1) start_slot is known on NEAR
 	//     (2) last_slot is unknown on NEAR
 	// Return error in case of problem with network connection
-	fn binary_slot_search(
+	async fn binary_slot_search(
 		&self,
 		slot: u64,
 		finalized_slot: u64,
@@ -77,7 +77,7 @@ impl LastSlotSearcher {
 			)
 		}
 
-		match self.block_known_on_near(slot, beacon_rpc_client, eth_client_contract) {
+		match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract) {
 			Ok(true) => self.binsearch_slot_forward(
 				slot,
 				last_eth_slot + 1,
@@ -124,7 +124,7 @@ impl LastSlotSearcher {
 	// (1) start_slot is known on NEAR
 	// (2) last_slot is unknown on NEAR
 	// Return error in case of problem with network connection
-	fn binsearch_slot_forward(
+	async fn binsearch_slot_forward(
 		&self,
 		slot: u64,
 		max_slot: u64,
@@ -134,7 +134,7 @@ impl LastSlotSearcher {
 		let mut current_step = 1;
 		let mut prev_slot = slot;
 		while slot + current_step < max_slot {
-			match self.block_known_on_near(
+			match self.block_known_on_substrate(
 				slot + current_step,
 				beacon_rpc_client,
 				eth_client_contract,
@@ -179,7 +179,7 @@ impl LastSlotSearcher {
 	// (1) start_slot is known on NEAR
 	// (2) last_slot is unknown on NEAR
 	// Return error in case of problem with network connection
-	fn binsearch_slot_range(
+	async fn binsearch_slot_range(
 		&self,
 		start_slot: u64,
 		last_slot: u64,
@@ -190,7 +190,7 @@ impl LastSlotSearcher {
 		let mut last_slot = last_slot;
 		while start_slot + 1 < last_slot {
 			let mid_slot = start_slot + (last_slot - start_slot) / 2;
-			match self.block_known_on_near(mid_slot, beacon_rpc_client, eth_client_contract) {
+			match self.block_known_on_substrate(mid_slot, beacon_rpc_client, eth_client_contract) {
 				Ok(true) => start_slot = mid_slot,
 				Ok(false) => last_slot = mid_slot,
 				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
@@ -220,7 +220,7 @@ impl LastSlotSearcher {
 	// Slot -- expected last known slot
 	// finalized_slot -- last finalized slot on NEAR, assume as known slot
 	// last_eth_slot -- head slot on Eth
-	fn linear_slot_search(
+	async fn linear_slot_search(
 		&self,
 		slot: u64,
 		finalized_slot: u64,
@@ -237,7 +237,7 @@ impl LastSlotSearcher {
 			)
 		}
 
-		match self.block_known_on_near(slot, beacon_rpc_client, eth_client_contract) {
+		match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract) {
 			Ok(true) => self.linear_search_forward(
 				slot,
 				last_eth_slot,
@@ -284,9 +284,9 @@ impl LastSlotSearcher {
 	// The search range is [slot .. max_slot)
 	// If there is no unknown block in this range max_slot - 1 will be returned
 	// Assumptions:
-	//     (1) block for slot is submitted to NEAR
-	//     (2) block for max_slot is not submitted to NEAR
-	fn linear_search_forward(
+	//     (1) block for slot is submitted to Substrate
+	//     (2) block for max_slot is not submitted to Substrate
+	async fn linear_search_forward(
 		&self,
 		slot: u64,
 		max_slot: u64,
@@ -295,7 +295,7 @@ impl LastSlotSearcher {
 	) -> Result<u64, Box<dyn Error>> {
 		let mut slot = slot;
 		while slot < max_slot {
-			match self.block_known_on_near(slot + 1, beacon_rpc_client, eth_client_contract) {
+			match self.block_known_on_substrate(slot + 1, beacon_rpc_client, eth_client_contract) {
 				Ok(true) => slot += 1,
 				Ok(false) => break,
 				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
@@ -312,9 +312,9 @@ impl LastSlotSearcher {
 	// The search range is [last_slot .. start_slot)
 	// If no such block are found the start_slot will be returned
 	// Assumptions:
-	//     (1) block for start_slot is submitted to NEAR
-	//     (2) block for last_slot + 1 is not submitted to NEAR
-	fn linear_search_backward(
+	//     (1) block for start_slot is submitted to Substrate
+	//     (2) block for last_slot + 1 is not submitted to Substrate
+	async fn linear_search_backward(
 		&self,
 		start_slot: u64,
 		last_slot: u64,
@@ -325,7 +325,7 @@ impl LastSlotSearcher {
 		let mut last_false_slot = slot + 1;
 
 		while slot > start_slot {
-			match self.block_known_on_near(slot, beacon_rpc_client, eth_client_contract) {
+			match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract) {
 				Ok(true) => break,
 				Ok(false) => {
 					last_false_slot = slot;
@@ -343,9 +343,9 @@ impl LastSlotSearcher {
 
 	// Find the leftmost non-empty slot. Search range: [left_slot, right_slot).
 	// Returns pair: (1) slot_id and (2) is this block already known on Eth client on NEAR
-	// Assume that right_slot is non-empty and it's block were submitted to NEAR,
+	// Assume that right_slot is non-empty and it's block were submitted to Substrate,
 	// so if non correspondent block is found we return (right_slot, false)
-	fn find_left_non_error_slot(
+	async fn find_left_non_error_slot(
 		&self,
 		left_slot: u64,
 		right_slot: u64,
@@ -357,7 +357,7 @@ impl LastSlotSearcher {
 
 		let mut slot = left_slot;
 		while slot != right_slot {
-			match self.block_known_on_near(slot, beacon_rpc_client, eth_client_contract) {
+			match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract) {
 				Ok(v) => return (slot, v),
 				Err(_) =>
 					if step > 0 {
@@ -375,9 +375,9 @@ impl LastSlotSearcher {
 		}
 	}
 
-	// Check if the block for current slot in Eth2 already were submitted to NEAR
+	// Check if the block for current slot in Eth2 already were submitted to Substrate
 	// Returns Error if slot doesn't contain any block
-	fn block_known_on_near(
+	async fn block_known_on_substrate(
 		&self,
 		slot: u64,
 		beacon_rpc_client: &BeaconRPCClient,
@@ -396,7 +396,7 @@ impl LastSlotSearcher {
 						.as_bytes(),
 				);
 
-				if eth_client_contract.is_known_block(&hash)? {
+				if eth_client_contract.is_known_block(&hash).await? {
 					trace!(target: "relay", "Block with slot={} was found on NEAR", slot);
 					Ok(true)
 				} else {
@@ -425,11 +425,11 @@ mod tests {
 	const TIMEOUT_SECONDS: u64 = 30;
 	const TIMEOUT_STATE_SECONDS: u64 = 1000;
 
-	fn get_test_config() -> ConfigForTests {
+	async fn get_test_config() -> ConfigForTests {
 		ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap())
 	}
 
-	fn get_execution_block_by_slot(
+	async fn get_execution_block_by_slot(
 		slot: u64,
 		beacon_rpc_client: &BeaconRPCClient,
 		eth1_rpc_client: &Eth1RPCClient,
@@ -440,7 +440,7 @@ mod tests {
 		}
 	}
 
-	fn send_execution_blocks(
+	async fn send_execution_blocks(
 		beacon_rpc_client: &BeaconRPCClient,
 		eth_client_contract: &mut Box<dyn EthClientPalletTrait>,
 		eth1_rpc_client: &Eth1RPCClient,
@@ -461,7 +461,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_block_known_on_near() {
+	fn test_block_known_on_substrate() {
 		let config_for_test = get_test_config();
 
 		let mut eth_client_contract = get_client_contract(true, &config_for_test);
@@ -475,7 +475,7 @@ mod tests {
 		let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 		let last_slot_searcher = LastSlotSearcher::new(true);
 
-		let is_block_known = last_slot_searcher.block_known_on_near(
+		let is_block_known = last_slot_searcher.block_known_on_substrate(
 			config_for_test.slot_without_block,
 			&beacon_rpc_client,
 			&eth_client_contract,
@@ -484,7 +484,7 @@ mod tests {
 			panic!();
 		}
 
-		let is_block_known = last_slot_searcher.block_known_on_near(
+		let is_block_known = last_slot_searcher.block_known_on_substrate(
 			config_for_test.first_slot,
 			&beacon_rpc_client,
 			&eth_client_contract,
@@ -505,7 +505,7 @@ mod tests {
 			finalized_slot + 1,
 		);
 
-		let is_block_known = last_slot_searcher.block_known_on_near(
+		let is_block_known = last_slot_searcher.block_known_on_substrate(
 			finalized_slot + 1,
 			&beacon_rpc_client,
 			&eth_client_contract,
@@ -772,7 +772,7 @@ mod tests {
 
 	#[test]
 	#[should_panic]
-	fn test_error_on_connection_problem() {
+	async fn test_error_on_connection_problem() {
 		let config_for_test = get_test_config();
 		let mut eth_client_contract = get_client_contract(true, &config_for_test);
 		eth_client_contract.register_submitter().unwrap();

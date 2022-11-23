@@ -14,10 +14,11 @@ eth-types = { path = "../crates/eth-types" }
 eth_rpc_client = { package = "webb-eth-rpc-client", path = "../crates/eth_rpc_client" }
 finality-update-verify = { path = "../crates/finality-update-verify" }
 
-webb = { path = "../../webb-rs", default-features = false, features = [
+webb = { path = "../../webb-rs", features = [
     "evm-runtime",
     "substrate-runtime"
 ]}
+webb-proposals = { path = "../../webb-rs/proposals" }
 
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
@@ -29,6 +30,7 @@ tokio = { version = "1.1", features = ["macros", "rt", "time"] }
 env_logger = "0.9.0"
 futures = { version = "0.3.21", default-features = false }
 async-std = "1.12.0"
+async-trait = "0.1.58"
 hex = "*"
 toml = "0.5.9"
 atomic_refcell = "0.1.8"

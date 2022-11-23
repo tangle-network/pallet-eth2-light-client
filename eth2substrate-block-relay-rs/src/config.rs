@@ -1,4 +1,3 @@
-use crate::contract_type::ContractType;
 use eth_rpc_client::beacon_rpc_client::BeaconRPCVersion;
 use reqwest::Url;
 use serde::Deserialize;
