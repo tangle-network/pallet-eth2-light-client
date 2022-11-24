@@ -43,7 +43,8 @@ impl LastSlotSearcher {
 				last_eth_slot,
 				beacon_rpc_client,
 				eth_client_contract,
-			).await
+			)
+			.await
 		} else {
 			self.linear_slot_search(
 				slot,
@@ -51,7 +52,8 @@ impl LastSlotSearcher {
 				last_eth_slot,
 				beacon_rpc_client,
 				eth_client_contract,
-			).await
+			)
+			.await
 		}
 	}
 
@@ -69,49 +71,64 @@ impl LastSlotSearcher {
 		eth_client_contract: &Box<dyn EthClientPalletTrait>,
 	) -> Result<u64, Box<dyn Error>> {
 		if slot == finalized_slot {
-			return self.binsearch_slot_forward(
-				slot,
-				last_eth_slot + 1,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await
+			return self
+				.binsearch_slot_forward(
+					slot,
+					last_eth_slot + 1,
+					beacon_rpc_client,
+					eth_client_contract,
+				)
+				.await
 		}
 
-		match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract).await {
-			Ok(true) => self.binsearch_slot_forward(
-				slot,
-				last_eth_slot + 1,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await,
-			Ok(false) => self.binsearch_slot_range(
-				finalized_slot,
-				slot,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await,
+		match self
+			.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract)
+			.await
+		{
+			Ok(true) =>
+				self.binsearch_slot_forward(
+					slot,
+					last_eth_slot + 1,
+					beacon_rpc_client,
+					eth_client_contract,
+				)
+				.await,
+			Ok(false) =>
+				self.binsearch_slot_range(
+					finalized_slot,
+					slot,
+					beacon_rpc_client,
+					eth_client_contract,
+				)
+				.await,
 			Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
 				Some(_) => {
-					let (left_slot, slot_on_near) = self.find_left_non_error_slot(
-						slot + 1,
-						last_eth_slot + 1,
-						1,
-						beacon_rpc_client,
-						eth_client_contract,
-					).await;
-					match slot_on_near {
-						true => self.binsearch_slot_forward(
-							left_slot,
+					let (left_slot, slot_on_near) = self
+						.find_left_non_error_slot(
+							slot + 1,
 							last_eth_slot + 1,
+							1,
 							beacon_rpc_client,
 							eth_client_contract,
-						).await,
-						false => self.binsearch_slot_range(
-							finalized_slot,
-							slot,
-							beacon_rpc_client,
-							eth_client_contract,
-						).await,
+						)
+						.await;
+					match slot_on_near {
+						true =>
+							self.binsearch_slot_forward(
+								left_slot,
+								last_eth_slot + 1,
+								beacon_rpc_client,
+								eth_client_contract,
+							)
+							.await,
+						false =>
+							self.binsearch_slot_range(
+								finalized_slot,
+								slot,
+								beacon_rpc_client,
+								eth_client_contract,
+							)
+							.await,
 					}
 				},
 				None => Err(err),
@@ -134,11 +151,14 @@ impl LastSlotSearcher {
 		let mut current_step = 1;
 		let mut prev_slot = slot;
 		while slot + current_step < max_slot {
-			match self.block_known_on_substrate(
-				slot + current_step,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await {
+			match self
+				.block_known_on_substrate(
+					slot + current_step,
+					beacon_rpc_client,
+					eth_client_contract,
+				)
+				.await
+			{
 				Ok(true) => {
 					prev_slot = slot + current_step;
 					current_step = cmp::min(current_step * 2, max_slot - slot);
@@ -146,13 +166,15 @@ impl LastSlotSearcher {
 				Ok(false) => break,
 				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
 					Some(_) => {
-						let (slot_id, slot_on_near) = self.find_left_non_error_slot(
-							slot + current_step - 1,
-							prev_slot,
-							-1,
-							beacon_rpc_client,
-							eth_client_contract,
-						).await;
+						let (slot_id, slot_on_near) = self
+							.find_left_non_error_slot(
+								slot + current_step - 1,
+								prev_slot,
+								-1,
+								beacon_rpc_client,
+								eth_client_contract,
+							)
+							.await;
 						if slot_on_near {
 							prev_slot = slot_id;
 							current_step = cmp::min(current_step * 2, max_slot - slot);
@@ -171,7 +193,8 @@ impl LastSlotSearcher {
 			slot + current_step,
 			beacon_rpc_client,
 			eth_client_contract,
-		).await
+		)
+		.await
 	}
 
 	// Search for the slot before the first unknown slot on NEAR
@@ -190,18 +213,23 @@ impl LastSlotSearcher {
 		let mut last_slot = last_slot;
 		while start_slot + 1 < last_slot {
 			let mid_slot = start_slot + (last_slot - start_slot) / 2;
-			match self.block_known_on_substrate(mid_slot, beacon_rpc_client, eth_client_contract).await {
+			match self
+				.block_known_on_substrate(mid_slot, beacon_rpc_client, eth_client_contract)
+				.await
+			{
 				Ok(true) => start_slot = mid_slot,
 				Ok(false) => last_slot = mid_slot,
 				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
 					Some(_) => {
-						let (left_slot, is_left_slot_on_near) = self.find_left_non_error_slot(
-							mid_slot - 1,
-							start_slot,
-							-1,
-							beacon_rpc_client,
-							eth_client_contract,
-						).await;
+						let (left_slot, is_left_slot_on_near) = self
+							.find_left_non_error_slot(
+								mid_slot - 1,
+								start_slot,
+								-1,
+								beacon_rpc_client,
+								eth_client_contract,
+							)
+							.await;
 						if is_left_slot_on_near {
 							start_slot = mid_slot;
 						} else {
@@ -229,50 +257,60 @@ impl LastSlotSearcher {
 		eth_client_contract: &Box<dyn EthClientPalletTrait>,
 	) -> Result<u64, Box<dyn Error>> {
 		if slot == finalized_slot {
-			return self.linear_search_forward(
-				slot,
-				last_eth_slot,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await
+			return self
+				.linear_search_forward(slot, last_eth_slot, beacon_rpc_client, eth_client_contract)
+				.await
 		}
 
-		match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract).await {
-			Ok(true) => self.linear_search_forward(
-				slot,
-				last_eth_slot,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await,
-			Ok(false) => self.linear_search_backward(
-				finalized_slot,
-				slot,
-				beacon_rpc_client,
-				eth_client_contract,
-			).await,
+		match self
+			.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract)
+			.await
+		{
+			Ok(true) =>
+				self.linear_search_forward(
+					slot,
+					last_eth_slot,
+					beacon_rpc_client,
+					eth_client_contract,
+				)
+				.await,
+			Ok(false) =>
+				self.linear_search_backward(
+					finalized_slot,
+					slot,
+					beacon_rpc_client,
+					eth_client_contract,
+				)
+				.await,
 			Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
 				Some(_) => {
-					let (left_slot, slot_on_near) = self.find_left_non_error_slot(
-						slot + 1,
-						last_eth_slot + 1,
-						1,
-						beacon_rpc_client,
-						eth_client_contract,
-					).await;
+					let (left_slot, slot_on_near) = self
+						.find_left_non_error_slot(
+							slot + 1,
+							last_eth_slot + 1,
+							1,
+							beacon_rpc_client,
+							eth_client_contract,
+						)
+						.await;
 
 					match slot_on_near {
-						true => self.linear_search_forward(
-							left_slot,
-							last_eth_slot,
-							beacon_rpc_client,
-							eth_client_contract,
-						).await,
-						false => self.linear_search_backward(
-							finalized_slot,
-							left_slot - 1,
-							beacon_rpc_client,
-							eth_client_contract,
-						).await,
+						true =>
+							self.linear_search_forward(
+								left_slot,
+								last_eth_slot,
+								beacon_rpc_client,
+								eth_client_contract,
+							)
+							.await,
+						false =>
+							self.linear_search_backward(
+								finalized_slot,
+								left_slot - 1,
+								beacon_rpc_client,
+								eth_client_contract,
+							)
+							.await,
 					}
 				},
 				None => Err(err),
@@ -295,7 +333,10 @@ impl LastSlotSearcher {
 	) -> Result<u64, Box<dyn Error>> {
 		let mut slot = slot;
 		while slot < max_slot {
-			match self.block_known_on_substrate(slot + 1, beacon_rpc_client, eth_client_contract).await {
+			match self
+				.block_known_on_substrate(slot + 1, beacon_rpc_client, eth_client_contract)
+				.await
+			{
 				Ok(true) => slot += 1,
 				Ok(false) => break,
 				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
@@ -325,7 +366,10 @@ impl LastSlotSearcher {
 		let mut last_false_slot = slot + 1;
 
 		while slot > start_slot {
-			match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract).await {
+			match self
+				.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract)
+				.await
+			{
 				Ok(true) => break,
 				Ok(false) => {
 					last_false_slot = slot;
@@ -357,7 +401,10 @@ impl LastSlotSearcher {
 
 		let mut slot = left_slot;
 		while slot != right_slot {
-			match self.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract).await {
+			match self
+				.block_known_on_substrate(slot, beacon_rpc_client, eth_client_contract)
+				.await
+			{
 				Ok(v) => return (slot, v),
 				Err(_) =>
 					if step > 0 {
@@ -416,7 +463,7 @@ impl LastSlotSearcher {
 mod tests {
 	use crate::{
 		config_for_tests::ConfigForTests, eth_client_pallet_trait::EthClientPalletTrait,
-		last_slot_searcher::LastSlotSearcher, test_utils::get_client_contract,
+		last_slot_searcher::LastSlotSearcher, test_utils::get_client_pallet,
 	};
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
@@ -450,7 +497,8 @@ mod tests {
 		let mut slot = start_slot;
 		let mut blocks: Vec<BlockHeader> = vec![];
 		while slot <= end_slot {
-			if let Ok(block) = get_execution_block_by_slot(slot, beacon_rpc_client, eth1_rpc_client).await
+			if let Ok(block) =
+				get_execution_block_by_slot(slot, beacon_rpc_client, eth1_rpc_client).await
 			{
 				blocks.push(block)
 			}
@@ -464,7 +512,7 @@ mod tests {
 	async fn test_block_known_on_substrate() {
 		let config_for_test = get_test_config();
 
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -475,20 +523,24 @@ mod tests {
 		let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 		let last_slot_searcher = LastSlotSearcher::new(true);
 
-		let is_block_known = last_slot_searcher.block_known_on_substrate(
-			config_for_test.slot_without_block,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let is_block_known = last_slot_searcher
+			.block_known_on_substrate(
+				config_for_test.slot_without_block,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 		if is_block_known.is_ok() {
 			panic!();
 		}
 
-		let is_block_known = last_slot_searcher.block_known_on_substrate(
-			config_for_test.first_slot,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let is_block_known = last_slot_searcher
+			.block_known_on_substrate(
+				config_for_test.first_slot,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 
 		match is_block_known {
 			Ok(is_block_known) => assert!(!is_block_known),
@@ -503,13 +555,12 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			finalized_slot + 1,
-		).await;
+		)
+		.await;
 
-		let is_block_known = last_slot_searcher.block_known_on_substrate(
-			finalized_slot + 1,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let is_block_known = last_slot_searcher
+			.block_known_on_substrate(finalized_slot + 1, &beacon_rpc_client, &eth_client_contract)
+			.await;
 		match is_block_known {
 			Ok(is_block_known) => assert!(is_block_known),
 			Err(_) => panic!(),
@@ -519,7 +570,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_find_left_non_error_slot() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -530,43 +581,51 @@ mod tests {
 		let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 		let last_slot_searcher = LastSlotSearcher::new(true);
 
-		let (left_non_empty_slot, is_known_block) = last_slot_searcher.find_left_non_error_slot(
-			config_for_test.left_empty_slot - 1,
-			config_for_test.right_empty_slot + 2,
-			1,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let (left_non_empty_slot, is_known_block) = last_slot_searcher
+			.find_left_non_error_slot(
+				config_for_test.left_empty_slot - 1,
+				config_for_test.right_empty_slot + 2,
+				1,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 		assert_eq!(left_non_empty_slot, config_for_test.left_empty_slot - 1);
 		assert!(!is_known_block);
 
-		let (left_non_empty_slot, is_known_block) = last_slot_searcher.find_left_non_error_slot(
-			config_for_test.left_empty_slot,
-			config_for_test.right_empty_slot + 2,
-			1,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let (left_non_empty_slot, is_known_block) = last_slot_searcher
+			.find_left_non_error_slot(
+				config_for_test.left_empty_slot,
+				config_for_test.right_empty_slot + 2,
+				1,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 		assert_eq!(left_non_empty_slot, config_for_test.right_empty_slot + 1);
 		assert!(!is_known_block);
 
-		let (left_non_empty_slot, is_known_block) = last_slot_searcher.find_left_non_error_slot(
-			config_for_test.left_empty_slot,
-			config_for_test.right_empty_slot,
-			1,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let (left_non_empty_slot, is_known_block) = last_slot_searcher
+			.find_left_non_error_slot(
+				config_for_test.left_empty_slot,
+				config_for_test.right_empty_slot,
+				1,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 		assert_eq!(left_non_empty_slot, config_for_test.right_empty_slot);
 		assert!(!is_known_block);
 
-		let (left_non_empty_slot, is_known_block) = last_slot_searcher.find_left_non_error_slot(
-			config_for_test.right_empty_slot,
-			config_for_test.right_empty_slot + 2,
-			1,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let (left_non_empty_slot, is_known_block) = last_slot_searcher
+			.find_left_non_error_slot(
+				config_for_test.right_empty_slot,
+				config_for_test.right_empty_slot + 2,
+				1,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 		assert_eq!(left_non_empty_slot, config_for_test.right_empty_slot + 1);
 		assert!(!is_known_block);
 
@@ -578,15 +637,18 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			finalized_slot + 1,
-		).await;
+		)
+		.await;
 
-		let (left_non_empty_slot, is_known_block) = last_slot_searcher.find_left_non_error_slot(
-			finalized_slot + 1,
-			finalized_slot + 2,
-			1,
-			&beacon_rpc_client,
-			&eth_client_contract,
-		).await;
+		let (left_non_empty_slot, is_known_block) = last_slot_searcher
+			.find_left_non_error_slot(
+				finalized_slot + 1,
+				finalized_slot + 2,
+				1,
+				&beacon_rpc_client,
+				&eth_client_contract,
+			)
+			.await;
 		assert_eq!(left_non_empty_slot, finalized_slot + 1);
 		assert!(is_known_block);
 	}
@@ -594,7 +656,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_linear_search_backward() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -612,7 +674,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			finalized_slot + 2,
-		).await;
+		)
+		.await;
 
 		let last_submitted_block = last_slot_searcher
 			.linear_search_backward(
@@ -631,7 +694,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 3,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 
 		let last_submitted_block = last_slot_searcher
 			.linear_search_backward(
@@ -648,7 +712,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_linear_search_forward() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -688,7 +752,8 @@ mod tests {
 			&eth1_rpc_client,
 			config_for_test.slot_without_block - 1,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.linear_search_forward(
@@ -706,7 +771,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_linear_slot_search() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -782,7 +847,7 @@ mod tests {
 	#[should_panic]
 	async fn test_error_on_connection_problem() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let mut beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -801,7 +866,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			finalized_slot + 2,
-		).await;
+		)
+		.await;
 
 		beacon_rpc_client = BeaconRPCClient::new(
 			"http://httpstat.us/504/",
@@ -824,7 +890,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_binsearch_slot_range() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let mut beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -835,7 +901,8 @@ mod tests {
 		let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 		let last_slot_searcher = LastSlotSearcher::new(true);
 
-		let finalized_beacon_slot = eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
+		let finalized_beacon_slot =
+			eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -843,7 +910,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_beacon_slot + 1,
 			config_for_test.slot_without_block - 2,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.binsearch_slot_range(
@@ -862,7 +930,8 @@ mod tests {
 			&eth1_rpc_client,
 			config_for_test.slot_without_block - 1,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 		let last_block_on_near = last_slot_searcher
 			.binsearch_slot_range(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
@@ -919,7 +988,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_binsearch_slot_forward() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let mut beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -930,7 +999,8 @@ mod tests {
 		let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 		let last_slot_searcher = LastSlotSearcher::new(true);
 
-		let finalized_beacon_slot = eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
+		let finalized_beacon_slot =
+			eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -938,7 +1008,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_beacon_slot + 1,
 			config_for_test.slot_without_block - 2,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.binsearch_slot_forward(
@@ -957,7 +1028,8 @@ mod tests {
 			&eth1_rpc_client,
 			config_for_test.slot_without_block - 1,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.binsearch_slot_forward(
@@ -1015,7 +1087,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_binsearch_slot_search() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let mut beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -1034,7 +1106,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			config_for_test.slot_without_block - 2,
-		).await;
+		)
+		.await;
 
 		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
 
@@ -1056,7 +1129,8 @@ mod tests {
 			&eth1_rpc_client,
 			config_for_test.slot_without_block - 1,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.binary_slot_search(
@@ -1130,7 +1204,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_get_last_slot_binsearch() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let mut beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -1148,7 +1222,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			config_for_test.slot_without_block - 2,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.get_last_slot(
@@ -1166,7 +1241,8 @@ mod tests {
 			&eth1_rpc_client,
 			config_for_test.slot_without_block - 1,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.get_last_slot(
@@ -1200,7 +1276,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_get_last_slot_linearsearch() {
 		let config_for_test = get_test_config();
-		let mut eth_client_contract = get_client_contract(true, &config_for_test);
+		let mut eth_client_contract = get_client_pallet(true, &config_for_test).await;
 		eth_client_contract.register_submitter().await.unwrap();
 		let mut beacon_rpc_client = BeaconRPCClient::new(
 			&config_for_test.beacon_endpoint,
@@ -1219,7 +1295,8 @@ mod tests {
 			&eth1_rpc_client,
 			finalized_slot + 1,
 			config_for_test.slot_without_block - 2,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.get_last_slot(
@@ -1237,7 +1314,8 @@ mod tests {
 			&eth1_rpc_client,
 			config_for_test.slot_without_block - 1,
 			config_for_test.slot_without_block - 1,
-		).await;
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.get_last_slot(

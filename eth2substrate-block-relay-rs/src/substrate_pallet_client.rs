@@ -1,26 +1,27 @@
-use std::any::Any;
 use async_trait::async_trait;
+use std::any::Any;
 
 use eth_types::{
-	eth2::{ExtendedBeaconBlockHeader, FinalizedHeaderUpdate},
+	eth2::{ExtendedBeaconBlockHeader, FinalizedHeaderUpdate, SyncCommittee},
 	pallet::InitInput,
+	BlockHeader,
 };
-use eth_types::BlockHeader;
-use eth_types::eth2::SyncCommittee;
+use sp_core::{crypto::AccountId32, sr25519::Pair};
 use sp_keyring::AccountKeyring;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
 		self,
-		dynamic::{DecodedValue, Value},
+		dynamic::{DecodedValue, DecodedValueThunk, Value},
 		metadata::DecodeWithMetadata,
-		OnlineClient, PolkadotConfig, tx::{Signer, PairSigner},
+		tx::{PairSigner, Signer},
+		Config, OnlineClient, PolkadotConfig,
 	},
 };
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
 
-use crate::eth_client_pallet_trait::{AccountId, EthClientPalletTrait};
+use crate::eth_client_pallet_trait::EthClientPalletTrait;
 
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new().await?;
@@ -37,13 +38,13 @@ async fn init(
 	verify_bls_signatures: Option<bool>,
 	hashes_gc_threshold: Option<u64>,
 	max_submitted_blocks_by_account: Option<u32>,
-	trusted_signer: Option<AccountId>,
+	trusted_signer: Option<AccountId32>,
 ) -> Result<(), Error> {
 	let api = setup_api().await?;
 	let signer = PairSigner::<PolkadotConfig, _>::new(AccountKeyring::Alice.pair());
 	// let signer = PairSigner::new(AccountKeyring::Alice.pair());
 
-	let init_input: InitInput<AccountId> = InitInput {
+	let init_input: InitInput<AccountId32> = InitInput {
 		finalized_execution_header,
 		finalized_beacon_header,
 		current_sync_committee,
@@ -71,7 +72,7 @@ async fn finalized_beacon_block_slot(typed_chain_id: TypedChainId) -> Result<u64
 		"FinalizedBeaconHeader",
 		vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
 	);
-	let finalized_beacon_header_value: DecodedValue =
+	let finalized_beacon_header_value: DecodedValueThunk =
 		api.storage().fetch_or_default(&storage_address, None).await?;
 
 	Ok(0)
@@ -85,7 +86,7 @@ pub async fn get_last_eth2_slot_on_tangle(typed_chain_id: TypedChainId) -> Resul
 		"FinalizedHeaderUpdate",
 		vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
 	);
-	let finalized_header_update: DecodedValue =
+	let finalized_header_update: DecodedValueThunk =
 		api.storage().fetch_or_default(&storage_address, None).await?;
 
 	Ok(0)
@@ -93,12 +94,17 @@ pub async fn get_last_eth2_slot_on_tangle(typed_chain_id: TypedChainId) -> Resul
 
 pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
-	signer: dyn Signer<PolkadotConfig>,
+	signer: PairSigner<PolkadotConfig, Pair>,
 }
 
 impl EthClientPallet {
 	pub fn new(api: OnlineClient<PolkadotConfig>) -> Self {
+		let signer = PairSigner::new(AccountKeyring::Alice.pair());
 		Self { api, signer }
+	}
+
+	pub fn get_signer_account_id(&self) -> AccountId32 {
+		self.signer.account_id().clone()
 	}
 }
 
@@ -125,7 +131,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn get_finalized_beacon_block_hash(
 		&self,
 	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
-		Ok(eth_types::H256::zero())
+		Ok(eth_types::H256::from([0u8; 32]))
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
@@ -148,11 +154,8 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn register_submitter(&self) -> Result<(), Box<dyn std::error::Error>> {
 		// Create a transaction to submit:
-		let tx = subxt::dynamic::tx(
-			"Eth2Client",
-			"register_submitter",
-			vec![Value::from_bytes(init_input.encode())],
-		);
+		let tx =
+			subxt::dynamic::tx("Eth2Client", "register_submitter", vec![Value::from_bytes(&[])]);
 
 		// submit the transaction with default params:
 		let hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
@@ -161,7 +164,7 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn is_submitter_registered(
 		&self,
-		account_id: Option<crate::eth_client_pallet_trait::AccountId>,
+		account_id: Option<AccountId32>,
 	) -> Result<bool, Box<dyn std::error::Error>> {
 		Ok(true)
 	}

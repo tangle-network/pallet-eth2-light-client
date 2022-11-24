@@ -11,7 +11,6 @@ use crate::{
 		LAST_FINALIZED_ETH_SLOT_ON_NEAR,
 	},
 };
-use funty::Fundamental;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
 	eth1_rpc_client::Eth1RPCClient,
@@ -22,6 +21,7 @@ use eth_types::{
 	BlockHeader,
 };
 use finality_update_verify::network_config::{Network, NetworkConfig};
+use funty::Fundamental;
 use log::{debug, info, trace, warn};
 use std::{cmp, error::Error, str::FromStr, thread, thread::sleep, time::Duration, vec::Vec};
 
@@ -187,12 +187,14 @@ impl Eth2SubstrateRelay {
 		}
 	}
 
-	async fn get_last_eth2_slot_on_substrate(&mut self, max_slot: u64) -> Result<u64, Box<dyn Error>> {
-		let last_eth2_slot_on_substrate = self.last_slot_searcher.get_last_slot(
-			max_slot,
-			&self.beacon_rpc_client,
-			&self.eth_client_pallet,
-		).await?;
+	async fn get_last_eth2_slot_on_substrate(
+		&mut self,
+		max_slot: u64,
+	) -> Result<u64, Box<dyn Error>> {
+		let last_eth2_slot_on_substrate = self
+			.last_slot_searcher
+			.get_last_slot(max_slot, &self.beacon_rpc_client, &self.eth_client_pallet)
+			.await?;
 
 		LAST_ETH_SLOT_ON_NEAR
 			.inc_by(cmp::max(0, last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_NEAR.get()));
@@ -287,7 +289,8 @@ impl Eth2SubstrateRelay {
 					self.get_execution_blocks_between(
 						last_eth2_slot_on_substrate + 1,
 						max_slot_for_submission,
-					).await,
+					)
+					.await,
 					"Network problems during fetching execution blocks",
 					self.sleep_time_on_sync_secs
 				);
@@ -295,7 +298,8 @@ impl Eth2SubstrateRelay {
 					headers,
 					current_slot,
 					&mut last_eth2_slot_on_substrate,
-				).await;
+				)
+				.await;
 				were_submission_on_iter = true;
 			}
 
@@ -489,16 +493,20 @@ impl Eth2SubstrateRelay {
 
 		info!(target: "relay", "last_finalized_slot on near/eth {}/{}", last_finalized_slot_on_substrate, last_finalized_slot_on_eth);
 
-		if self.is_enough_blocks_for_light_client_update(
-			last_submitted_slot,
-			last_finalized_slot_on_substrate,
-			last_finalized_slot_on_eth,
-		).await {
+		if self
+			.is_enough_blocks_for_light_client_update(
+				last_submitted_slot,
+				last_finalized_slot_on_substrate,
+				last_finalized_slot_on_eth,
+			)
+			.await
+		{
 			self.send_light_client_updates(
 				last_submitted_slot,
 				last_finalized_slot_on_substrate,
 				last_finalized_slot_on_eth,
-			).await;
+			)
+			.await;
 			return true
 		}
 
@@ -528,7 +536,8 @@ impl Eth2SubstrateRelay {
 			self.send_regular_light_client_update(
 				last_finalized_slot_on_eth,
 				last_finalized_slot_on_substrate,
-			).await;
+			)
+			.await;
 		}
 	}
 
@@ -623,7 +632,8 @@ impl Eth2SubstrateRelay {
 			if finality_update_slot <= last_finalized_slot_on_substrate {
 				info!(target: "relay", "Finality update slot for hand made light client update <= last finality update on NEAR. Increment gap for attested slot and skipping light client update.");
 				attested_slot = return_on_fail!(
-					self.get_attested_slot(last_finalized_slot_on_substrate + ONE_EPOCH_IN_SLOTS).await,
+					self.get_attested_slot(last_finalized_slot_on_substrate + ONE_EPOCH_IN_SLOTS)
+						.await,
 					"Error on getting attested slot"
 				);
 				continue
@@ -637,9 +647,11 @@ impl Eth2SubstrateRelay {
 
 	async fn send_specific_light_client_update(&mut self, light_client_update: LightClientUpdate) {
 		let is_known_block = return_on_fail!(
-			self.eth_client_pallet.is_known_block(
-				&light_client_update.finality_update.header_update.execution_block_hash,
-			).await,
+			self.eth_client_pallet
+				.is_known_block(
+					&light_client_update.finality_update.header_update.execution_block_hash,
+				)
+				.await,
 			"Fail on the is_known_block method. Skipping sending light client update"
 		);
 
@@ -657,7 +669,9 @@ impl Eth2SubstrateRelay {
 			}
 
 			let execution_outcome = return_on_fail_and_sleep!(
-				self.eth_client_pallet.send_light_client_update(light_client_update.clone()).await,
+				self.eth_client_pallet
+					.send_light_client_update(light_client_update.clone())
+					.await,
 				"Fail to send light client update",
 				self.sleep_time_on_sync_secs
 			);
@@ -671,7 +685,8 @@ impl Eth2SubstrateRelay {
 			// }
 
 			// info!(target: "relay", "Successful light client update submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",
-			//                       self.substrate_network_name, execution_outcome.transaction.hash);
+			//                       self.substrate_network_name,
+			// execution_outcome.transaction.hash);
 
 			let finalized_block_number = return_on_fail!(
 				self.beacon_rpc_client.get_block_number_for_slot(
@@ -758,7 +773,11 @@ mod tests {
 			}
 		}
 
-		relay.eth_client_pallet.send_headers(&blocks, finality_slot_on_eth).await.unwrap();
+		relay
+			.eth_client_pallet
+			.send_headers(&blocks, finality_slot_on_eth)
+			.await
+			.unwrap();
 
 		finality_slot_on_eth
 	}
@@ -771,7 +790,7 @@ mod tests {
 	async fn test_submit_zero_headers() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 
 		let mut end_slot = get_finalized_slot(&relay).await;
 		end_slot += 1;
@@ -786,7 +805,7 @@ mod tests {
 	async fn test_send_specific_light_client_update() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = get_finalized_slot(&relay).await;
 
 		let light_client_updates: Vec<LightClientUpdate> = serde_json::from_str(
@@ -818,7 +837,7 @@ mod tests {
 
 		let config_for_test = get_test_config();
 
-		let relay = get_relay(true, true, &config_for_test);
+		let relay = get_relay(true, true, &config_for_test).await;
 
 		let light_client_update =
 			relay.beacon_rpc_client.get_light_client_update_for_last_period().unwrap();
@@ -870,7 +889,7 @@ mod tests {
 	async fn test_hand_made_light_client_update() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = get_finalized_slot(&relay).await;
 
 		let light_client_updates: Vec<LightClientUpdate> = serde_json::from_str(
@@ -897,7 +916,7 @@ mod tests {
 	async fn test_hand_made_light_client_update_with_null_signature_slot() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = get_finalized_slot(&relay).await;
 
 		let light_client_updates: Vec<LightClientUpdate> = serde_json::from_str(
@@ -933,10 +952,11 @@ mod tests {
 	async fn test_send_light_client_update() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, false, &config_for_test);
+		let mut relay = get_relay(true, false, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
 
-		let _finality_slot_on_eth = send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
+		let _finality_slot_on_eth =
+			send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
 		assert!(relay.send_light_client_updates_with_checks(config_for_test.first_slot).await);
 
 		let new_finalized_slot = get_finalized_slot(&relay).await;
@@ -947,12 +967,14 @@ mod tests {
 	async fn test_get_execution_block_by_slot() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		relay
 			.get_execution_block_by_slot(config_for_test.slot_without_block - 1)
 			.await
 			.unwrap();
-		if let Err(err) = relay.get_execution_block_by_slot(config_for_test.slot_without_block).await {
+		if let Err(err) =
+			relay.get_execution_block_by_slot(config_for_test.slot_without_block).await
+		{
 			if err.downcast_ref::<NoBlockForSlotError>().is_none() {
 				panic!("Wrong error type for slot without block");
 			}
@@ -966,7 +988,9 @@ mod tests {
 			TIMEOUT_STATE_SECONDS,
 			None,
 		);
-		if let Err(err) = relay.get_execution_block_by_slot(config_for_test.slot_without_block).await {
+		if let Err(err) =
+			relay.get_execution_block_by_slot(config_for_test.slot_without_block).await
+		{
 			if err.downcast_ref::<NoBlockForSlotError>().is_some() {
 				panic!("Wrong error type for unworking network");
 			}
@@ -978,7 +1002,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_verify_bls_signature() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let mut light_client_updates: Vec<LightClientUpdate> = serde_json::from_str(
 			&std::fs::read_to_string(config_for_test.path_to_light_client_updates)
 				.expect("Unable to read file"),
@@ -1004,7 +1028,7 @@ mod tests {
 	async fn test_get_attested_slot() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 
 		let light_client_updates: Vec<LightClientUpdate> = serde_json::from_str(
 			&std::fs::read_to_string(config_for_test.path_to_light_client_updates)
@@ -1035,7 +1059,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_get_execution_blocks_between() {
 		let config_for_test = get_test_config();
-		let relay = get_relay(true, true, &config_for_test);
+		let relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = get_finalized_slot(&relay).await;
 
 		let blocks = relay
@@ -1059,7 +1083,7 @@ mod tests {
 	#[tokio::test]
 	async fn test_submit_execution_blocks() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let mut finalized_slot = get_finalized_slot(&relay).await;
 		let blocks = relay
 			.get_execution_blocks_between(
@@ -1087,7 +1111,7 @@ mod tests {
 	#[ignore]
 	async fn try_submit_update_with_not_enough_blocks() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = get_finalized_slot(&relay).await;
 
 		let light_client_updates: Vec<LightClientUpdate> = serde_json::from_str(
@@ -1113,7 +1137,7 @@ mod tests {
 	async fn test_not_invalid_attested_slot() {
 		let config_for_test = get_test_config();
 
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = config_for_test.first_slot;
 		let possible_attested_slot = finalized_slot +
 			ONE_EPOCH_IN_SLOTS * 2 +
@@ -1130,7 +1154,7 @@ mod tests {
 	#[should_panic(expected = "504 Gateway Timeout")]
 	async fn get_execution_blocks_in_bad_network() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finalized_slot = get_finalized_slot(&relay).await;
 
 		relay.beacon_rpc_client = BeaconRPCClient::new(
@@ -1153,10 +1177,13 @@ mod tests {
 	#[ignore]
 	async fn test_send_regular_light_client_update() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, false, &config_for_test);
+		let mut relay = get_relay(true, false, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
-		let finality_slot_on_eth = send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
-		relay.send_regular_light_client_update(finality_slot_on_eth, finality_slot).await;
+		let finality_slot_on_eth =
+			send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
+		relay
+			.send_regular_light_client_update(finality_slot_on_eth, finality_slot)
+			.await;
 
 		let new_finalized_slot = get_finalized_slot(&relay).await;
 		assert_ne!(finality_slot, new_finalized_slot);
@@ -1165,10 +1192,11 @@ mod tests {
 	#[tokio::test]
 	async fn test_wrong_last_submitted_slot() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, false, &config_for_test);
+		let mut relay = get_relay(true, false, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
 
-		let _finality_slot_on_eth = send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
+		let _finality_slot_on_eth =
+			send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
 		assert!(!relay.send_light_client_updates_with_checks(finality_slot).await);
 
 		let new_finalized_slot = get_finalized_slot(&relay).await;
@@ -1178,12 +1206,13 @@ mod tests {
 	#[tokio::test]
 	async fn test_too_often_updates() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, false, &config_for_test);
+		let mut relay = get_relay(true, false, &config_for_test).await;
 		relay.interval_between_light_client_updates_submission_in_epochs = 2;
 
 		let finality_slot = get_finalized_slot(&relay).await;
 
-		let _finality_slot_on_eth = send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
+		let _finality_slot_on_eth =
+			send_blocks_till_finalized_eth_slot(&mut relay, finality_slot).await;
 		assert!(!relay.send_light_client_updates_with_checks(finality_slot).await);
 
 		let new_finalized_slot = get_finalized_slot(&relay).await;
@@ -1194,7 +1223,7 @@ mod tests {
 	#[ignore]
 	async fn test_run() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
 
 		relay.run(Some(5));
@@ -1212,7 +1241,8 @@ mod tests {
 			true,
 			config_for_test.finalized_slot_before_new_period,
 			&config_for_test,
-		);
+		)
+		.await;
 		relay.headers_batch_size = 33;
 		relay.max_blocks_for_finalization = 100;
 
@@ -1228,7 +1258,9 @@ mod tests {
 
 		assert_eq!(finality_slot, last_slot_on_substrate);
 
-		relay.submit_execution_blocks(blocks.0, blocks.1, &mut last_slot_on_substrate).await;
+		relay
+			.submit_execution_blocks(blocks.0, blocks.1, &mut last_slot_on_substrate)
+			.await;
 
 		assert!(relay.send_light_client_updates_with_checks(blocks.1 - 1).await);
 
@@ -1247,7 +1279,7 @@ mod tests {
 	async fn test_base_update_for_same_period() {
 		let config_for_test = get_test_config();
 		let init_slot = config_for_test.finalized_slot_before_new_period - ONE_EPOCH_IN_SLOTS - 1;
-		let mut relay = get_relay_from_slot(true, init_slot, &config_for_test);
+		let mut relay = get_relay_from_slot(true, init_slot, &config_for_test).await;
 		relay.headers_batch_size = 33;
 		relay.max_blocks_for_finalization = 100;
 
@@ -1263,7 +1295,9 @@ mod tests {
 
 		assert_eq!(finality_slot, last_slot_on_substrate);
 
-		relay.submit_execution_blocks(blocks.0, blocks.1, &mut last_slot_on_substrate).await;
+		relay
+			.submit_execution_blocks(blocks.0, blocks.1, &mut last_slot_on_substrate)
+			.await;
 
 		assert!(relay.send_light_client_updates_with_checks(blocks.1).await);
 
@@ -1280,7 +1314,8 @@ mod tests {
 			true,
 			config_for_test.finalized_slot_before_new_period,
 			&config_for_test,
-		);
+		)
+		.await;
 		relay.headers_batch_size = 33;
 		let blocks = relay
 			.get_execution_blocks_between(
@@ -1340,7 +1375,7 @@ mod tests {
 	#[ignore]
 	async fn test_max_finalized_blocks_8_epochs() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &config_for_test);
+		let mut relay = get_relay(true, true, &config_for_test).await;
 		relay.max_blocks_for_finalization = 10000;
 		relay.headers_batch_size = 10000;
 
@@ -1367,7 +1402,7 @@ mod tests {
 	// Can't finalize 393 blocks
 	async fn test_max_finalized_blocks_9_epochs() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay(true, true, &get_test_config());
+		let mut relay = get_relay(true, true, &get_test_config()).await;
 		relay.max_blocks_for_finalization = 10000;
 		relay.headers_batch_size = 10000;
 

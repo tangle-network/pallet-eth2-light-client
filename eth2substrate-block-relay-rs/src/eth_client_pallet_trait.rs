@@ -3,10 +3,10 @@ use eth_types::{
 	eth2::{LightClientState, LightClientUpdate},
 	BlockHeader, H256,
 };
+use sp_core::crypto::AccountId32;
 use std::error::Error;
 
 pub type Balance = u128;
-pub type AccountId = [u8; 32];
 
 /// Interface for using Ethereum Light Client
 #[async_trait]
@@ -51,7 +51,7 @@ pub trait EthClientPalletTrait {
 	/// Checks if the relay is registered in the Ethereum Light Client on NEAR
 	async fn is_submitter_registered(
 		&self,
-		account_id: Option<AccountId>,
+		account_id: Option<AccountId32>,
 	) -> Result<bool, Box<dyn Error>>;
 
 	/// Gets the Light Client State of the Ethereum Light Client on NEAR

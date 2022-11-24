@@ -7,7 +7,6 @@ use crate::{
 	light_client_snapshot_with_proof::LightClientSnapshotWithProof,
 	utils,
 };
-use funty::Fundamental;
 use eth_types::{
 	eth2::{
 		BeaconBlockHeader, FinalizedHeaderUpdate, HeaderUpdate, LightClientUpdate, Slot,
@@ -15,6 +14,7 @@ use eth_types::{
 	},
 	H256,
 };
+use funty::Fundamental;
 use log::trace;
 use reqwest::blocking::Client;
 use serde::Deserialize;

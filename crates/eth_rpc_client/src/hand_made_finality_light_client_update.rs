@@ -7,7 +7,6 @@ use crate::{
 	},
 	execution_block_proof::ExecutionBlockProof,
 };
-use funty::Fundamental;
 use eth_types::{
 	eth2::{
 		FinalizedHeaderUpdate, HeaderUpdate, LightClientUpdate, SignatureBytes, SyncCommittee,
@@ -15,6 +14,7 @@ use eth_types::{
 	},
 	H256,
 };
+use funty::Fundamental;
 use log::trace;
 use serde_json::Value;
 use ssz::Encode;
