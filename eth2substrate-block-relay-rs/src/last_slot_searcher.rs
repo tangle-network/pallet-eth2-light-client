@@ -1,3 +1,4 @@
+use eth2_contract_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient,
 	errors::{ExecutionPayloadError, NoBlockForSlotError},
@@ -5,9 +6,6 @@ use eth_rpc_client::{
 use eth_types::H256;
 use log::{info, trace};
 use std::{cmp, error::Error};
-
-use crate::eth_client_pallet_trait::EthClientPalletTrait;
-
 pub struct LastSlotSearcher {
 	enable_binsearch: bool,
 }
@@ -462,9 +460,10 @@ impl LastSlotSearcher {
 #[cfg(test)]
 mod tests {
 	use crate::{
-		config_for_tests::ConfigForTests, eth_client_pallet_trait::EthClientPalletTrait,
-		last_slot_searcher::LastSlotSearcher, test_utils::get_client_pallet,
+		config_for_tests::ConfigForTests, last_slot_searcher::LastSlotSearcher,
+		test_utils::get_client_pallet,
 	};
+	use eth2_contract_init::eth_client_pallet_trait::EthClientPalletTrait;
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
 	use std::error::Error;

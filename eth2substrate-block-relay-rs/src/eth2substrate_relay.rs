@@ -1,16 +1,15 @@
 use crate::{
 	config::Config,
-	eth_client_pallet_trait::EthClientPalletTrait,
 	last_slot_searcher::LastSlotSearcher,
 	prometheus_metrics,
 	prometheus_metrics::{
 		CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH, CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR,
 		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH,
-		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR, FAILS_ON_HEADERS_SUBMISSION,
-		FAILS_ON_UPDATES_SUBMISSION, LAST_ETH_SLOT, LAST_ETH_SLOT_ON_NEAR, LAST_FINALIZED_ETH_SLOT,
-		LAST_FINALIZED_ETH_SLOT_ON_NEAR,
+		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR, LAST_ETH_SLOT, LAST_ETH_SLOT_ON_NEAR,
+		LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_NEAR,
 	},
 };
+use eth2_contract_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
 	eth1_rpc_client::Eth1RPCClient,
@@ -401,7 +400,7 @@ impl Eth2SubstrateRelay {
 		last_eth2_slot_on_substrate: &mut u64,
 	) {
 		info!(target: "relay", "Try submit headers from slot={} to {} to NEAR", *last_eth2_slot_on_substrate + 1, current_slot - 1);
-		let execution_outcome = return_on_fail!(
+		let _execution_outcome = return_on_fail!(
 			self.eth_client_pallet.send_headers(&headers, current_slot - 1).await,
 			"Error on header submission"
 		);
@@ -668,7 +667,7 @@ impl Eth2SubstrateRelay {
 				return
 			}
 
-			let execution_outcome = return_on_fail_and_sleep!(
+			let _execution_outcome = return_on_fail_and_sleep!(
 				self.eth_client_pallet
 					.send_light_client_update(light_client_update.clone())
 					.await,

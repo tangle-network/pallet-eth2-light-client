@@ -92,7 +92,7 @@ mod tests {
 
 	use crate::{
 		config_for_tests::ConfigForTests,
-		is_correct_finality_update, network_config,
+		is_correct_finality_update,
 		network_config::{Network, NetworkConfig},
 	};
 	use eth_types::eth2::{LightClientUpdate, SyncCommittee};

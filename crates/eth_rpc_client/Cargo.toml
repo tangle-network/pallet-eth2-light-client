@@ -1,5 +1,5 @@
 [package]
-name = "webb-eth-rpc-client"
+name = "eth_rpc_client"
 version = "0.1.0"
 edition = "2021"
 

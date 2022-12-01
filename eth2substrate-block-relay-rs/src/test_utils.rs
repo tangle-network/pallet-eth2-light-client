@@ -1,12 +1,14 @@
 use crate::{
-	config::Config,
-	config_for_tests::ConfigForTests,
-	eth2substrate_relay::Eth2SubstrateRelay,
-	eth_client_pallet_trait::EthClientPalletTrait,
-	substrate_pallet_client::{setup_api, EthClientPallet},
+	config::Config, config_for_tests::ConfigForTests, eth2substrate_relay::Eth2SubstrateRelay,
 	test_utils,
 };
 use bitvec::macros::internal::funty::Fundamental;
+use eth2_contract_init::{
+	eth_client_pallet_trait::EthClientPalletTrait,
+	eth_network::EthNetwork,
+	init_pallet,
+	substrate_pallet_client::{setup_api, EthClientPallet},
+};
 use eth_rpc_client::{
 	beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion},
 	eth1_rpc_client::Eth1RPCClient,
@@ -18,6 +20,7 @@ use eth_types::{
 use std::{thread, time};
 use tree_hash::TreeHash;
 use webb::substrate::subxt::tx::PairSigner;
+use webb_proposals::TypedChainId;
 
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
 	let mut json_file_path = std::env::current_exe().unwrap();
@@ -72,18 +75,28 @@ pub fn init_pallet_from_files(
 		}
 	}
 
-	eth_client_pallet.init_contract(
-		config_for_test.network_name.clone(),
-		finalized_execution_header.unwrap(),
-		finalized_beacon_header,
-		current_sync_committee,
-		next_sync_committee,
-		Some(true),
-		Some(false),
-		None,
-		None,
-		Some(eth_client_pallet.get_signer_account_id()),
-	);
+	let typed_chain_id = match config_for_test.network_name.clone() {
+		EthNetwork::Mainnet => TypedChainId::Evm(1),
+		EthNetwork::Kiln => TypedChainId::Evm(1337802),
+		EthNetwork::Ropsten => TypedChainId::Evm(3),
+		EthNetwork::Goerli => TypedChainId::Evm(5),
+	};
+
+	eth_client_pallet
+		.init(
+			typed_chain_id,
+			finalized_execution_header.unwrap(),
+			finalized_beacon_header,
+			current_sync_committee,
+			next_sync_committee,
+			Some(true),
+			Some(false),
+			None,
+			None,
+			Some(eth_client_pallet.get_signer_account_id()),
+		)
+		.await
+		.unwrap();
 	thread::sleep(time::Duration::from_secs(30));
 }
 
@@ -207,6 +220,8 @@ fn get_init_config(
 		trusted_signer_account_id: Some(eth_client_pallet.get_signer_account_id().to_string()),
 		init_block_root: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
+		substrate_endpoint: "localhost:9944".to_string(),
+		substrate_network_id: 1080,
 	}
 }
 
@@ -222,7 +237,7 @@ pub async fn get_client_pallet(
 
 	match from_file {
 		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test),
-		false => init_contract::init_contract(&config, &mut eth_client_pallet).unwrap(),
+		false => init_pallet(&config, &mut eth_client_pallet).unwrap(),
 	};
 
 	Box::new(eth_client_pallet)
