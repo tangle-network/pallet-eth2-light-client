@@ -9,7 +9,7 @@ use crate::{
 		LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_NEAR,
 	},
 };
-use eth2_contract_init::eth_client_pallet_trait::EthClientPalletTrait;
+use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
 	eth1_rpc_client::Eth1RPCClient,
@@ -101,7 +101,7 @@ pub struct Eth2SubstrateRelay {
 impl Eth2SubstrateRelay {
 	pub async fn init(
 		config: &Config,
-		eth_contract: Box<dyn EthClientPalletTrait>,
+		eth_pallet: Box<dyn EthClientPalletTrait>,
 		enable_binsearch: bool,
 		submit_only_finalized_blocks: bool,
 	) -> Self {
@@ -117,7 +117,7 @@ impl Eth2SubstrateRelay {
 			Self::get_light_client_update_from_file(config, &beacon_rpc_client)
 				.expect("Error on parsing light client update");
 
-		let max_submitted_blocks_by_account = eth_contract
+		let max_submitted_blocks_by_account = eth_pallet
 			.get_max_submitted_blocks_by_account()
 			.await
 			.expect("Error on getting max submitted blocks by account");
@@ -127,7 +127,7 @@ impl Eth2SubstrateRelay {
 		let eth2substrate_relay = Eth2SubstrateRelay {
 			beacon_rpc_client,
 			eth1_rpc_client: Eth1RPCClient::new(&config.eth1_endpoint),
-			eth_client_pallet: eth_contract,
+			eth_client_pallet: eth_pallet,
 			headers_batch_size: config.headers_batch_size as u64,
 			interval_between_light_client_updates_submission_in_epochs: config
 				.interval_between_light_client_updates_submission_in_epochs,

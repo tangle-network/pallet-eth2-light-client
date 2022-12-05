@@ -3,10 +3,11 @@ use crate::{
 	test_utils,
 };
 use bitvec::macros::internal::funty::Fundamental;
-use eth2_contract_init::{
+use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 	eth_network::EthNetwork,
 	init_pallet,
+	init_pallet::init_pallet,
 	substrate_pallet_client::{setup_api, EthClientPallet},
 };
 use eth_rpc_client::{
@@ -31,7 +32,7 @@ pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
 	std::fs::read_to_string(json_file_path).expect("Unable to read file")
 }
 
-pub fn init_pallet_from_files(
+pub async fn init_pallet_from_files(
 	eth_client_pallet: &mut EthClientPallet,
 	config_for_test: &ConfigForTests,
 ) {
@@ -100,7 +101,7 @@ pub fn init_pallet_from_files(
 	thread::sleep(time::Duration::from_secs(30));
 }
 
-pub fn init_contract_from_specific_slot(
+pub async fn init_pallet_from_specific_slot(
 	eth_client_pallet: &mut EthClientPallet,
 	finality_slot: u64,
 	config_for_test: &ConfigForTests,
@@ -157,18 +158,20 @@ pub fn init_contract_from_specific_slot(
 		)
 		.unwrap();
 
-	eth_client_pallet.init_contract(
-		config_for_test.network_name.clone(),
-		finalized_execution_header,
-		finalized_beacon_header,
-		current_sync_committee,
-		next_sync_committee,
-		Some(true),
-		Some(false),
-		None,
-		None,
-		Some(eth_client_pallet.get_signer_account_id()),
-	);
+	eth_client_pallet
+		.init(
+			config_for_test.network_name.clone(),
+			finalized_execution_header,
+			finalized_beacon_header,
+			current_sync_committee,
+			next_sync_committee,
+			Some(true),
+			Some(false),
+			None,
+			None,
+			Some(eth_client_pallet.get_signer_account_id()),
+		)
+		.await;
 
 	thread::sleep(time::Duration::from_secs(30));
 }
@@ -203,8 +206,8 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 fn get_init_config(
 	config_for_test: &ConfigForTests,
 	eth_client_pallet: &EthClientPallet,
-) -> eth2_contract_init::config::Config {
-	eth2_contract_init::config::Config {
+) -> eth2_pallet_init::config::Config {
+	eth2_pallet_init::config::Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		signer_account_id: "alice".to_string(),
@@ -237,7 +240,7 @@ pub async fn get_client_pallet(
 
 	match from_file {
 		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test),
-		false => init_pallet(&config, &mut eth_client_pallet).unwrap(),
+		false => init_pallet(&config, &mut eth_client_pallet).await.unwrap(),
 	};
 
 	Box::new(eth_client_pallet)
@@ -288,7 +291,7 @@ pub async fn get_relay_from_slot(
 	let api = setup_api().await;
 	let mut eth_client_pallet = EthClientPallet::new(api);
 
-	init_contract_from_specific_slot(&mut eth_client_pallet, slot, config_for_test);
+	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test);
 
 	Eth2SubstrateRelay::init(&config, Box::new(eth_client_pallet), enable_binsearch, false)
 }

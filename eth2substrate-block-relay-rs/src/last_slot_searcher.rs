@@ -1,4 +1,4 @@
-use eth2_contract_init::eth_client_pallet_trait::EthClientPalletTrait;
+use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient,
 	errors::{ExecutionPayloadError, NoBlockForSlotError},
@@ -463,7 +463,7 @@ mod tests {
 		config_for_tests::ConfigForTests, last_slot_searcher::LastSlotSearcher,
 		test_utils::get_client_pallet,
 	};
-	use eth2_contract_init::eth_client_pallet_trait::EthClientPalletTrait;
+	use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
 	use std::error::Error;

@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-eth-types = { path = "../../../pallet-eth2-light-client/crates/eth-types" }
-consensus_types = { path = "../../../pallet-eth2-light-client/crates/consensus_types" }
-bls = { path = "../../../pallet-eth2-light-client/crates/bls" }
-tree_hash = { path = "../../../pallet-eth2-light-client/crates/tree_hash" }
+eth-types = { path = "../eth-types" }
+consensus_types = { path = "../consensus_types" }
+bls = { path = "../bls" }
+tree_hash = { path = "../tree_hash" }
 bitvec = "1.0.0"
 serde = { version = "1.0", features = ["derive"] }
 

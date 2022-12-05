@@ -13,7 +13,7 @@ merkle_proof = { path = "../crates/merkle_proof" }
 eth2_hashing = { path = "../crates/eth2_hashing" }
 eth2_ssz = { path = "../crates/ssz" }
 eth_rpc_client = { path = "../crates/eth_rpc_client" }
-eth2-contract-init = { path = "../crates/eth2-contract-init" }
+eth2-pallet-init = { path = "../crates/eth2-pallet-init" }
 finality-update-verify = { path = "../crates/finality-update-verify" }
 
 webb = { path = "../../webb-rs", features = [

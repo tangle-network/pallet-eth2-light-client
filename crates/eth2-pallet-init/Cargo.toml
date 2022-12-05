@@ -1,5 +1,5 @@
 [package]
-name = "eth2-contract-init"
+name = "eth2-pallet-init"
 version = "0.1.0"
 edition = "2021"
 

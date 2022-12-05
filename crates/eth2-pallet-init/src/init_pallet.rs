@@ -154,7 +154,7 @@ pub async fn init_pallet(
 
 #[cfg(test)]
 mod tests {
-	use crate::{config_for_tests::ConfigForTests, init_contract::init_contract};
+	use crate::{config_for_tests::ConfigForTests, init_pallet::init_pallet};
 	use contract_wrapper::{
 		near_network::NearNetwork, sandbox_contract_wrapper::SandboxContractWrapper,
 	};
@@ -204,7 +204,7 @@ mod tests {
 
 	#[test]
 	#[should_panic(expected = "The updates validation can't be disabled for mainnet")]
-	fn test_init_contract_on_mainnet_without_validation() {
+	fn test_init_pallet_on_mainnet_without_validation() {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
@@ -216,14 +216,14 @@ mod tests {
 		init_config.validate_updates = Some(false);
 		init_config.substrate_network_id = NearNetwork::Mainnet;
 
-		init_contract(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
 	}
 
 	#[test]
 	#[should_panic(
 		expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
 	)]
-	fn test_init_contract_on_mainnet_without_trusted_signature() {
+	fn test_init_pallet_on_mainnet_without_trusted_signature() {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
@@ -235,7 +235,7 @@ mod tests {
 		init_config.substrate_network_id = NearNetwork::Mainnet;
 		init_config.trusted_signer_account_id = None;
 
-		init_contract(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
 	}
 
 	#[test]
@@ -249,7 +249,7 @@ mod tests {
 		let mut eth_client_pallet = EthClientContract::new(contract_wrapper);
 		let init_config = get_init_config(&config_for_test, &eth_client_pallet);
 
-		init_contract(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
 
 		let last_finalized_slot_eth_client = eth_client_pallet
 			.get_finalized_beacon_block_slot()
