@@ -98,7 +98,10 @@ pub async fn init_pallet_from_files(
 		)
 		.await
 		.unwrap();
+
 	thread::sleep(time::Duration::from_secs(30));
+
+	eth_client_pallet
 }
 
 pub async fn init_pallet_from_specific_slot(
@@ -239,7 +242,7 @@ pub async fn get_client_pallet(
 	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
 
 	match from_file {
-		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test),
+		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test).await,
 		false => init_pallet(&config, &mut eth_client_pallet).await.unwrap(),
 	};
 
@@ -254,14 +257,14 @@ pub async fn get_relay(
 	let config = get_config(config_for_test);
 	Eth2SubstrateRelay::init(
 		&config,
-		get_client_pallet(from_file, config_for_test),
+		get_client_pallet(from_file, config_for_test).await,
 		enable_binsearch,
 		false,
 	)
 	.await
 }
 
-pub fn get_relay_with_update_from_file(
+pub async fn get_relay_with_update_from_file(
 	enable_binsearch: bool,
 	from_file: bool,
 	next_sync_committee: bool,
@@ -276,10 +279,11 @@ pub fn get_relay_with_update_from_file(
 
 	Eth2SubstrateRelay::init(
 		&config,
-		get_client_pallet(from_file, config_for_test),
+		get_client_pallet(from_file, config_for_test).await,
 		enable_binsearch,
 		false,
 	)
+	.await
 }
 
 pub async fn get_relay_from_slot(
@@ -288,10 +292,10 @@ pub async fn get_relay_from_slot(
 	config_for_test: &ConfigForTests,
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
-	let api = setup_api().await;
+	let api = setup_api().await.unwrap();
 	let mut eth_client_pallet = EthClientPallet::new(api);
 
 	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test);
 
-	Eth2SubstrateRelay::init(&config, Box::new(eth_client_pallet), enable_binsearch, false)
+	Eth2SubstrateRelay::init(&config, Box::new(eth_client_pallet), enable_binsearch, false).await
 }

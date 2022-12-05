@@ -78,6 +78,9 @@ type BalanceOf<T> =
 mod mock;
 
 #[cfg(test)]
+mod mocked_pallet_client;
+
+#[cfg(test)]
 mod tests;
 
 #[cfg(test)]

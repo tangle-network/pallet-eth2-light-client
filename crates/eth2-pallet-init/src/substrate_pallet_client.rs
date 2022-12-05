@@ -5,7 +5,7 @@ use eth_types::{
 	pallet::InitInput,
 	BlockHeader,
 };
-use sp_core::{crypto::AccountId32, sr25519::Pair};
+use sp_core::{crypto::AccountId32, sr25519::Pair, Decode};
 use sp_keyring::AccountKeyring;
 use webb::substrate::{
 	scale::Encode,
@@ -83,9 +83,12 @@ impl EthClientPallet {
 			"FinalizedBeaconHeader",
 			vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
 		);
-		let _finalized_beacon_header_value: DecodedValueThunk =
+		let maybe_finalized_beacon_header_value: DecodedValueThunk =
 			api.storage().fetch_or_default(&storage_address, None).await?;
 
+		let finalized_beacon_header_value: ExtendedBeaconBlockHeader =
+			ExtendedBeaconBlockHeader::decode(&mut maybe_finalized_beacon_header_value.encoded())
+				.unwrap();
 		Ok(0)
 	}
 
