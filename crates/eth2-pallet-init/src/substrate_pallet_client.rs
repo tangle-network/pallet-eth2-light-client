@@ -152,11 +152,12 @@ impl<H256, LightClientUpdate, BlockHeader>
 			"FinalizedBeaconHeader",
 			vec![Value::from_bytes(&self.chain.chain_id().encode())],
 		);
-		let maybe_unfinalized_header: DecodedValueThunk =
+		let maybe_extended_beacon_header: DecodedValueThunk =
 			self.api.storage().fetch_or_default(&storage_address, None).await?;
 
-		let extended_beacon_header =
-			Option::<ExtendedBeaconBlockHeader>::decode(&mut maybe_unfinalized_header.encoded())?;
+		let extended_beacon_header = Option::<ExtendedBeaconBlockHeader>::decode(
+			&mut maybe_extended_beacon_header.encoded(),
+		)?;
 
 		if let Some(extended_beacon_header) = extended_beacon_header {
 			Ok(extended_beacon_header.execution_block_hash)
