@@ -186,6 +186,27 @@ impl<H256, LightClientUpdate, BlockHeader>
 		_headers: &[eth_types::BlockHeader],
 		_end_slot: u64,
 	) -> Result<(), Box<dyn std::error::Error>> {
+		let txes = vec![];
+		for header in _headers {
+			let tx = subxt::dynamic::tx(
+				"Eth2Client",
+				"submit_execution_header",
+				vec![
+					Value::from_bytes(&self.chain.chain_id().encode()),
+					Value::from_bytes(&header.encode()),
+				],
+			);
+			txes.push(tx);
+		}
+		
+
+		let batch_tx = subxt::dynamic::tx(
+			"Utility",
+			"batch",
+			txes.iter().map(|tx| tx).collect(),
+		);
+
+		let tx_hash = self.api.tx().sign_and_submit_default(&batch_tx, &self.signer).await?;
 		Ok(())
 	}
 
