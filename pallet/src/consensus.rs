@@ -1,9 +1,9 @@
 use super::*;
-use crate::eth_types::{
+use bitvec::{order::Lsb0, prelude::BitVec};
+use eth_types::{
 	eth2::{DomainType, ForkData, HeaderUpdate, PublicKeyBytes, SigningData},
 	H256,
 };
-use bitvec::{order::Lsb0, prelude::BitVec};
 use tree_hash::TreeHash;
 
 pub const EPOCHS_PER_SYNC_COMMITTEE_PERIOD: u64 = 256;
@@ -74,7 +74,7 @@ pub fn get_participant_pubkeys(
 	public_keys: &[PublicKeyBytes],
 	sync_committee_bits: &BitVec<u8, Lsb0>,
 ) -> Vec<PublicKeyBytes> {
-	let mut result: Vec<PublicKeyBytes> = vec![];
+	let mut result: Vec<PublicKeyBytes> = sp_std::vec![];
 	for (idx, bit) in sync_committee_bits.iter().by_vals().enumerate() {
 		if bit {
 			result.push(public_keys[idx].clone());

@@ -3,16 +3,16 @@ use crate::{
 	last_slot_searcher::LastSlotSearcher,
 	prometheus_metrics,
 	prometheus_metrics::{
-		CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH, CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR,
+		CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH, CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE,
 		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH,
-		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR, LAST_ETH_SLOT, LAST_ETH_SLOT_ON_NEAR,
-		LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_NEAR,
+		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE, LAST_ETH_SLOT,
+		LAST_ETH_SLOT_ON_SUBSTRATE, LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE,
 	},
 };
-use eth2_pallet_init::eth_client_pallet_trait::EthClientPallet;
+use bitvec::macros::internal::funty::Fundamental;
+use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
-	beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
-	eth1_rpc_client::Eth1RPCClient,
+	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
 	hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 };
 use eth_types::{
@@ -20,9 +20,8 @@ use eth_types::{
 	BlockHeader,
 };
 use finality_update_verify::network_config::{Network, NetworkConfig};
-use funty::Fundamental;
 use log::{debug, info, trace, warn};
-use std::{cmp, error::Error, str::FromStr, thread, thread::sleep, time::Duration, vec::Vec};
+use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
 
 const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
@@ -31,9 +30,9 @@ macro_rules! skip_fail {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                warn!(target: "relay", "{}. Error: {}", $msg, e);
+                warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 trace!(target: "relay", "Sleep {} secs before next loop", $sleep_time);
-                thread::sleep(Duration::from_secs($sleep_time));
+                tokio::time::sleep(Duration::from_secs($sleep_time)).await;
                 continue;
             }
         }
@@ -45,7 +44,7 @@ macro_rules! return_on_fail {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                warn!(target: "relay", "{}. Error: {}", $msg, e);
+                warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 return;
             }
         }
@@ -57,7 +56,7 @@ macro_rules! return_val_on_fail {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                warn!(target: "relay", "{}. Error: {}", $msg, e);
+                warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 return $val;
             }
         }
@@ -69,9 +68,9 @@ macro_rules! return_on_fail_and_sleep {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                warn!(target: "relay", "{}. Error: {}", $msg, e);
+                warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 trace!(target: "relay", "Sleep {} secs before next loop", $sleep_time);
-                thread::sleep(Duration::from_secs($sleep_time));
+                tokio::time::sleep(Duration::from_secs($sleep_time)).await;
                 return;
             }
         }
@@ -81,7 +80,7 @@ macro_rules! return_on_fail_and_sleep {
 pub struct Eth2SubstrateRelay {
 	beacon_rpc_client: BeaconRPCClient,
 	eth1_rpc_client: Eth1RPCClient,
-	eth_client_pallet: Box<dyn EthClientPallet>,
+	eth_client_pallet: Box<dyn EthClientPalletTrait>,
 	headers_batch_size: u64,
 	bellatrix_fork_epoch: Epoch,
 	bellatrix_fork_version: ForkVersion,
@@ -95,13 +94,14 @@ pub struct Eth2SubstrateRelay {
 	sleep_time_on_sync_secs: u64,
 	sleep_time_after_submission_secs: u64,
 	max_submitted_blocks_by_account: u32,
+	#[allow(dead_code)]
 	substrate_network_name: String,
 }
 
 impl Eth2SubstrateRelay {
 	pub async fn init(
 		config: &Config,
-		eth_pallet: Box<dyn EthClientPallet>,
+		eth_pallet: Box<dyn EthClientPalletTrait>,
 		enable_binsearch: bool,
 		submit_only_finalized_blocks: bool,
 	) -> Self {
@@ -115,6 +115,7 @@ impl Eth2SubstrateRelay {
 		);
 		let next_light_client_update =
 			Self::get_light_client_update_from_file(config, &beacon_rpc_client)
+				.await
 				.expect("Error on parsing light client update");
 
 		let max_submitted_blocks_by_account = eth_pallet
@@ -149,13 +150,15 @@ impl Eth2SubstrateRelay {
 			.eth_client_pallet
 			.is_submitter_registered(None)
 			.await
-			.unwrap_or_else(|e| panic!("Failed to check if the submitter registered. Err {}", e))
+			.unwrap_or_else(|e| panic!("Failed to check if the submitter registered. Err {e:?}"))
 		{
 			eth2substrate_relay
 				.eth_client_pallet
 				.register_submitter()
 				.await
 				.expect("Error on registering the submitter");
+
+			log::info!(target: "relay", "Successfully registered submitter");
 		}
 
 		if let Some(port) = config.prometheus_metrics_port {
@@ -165,13 +168,13 @@ impl Eth2SubstrateRelay {
 		eth2substrate_relay
 	}
 
-	async fn get_max_slot_for_submission(&self) -> Result<u64, Box<dyn Error>> {
-		let last_eth2_slot = self.beacon_rpc_client.get_last_slot_number()?.as_u64();
+	async fn get_max_slot_for_submission(&self) -> Result<u64, crate::Error> {
+		let last_eth2_slot = self.beacon_rpc_client.get_last_slot_number().await?.as_u64();
 		LAST_ETH_SLOT.inc_by(cmp::max(0, last_eth2_slot as i64 - LAST_ETH_SLOT.get()));
 		info!(target: "relay", "Last slot on ETH = {}", last_eth2_slot);
 
 		if let Ok(last_block_number) =
-			self.beacon_rpc_client.get_block_number_for_slot(last_eth2_slot)
+			self.beacon_rpc_client.get_block_number_for_slot(last_eth2_slot).await
 		{
 			CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH.inc_by(cmp::max(
 				0,
@@ -180,7 +183,7 @@ impl Eth2SubstrateRelay {
 		}
 
 		return if self.submit_only_finalized_blocks {
-			Ok(self.beacon_rpc_client.get_last_finalized_slot_number()?.as_u64())
+			Ok(self.beacon_rpc_client.get_last_finalized_slot_number().await?.as_u64())
 		} else {
 			Ok(last_eth2_slot)
 		}
@@ -189,57 +192,69 @@ impl Eth2SubstrateRelay {
 	async fn get_last_eth2_slot_on_substrate(
 		&mut self,
 		max_slot: u64,
-	) -> Result<u64, Box<dyn Error>> {
+	) -> Result<u64, crate::Error> {
 		let last_eth2_slot_on_substrate = self
 			.last_slot_searcher
 			.get_last_slot(max_slot, &self.beacon_rpc_client, &self.eth_client_pallet)
-			.await?;
+			.await
+			.map_err(to_error)?;
 
-		LAST_ETH_SLOT_ON_NEAR
-			.inc_by(cmp::max(0, last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_NEAR.get()));
+		LAST_ETH_SLOT_ON_SUBSTRATE.inc_by(cmp::max(
+			0,
+			last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_SUBSTRATE.get(),
+		));
 
-		if let Ok(last_block_number) =
-			self.beacon_rpc_client.get_block_number_for_slot(last_eth2_slot_on_substrate)
+		if let Ok(last_block_number) = self
+			.beacon_rpc_client
+			.get_block_number_for_slot(last_eth2_slot_on_substrate)
+			.await
 		{
-			CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR.inc_by(cmp::max(
+			CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.inc_by(cmp::max(
 				0,
-				last_block_number as i64 - CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR.get(),
+				last_block_number as i64 - CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.get(),
 			));
 		}
 
-		return Ok(last_eth2_slot_on_substrate)
+		Ok(last_eth2_slot_on_substrate)
 	}
 
-	async fn get_last_finalized_slot_on_substrate(&self) -> Result<u64, Box<dyn Error>> {
-		let last_finalized_slot_on_substrate =
-			self.eth_client_pallet.get_finalized_beacon_block_slot().await?;
-		LAST_FINALIZED_ETH_SLOT_ON_NEAR.inc_by(cmp::max(
+	async fn get_last_finalized_slot_on_substrate(&self) -> Result<u64, crate::Error> {
+		let last_finalized_slot_on_substrate = self
+			.eth_client_pallet
+			.get_finalized_beacon_block_slot()
+			.await
+			.map_err(to_error)?;
+		LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE.inc_by(cmp::max(
 			0,
-			last_finalized_slot_on_substrate as i64 - LAST_FINALIZED_ETH_SLOT_ON_NEAR.get(),
+			last_finalized_slot_on_substrate as i64 - LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE.get(),
 		));
 
 		if let Ok(last_block_number) = self
 			.beacon_rpc_client
 			.get_block_number_for_slot(last_finalized_slot_on_substrate)
+			.await
 		{
-			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR.inc_by(cmp::max(
+			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.inc_by(cmp::max(
 				0,
-				last_block_number as i64 - CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR.get(),
+				last_block_number as i64 -
+					CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.get(),
 			));
 		}
 
 		Ok(last_finalized_slot_on_substrate)
 	}
 
-	async fn get_last_finalized_slot_on_eth(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_last_finalized_slot_on_eth(&self) -> Result<u64, crate::Error> {
 		let last_finalized_slot_on_eth =
-			self.beacon_rpc_client.get_last_finalized_slot_number()?.as_u64();
+			self.beacon_rpc_client.get_last_finalized_slot_number().await?.as_u64();
 
 		LAST_FINALIZED_ETH_SLOT
 			.inc_by(cmp::max(0, last_finalized_slot_on_eth as i64 - LAST_FINALIZED_ETH_SLOT.get()));
 
-		if let Ok(last_block_number) =
-			self.beacon_rpc_client.get_block_number_for_slot(last_finalized_slot_on_eth)
+		if let Ok(last_block_number) = self
+			.beacon_rpc_client
+			.get_block_number_for_slot(last_finalized_slot_on_eth)
+			.await
 		{
 			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH.inc_by(cmp::max(
 				0,
@@ -264,7 +279,7 @@ impl Eth2SubstrateRelay {
 			);
 
 			info!(target: "relay", "== New relay loop ==");
-			sleep(Duration::from_secs(12));
+			tokio::time::sleep(Duration::from_secs(12)).await;
 
 			let max_slot_for_submission: u64 = skip_fail!(
 				self.get_max_slot_for_submission().await,
@@ -274,11 +289,11 @@ impl Eth2SubstrateRelay {
 
 			let mut last_eth2_slot_on_substrate: u64 = skip_fail!(
 				self.get_last_eth2_slot_on_substrate(max_slot_for_submission).await,
-				"Fail to get last slot on NEAR",
+				"Fail to get last slot on SUBSTRATE",
 				self.sleep_time_on_sync_secs
 			);
 
-			info!(target: "relay", "Last slot on NEAR = {}; max slot for submission = {}",
+			info!(target: "relay", "Last slot on SUBSTRATE = {}; max slot for submission = {}",
                   last_eth2_slot_on_substrate, max_slot_for_submission);
 
 			if last_eth2_slot_on_substrate < max_slot_for_submission {
@@ -307,23 +322,25 @@ impl Eth2SubstrateRelay {
 
 			if !were_submission_on_iter {
 				info!(target: "relay", "Sync with ETH network. Sleep {} secs", self.sleep_time_on_sync_secs);
-				thread::sleep(Duration::from_secs(self.sleep_time_on_sync_secs));
+				tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 			}
 		}
 	}
 
-	async fn wait_for_synchronization(&self) -> Result<(), Box<dyn Error>> {
-		while self.beacon_rpc_client.is_syncing()? || self.eth1_rpc_client.is_syncing()? {
+	async fn wait_for_synchronization(&self) -> Result<(), crate::Error> {
+		while self.beacon_rpc_client.is_syncing().await? ||
+			self.eth1_rpc_client.is_syncing().await?
+		{
 			info!(target: "relay", "Waiting for sync...");
-			thread::sleep(Duration::from_secs(self.sleep_time_on_sync_secs));
+			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 		}
 		Ok(())
 	}
 
-	fn get_light_client_update_from_file(
+	async fn get_light_client_update_from_file(
 		config: &Config,
 		beacon_rpc_client: &BeaconRPCClient,
-	) -> Result<Option<LightClientUpdate>, Box<dyn Error>> {
+	) -> Result<Option<LightClientUpdate>, crate::Error> {
 		let mut next_light_client_update: Option<LightClientUpdate> = None;
 		if let Some(path_to_attested_state) = config.clone().path_to_attested_state {
 			match config.clone().path_to_finality_state {
@@ -333,7 +350,7 @@ impl Eth2SubstrateRelay {
                             beacon_rpc_client,
                             &path_to_attested_state,
                             &path_to_finality_state,
-                        ).expect("Error on getting light client update from file"),
+                        ).await.expect("Error on getting light client update from file"),
                     );
 				},
 				None => {
@@ -341,7 +358,7 @@ impl Eth2SubstrateRelay {
                         HandMadeFinalityLightClientUpdate::get_finality_light_client_update_from_file(
                             beacon_rpc_client,
                             &path_to_attested_state,
-                        ).expect("Error on getting light client update from file"),
+                        ).await.expect("Error on getting light client update from file"),
                     );
 				},
 			}
@@ -361,13 +378,15 @@ impl Eth2SubstrateRelay {
 		&self,
 		start_slot: u64,
 		last_eth2_slot_on_eth_chain: u64,
-	) -> Result<(Vec<BlockHeader>, u64), Box<dyn Error>> {
+	) -> Result<(Vec<BlockHeader>, u64), crate::Error> {
 		let mut headers: Vec<BlockHeader> = vec![];
 		let mut current_slot = start_slot;
 
 		let remaining_headers = (self.max_submitted_blocks_by_account -
-			self.eth_client_pallet.get_num_of_submitted_blocks_by_account().await?)
-			as u64;
+			self.eth_client_pallet
+				.get_num_of_submitted_blocks_by_account()
+				.await
+				.map_err(to_error)?) as u64;
 
 		trace!(target: "relay", "remaining headers number {}", remaining_headers);
 
@@ -379,7 +398,7 @@ impl Eth2SubstrateRelay {
 			debug!(target: "relay", "Try add block header for slot={}, headers len={}/{}", current_slot, headers.len(), self.headers_batch_size);
 			match self.get_execution_block_by_slot(current_slot).await {
 				Ok(eth1_header) => headers.push(eth1_header),
-				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
+				Err(err) => match err.is_no_block_for_slot_error {
 					Some(_) => {
 						current_slot += 1;
 						continue
@@ -399,8 +418,8 @@ impl Eth2SubstrateRelay {
 		current_slot: u64,
 		last_eth2_slot_on_substrate: &mut u64,
 	) {
-		info!(target: "relay", "Try submit headers from slot={} to {} to NEAR", *last_eth2_slot_on_substrate + 1, current_slot - 1);
-		let _execution_outcome = return_on_fail!(
+		info!(target: "relay", "Try submit headers from slot={} to {} to SUBSTRATE", *last_eth2_slot_on_substrate + 1, current_slot - 1);
+		return_on_fail!(
 			self.eth_client_pallet.send_headers(&headers, current_slot - 1).await,
 			"Error on header submission"
 		);
@@ -413,20 +432,24 @@ impl Eth2SubstrateRelay {
 		*last_eth2_slot_on_substrate = current_slot - 1;
 		// info!(target: "relay", "Successful headers submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",
 		//                           self.near_network_name, execution_outcome.transaction.hash);
-		thread::sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
+		tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 	}
 
 	async fn verify_bls_signature_for_finality_update(
 		&mut self,
 		light_client_update: &LightClientUpdate,
-	) -> Result<bool, Box<dyn Error>> {
+	) -> Result<bool, crate::Error> {
 		let signature_slot_period =
 			BeaconRPCClient::get_period_for_slot(light_client_update.signature_slot);
 		let finalized_slot_period = BeaconRPCClient::get_period_for_slot(
-			self.eth_client_pallet.get_finalized_beacon_block_slot().await?,
+			self.eth_client_pallet
+				.get_finalized_beacon_block_slot()
+				.await
+				.map_err(to_error)?,
 		);
 
-		let light_client_state = self.eth_client_pallet.get_light_client_state().await?;
+		let light_client_state =
+			self.eth_client_pallet.get_light_client_state().await.map_err(to_error)?;
 
 		let sync_committee = if signature_slot_period == finalized_slot_period {
 			light_client_state.current_sync_committee
@@ -441,14 +464,19 @@ impl Eth2SubstrateRelay {
 			light_client_update,
 			sync_committee,
 		)
+		.map_err(Into::into)
 	}
 
-	async fn get_execution_block_by_slot(&self, slot: u64) -> Result<BlockHeader, Box<dyn Error>> {
-		match self.beacon_rpc_client.get_block_number_for_slot(slot) {
-			Ok(block_number) => self.eth1_rpc_client.get_block_header_by_number(block_number),
+	async fn get_execution_block_by_slot(&self, slot: u64) -> Result<BlockHeader, crate::Error> {
+		match self.beacon_rpc_client.get_block_number_for_slot(slot).await {
+			Ok(block_number) => self.eth1_rpc_client.get_block_header_by_number(block_number).await,
 			Err(err) => Err(err),
 		}
 	}
+}
+
+fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
+	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{t:?}")))
 }
 
 // Implementation of functions for submitting light client updates
@@ -468,7 +496,7 @@ impl Eth2SubstrateRelay {
 		}
 
 		if last_finalized_slot_on_eth <= last_finalized_slot_on_substrate {
-			info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on NEAR. Skipping sending light client update.");
+			info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on SUBSTRATE. Skipping sending light client update.");
 			return false
 		}
 
@@ -482,7 +510,7 @@ impl Eth2SubstrateRelay {
 	async fn send_light_client_updates_with_checks(&mut self, last_submitted_slot: u64) -> bool {
 		let last_finalized_slot_on_substrate: u64 = return_val_on_fail!(
 			self.get_last_finalized_slot_on_substrate().await,
-			"Error on getting finalized block slot on NEAR. Skipping sending light client update",
+			"Error on getting finalized block slot on SUBSTRATE. Skipping sending light client update",
 			false
 		);
 
@@ -490,7 +518,7 @@ impl Eth2SubstrateRelay {
                 "Error on getting last finalized slot on Ethereum. Skipping sending light client update",
                 false).as_u64();
 
-		info!(target: "relay", "last_finalized_slot on near/eth {}/{}", last_finalized_slot_on_substrate, last_finalized_slot_on_eth);
+		info!(target: "relay", "last_finalized_slot on substrate/eth {}/{}", last_finalized_slot_on_substrate, last_finalized_slot_on_eth);
 
 		if self
 			.is_enough_blocks_for_light_client_update(
@@ -509,7 +537,7 @@ impl Eth2SubstrateRelay {
 			return true
 		}
 
-		return false
+		false
 	}
 
 	async fn send_light_client_updates(
@@ -529,7 +557,7 @@ impl Eth2SubstrateRelay {
 		if last_finalized_slot_on_eth >=
 			last_finalized_slot_on_substrate + self.max_blocks_for_finalization
 		{
-			info!(target: "relay", "Too big gap between slot of finalized block on NEAR and ETH. Sending hand made light client update");
+			info!(target: "relay", "Too big gap between slot of finalized block on SUBSTRATE and ETH. Sending hand made light client update");
 			self.send_hand_made_light_client_update(last_finalized_slot_on_substrate).await;
 		} else {
 			self.send_regular_light_client_update(
@@ -558,23 +586,23 @@ impl Eth2SubstrateRelay {
 		last_finalized_slot_on_eth: u64,
 		last_finalized_slot_on_substrate: u64,
 	) {
-		let last_eth2_period_on_near_chain =
+		let last_eth2_period_on_substrate_chain =
 			BeaconRPCClient::get_period_for_slot(last_finalized_slot_on_substrate);
-		info!(target: "relay", "Last finalized slot/period on near={}/{}", last_finalized_slot_on_substrate, last_eth2_period_on_near_chain);
+		info!(target: "relay", "Last finalized slot/period on substrate={}/{}", last_finalized_slot_on_substrate, last_eth2_period_on_substrate_chain);
 
 		let end_period = BeaconRPCClient::get_period_for_slot(last_finalized_slot_on_eth);
 		info!(target: "relay", "Last finalized slot/period on ethereum={}/{}", last_finalized_slot_on_eth, end_period);
 
-		let light_client_update = if end_period == last_eth2_period_on_near_chain {
-			debug!(target: "relay", "Finalized period on ETH and NEAR are equal. Don't fetch sync commity update");
+		let light_client_update = if end_period == last_eth2_period_on_substrate_chain {
+			debug!(target: "relay", "Finalized period on ETH and SUBSTRATE are equal. Don't fetch sync commity update");
 			return_on_fail!(
-				self.beacon_rpc_client.get_finality_light_client_update(),
+				self.beacon_rpc_client.get_finality_light_client_update().await,
 				"Error on getting light client update. Skipping sending light client update"
 			)
 		} else {
-			debug!(target: "relay", "Finalized period on ETH and NEAR are different. Fetching sync commity update");
+			debug!(target: "relay", "Finalized period on ETH and SUBSTRATE are different. Fetching sync commity update");
 			return_on_fail!(
-				self.beacon_rpc_client.get_light_client_update_for_last_period(),
+				self.beacon_rpc_client.get_light_client_update_for_last_period().await,
 				"Error on getting light client update. Skipping sending light client update"
 			)
 		};
@@ -585,7 +613,7 @@ impl Eth2SubstrateRelay {
 	async fn get_attested_slot(
 		&mut self,
 		last_finalized_slot_on_substrate: u64,
-	) -> Result<u64, Box<dyn Error>> {
+	) -> Result<u64, crate::Error> {
 		const EXPECTED_EPOCHS_BETWEEN_HEAD_AND_FINALIZED_BLOCKS: u64 = 2;
 		let next_finalized_slot = last_finalized_slot_on_substrate +
 			self.interval_between_light_client_updates_submission_in_epochs * ONE_EPOCH_IN_SLOTS;
@@ -594,9 +622,9 @@ impl Eth2SubstrateRelay {
 
 		let attested_slot: u64 = self
 			.beacon_rpc_client
-			.get_non_empty_beacon_block_header(attested_slot)?
-			.slot
-			.into();
+			.get_non_empty_beacon_block_header(attested_slot)
+			.await?
+			.slot;
 		trace!(target: "relay", "Chosen attested slot {}", attested_slot);
 
 		Ok(attested_slot)
@@ -618,10 +646,10 @@ impl Eth2SubstrateRelay {
 					&self.beacon_rpc_client,
 					attested_slot,
 					include_next_sync_committee,
-				),
+				)
+				.await,
 				format!(
-					"Error on getting hand made light client update for attested slot={}.",
-					attested_slot
+					"Error on getting hand made light client update for attested slot={attested_slot}."
 				)
 			);
 
@@ -629,7 +657,7 @@ impl Eth2SubstrateRelay {
 				light_client_update.finality_update.header_update.beacon_header.slot;
 
 			if finality_update_slot <= last_finalized_slot_on_substrate {
-				info!(target: "relay", "Finality update slot for hand made light client update <= last finality update on NEAR. Increment gap for attested slot and skipping light client update.");
+				info!(target: "relay", "Finality update slot for hand made light client update <= last finality update on SUBSTRATE. Increment gap for attested slot and skipping light client update.");
 				attested_slot = return_on_fail!(
 					self.get_attested_slot(last_finalized_slot_on_substrate + ONE_EPOCH_IN_SLOTS)
 						.await,
@@ -639,7 +667,7 @@ impl Eth2SubstrateRelay {
 			}
 
 			trace!(target: "relay", "Hand made light client update: {:?}", light_client_update);
-			self.send_specific_light_client_update(light_client_update);
+			self.send_specific_light_client_update(light_client_update).await;
 			return
 		}
 	}
@@ -667,7 +695,7 @@ impl Eth2SubstrateRelay {
 				return
 			}
 
-			let _execution_outcome = return_on_fail_and_sleep!(
+			return_on_fail_and_sleep!(
 				self.eth_client_pallet
 					.send_light_client_update(light_client_update.clone())
 					.await,
@@ -688,16 +716,23 @@ impl Eth2SubstrateRelay {
 			// execution_outcome.transaction.hash);
 
 			let finalized_block_number = return_on_fail!(
-				self.beacon_rpc_client.get_block_number_for_slot(
-					light_client_update.finality_update.header_update.beacon_header.slot.as_u64()
-				),
+				self.beacon_rpc_client
+					.get_block_number_for_slot(
+						light_client_update
+							.finality_update
+							.header_update
+							.beacon_header
+							.slot
+							.as_u64()
+					)
+					.await,
 				"Fail on getting finalized block number"
 			);
 
 			info!(target: "relay", "Finalized block number from light client update = {}", finalized_block_number);
-			sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
+			tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 		} else {
-			debug!(target: "relay", "Finalized block for light client update is not found on NEAR. Skipping send light client update");
+			debug!(target: "relay", "Finalized block for light client update is not found on SUBSTRATE. Skipping send light client update");
 		}
 	}
 }
@@ -711,11 +746,11 @@ mod tests {
 		test_utils::{get_relay, get_relay_from_slot, get_relay_with_update_from_file},
 	};
 	use eth_rpc_client::{
-		beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
+		beacon_rpc_client::BeaconRPCClient,
 		hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 	};
 	use eth_types::{eth2::LightClientUpdate, BlockHeader};
-	use std::{thread::sleep, time::Duration};
+	use std::time::Duration;
 	use tree_hash::TreeHash;
 
 	const TIMEOUT_SECONDS: u64 = 30;
@@ -739,9 +774,9 @@ mod tests {
 					blocks.push(block);
 					slot += 1;
 				},
-				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
+				Err(err) => match err.is_no_block_for_slot_error.as_ref() {
 					Some(_) => slot += 1,
-					None => sleep(Duration::from_secs(10)),
+					None => tokio::time::sleep(Duration::from_secs(10)).await,
 				},
 			}
 		}
@@ -756,7 +791,7 @@ mod tests {
 		let mut slot = finality_slot + 1;
 
 		let mut finality_slot_on_eth =
-			relay.beacon_rpc_client.get_last_finalized_slot_number().unwrap().as_u64();
+			relay.beacon_rpc_client.get_last_finalized_slot_number().await.unwrap().as_u64();
 
 		let mut blocks: Vec<BlockHeader> = vec![];
 		while finality_slot == finality_slot_on_eth || slot <= finality_slot_on_eth {
@@ -766,7 +801,9 @@ mod tests {
 			slot += 1;
 
 			finality_slot_on_eth = loop {
-				if let Ok(last_slot) = relay.beacon_rpc_client.get_last_finalized_slot_number() {
+				if let Ok(last_slot) =
+					relay.beacon_rpc_client.get_last_finalized_slot_number().await
+				{
 					break last_slot.as_u64()
 				}
 			}
@@ -795,7 +832,7 @@ mod tests {
 		end_slot += 1;
 
 		let blocks: Vec<BlockHeader> = vec![];
-		if let Ok(_) = relay.eth_client_pallet.send_headers(&blocks, end_slot).await {
+		if (relay.eth_client_pallet.send_headers(&blocks, end_slot).await).is_ok() {
 			panic!("No error on submit 0 headers");
 		}
 	}
@@ -839,7 +876,7 @@ mod tests {
 		let relay = get_relay(true, true, &config_for_test).await;
 
 		let light_client_update =
-			relay.beacon_rpc_client.get_light_client_update_for_last_period().unwrap();
+			relay.beacon_rpc_client.get_light_client_update_for_last_period().await.unwrap();
 
 		let branch: Vec<ethereum_types::H256> = light_client_update
 			.finality_update
@@ -899,12 +936,12 @@ mod tests {
 		let finalized_slot_1 =
 			light_client_updates[1].finality_update.header_update.beacon_header.slot;
 
-		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_1);
+		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_1).await;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
 		assert_eq!(finalized_slot, config_for_test.first_slot);
 
-		relay.send_hand_made_light_client_update(finalized_slot);
+		relay.send_hand_made_light_client_update(finalized_slot).await;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
 		assert_eq!(finalized_slot, finalized_slot_1);
@@ -926,7 +963,7 @@ mod tests {
 		let finalized_slot_1 =
 			light_client_updates[1].finality_update.header_update.beacon_header.slot;
 
-		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_1);
+		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_1).await;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
 		assert_eq!(finalized_slot, config_for_test.first_slot);
@@ -938,9 +975,11 @@ mod tests {
 			panic!("Signature slot has block {}", attested_slot + 1);
 		}
 
-		relay.send_hand_made_light_client_update(
-			config_for_test.slot_without_block_2 - ONE_EPOCH_IN_SLOTS * 3 - 1,
-		);
+		relay
+			.send_hand_made_light_client_update(
+				config_for_test.slot_without_block_2 - ONE_EPOCH_IN_SLOTS * 3 - 1,
+			)
+			.await;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
 		assert_eq!(finalized_slot, finalized_slot_1);
@@ -974,7 +1013,7 @@ mod tests {
 		if let Err(err) =
 			relay.get_execution_block_by_slot(config_for_test.slot_without_block).await
 		{
-			if err.downcast_ref::<NoBlockForSlotError>().is_none() {
+			if err.is_no_block_for_slot_error.is_none() {
 				panic!("Wrong error type for slot without block");
 			}
 		} else {
@@ -990,7 +1029,7 @@ mod tests {
 		if let Err(err) =
 			relay.get_execution_block_by_slot(config_for_test.slot_without_block).await
 		{
-			if err.downcast_ref::<NoBlockForSlotError>().is_some() {
+			if err.is_no_block_for_slot_error.is_some() {
 				panic!("Wrong error type for unworking network");
 			}
 		} else {
@@ -1042,7 +1081,9 @@ mod tests {
 			&relay.beacon_rpc_client,
 			attested_slot,
 			false,
-		) {
+		)
+		.await
+		{
 			Ok(light_client_update) => {
 				let finality_update_slot =
 					light_client_update.finality_update.header_update.beacon_header.slot;
@@ -1225,7 +1266,7 @@ mod tests {
 		let mut relay = get_relay(true, true, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
 
-		relay.run(Some(5));
+		relay.run(Some(5)).await;
 
 		let new_finality_slot = get_finalized_slot(&relay).await;
 
@@ -1325,7 +1366,9 @@ mod tests {
 			.unwrap();
 		let mut last_slot_on_substrate = config_for_test.finalized_slot_before_new_period;
 
-		relay.submit_execution_blocks(blocks.0, blocks.1, &mut last_slot_on_substrate);
+		relay
+			.submit_execution_blocks(blocks.0, blocks.1, &mut last_slot_on_substrate)
+			.await;
 
 		let attested_slot = relay
 			.get_attested_slot(config_for_test.finalized_slot_before_new_period)
@@ -1337,9 +1380,10 @@ mod tests {
 				attested_slot,
 				false,
 			)
+			.await
 			.unwrap();
 
-		relay.send_specific_light_client_update(light_client_update);
+		relay.send_specific_light_client_update(light_client_update).await;
 
 		let new_finality_slot = get_finalized_slot(&relay).await;
 
@@ -1350,9 +1394,9 @@ mod tests {
 	#[ignore]
 	async fn test_send_light_client_update_from_file() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay_with_update_from_file(true, true, false, &config_for_test);
+		let mut relay = get_relay_with_update_from_file(true, true, false, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
-		relay.run(None);
+		relay.run(None).await;
 
 		let new_finality_slot = get_finalized_slot(&relay).await;
 		assert_ne!(finality_slot, new_finality_slot);
@@ -1362,9 +1406,9 @@ mod tests {
 	#[ignore]
 	async fn test_send_light_client_update_from_file_with_next_sync_committee() {
 		let config_for_test = get_test_config();
-		let mut relay = get_relay_with_update_from_file(true, true, true, &config_for_test);
+		let mut relay = get_relay_with_update_from_file(true, true, true, &config_for_test).await;
 		let finality_slot = get_finalized_slot(&relay).await;
-		relay.run(None);
+		relay.run(None).await;
 
 		let new_finality_slot = get_finalized_slot(&relay).await;
 		assert_ne!(finality_slot, new_finality_slot);
@@ -1387,9 +1431,9 @@ mod tests {
 			light_client_updates[8].finality_update.header_update.beacon_header.slot;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
-		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_8);
+		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_8).await;
 
-		relay.send_specific_light_client_update(light_client_updates[8].clone());
+		relay.send_specific_light_client_update(light_client_updates[8].clone()).await;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
 		assert_eq!(finalized_slot, finalized_slot_8);
@@ -1415,9 +1459,9 @@ mod tests {
 			light_client_updates[9].finality_update.header_update.beacon_header.slot;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
-		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_9);
+		send_execution_blocks_between(&mut relay, finalized_slot + 1, finalized_slot_9).await;
 
-		relay.send_specific_light_client_update(light_client_updates[9].clone());
+		relay.send_specific_light_client_update(light_client_updates[9].clone()).await;
 
 		let finalized_slot = get_finalized_slot(&relay).await;
 		assert_eq!(finalized_slot, finalized_slot_9);

@@ -3,7 +3,7 @@ use crate::{
 	generic_secret_key::{GenericSecretKey, TSecretKey},
 	generic_signature::TSignature,
 };
-use core::{fmt, marker::PhantomData};
+use core::marker::PhantomData;
 
 /// A simple wrapper around `PublicKey` and `GenericSecretKey`.
 #[derive(Clone)]
@@ -35,12 +35,12 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<Pub, Sec, Sig> fmt::Debug for GenericKeypair<Pub, Sec, Sig>
+impl<Pub, Sec, Sig> std::fmt::Debug for GenericKeypair<Pub, Sec, Sig>
 where
 	Pub: TPublicKey,
 {
 	/// Defers to `self.pk` to avoid leaking the secret key.
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		self.pk.fmt(f)
 	}
 }

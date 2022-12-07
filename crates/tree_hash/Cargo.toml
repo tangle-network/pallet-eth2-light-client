@@ -12,7 +12,7 @@ eth2_hashing = { path = "../eth2_hashing", default-features = false, features = 
 smallvec = { version = "1.6.1", default-features = false }
 
 [dev-dependencies]
-rand = "0.8.5"
+rand = { version = "0.8.5", default-features = false }
 tree_hash_derive = { path = "../tree_hash_derive", default-features = false }
 eth2_ssz = { path = "../ssz", default-features = false }
 eth2_ssz_derive = { path = "../ssz_derive", default-features = false }

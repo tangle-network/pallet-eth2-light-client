@@ -79,12 +79,10 @@ macro_rules! impl_ssz_decode {
 	};
 }
 
-/// Contains the functions required for a `fmt::Display` implementation.
-///
 /// Does not include the `Impl` section since it gets very complicated when it comes to generics.
 macro_rules! impl_display {
 	() => {
-		fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 			write!(f, "{}", hex_encode(self.serialize().to_vec()))
 		}
 	};
@@ -136,7 +134,7 @@ macro_rules! impl_serde_deserialize {
 			impl<'de> serde::de::Visitor<'de> for StringVisitor {
 				type Value = String;
 
-				fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+				fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
 					formatter.write_str("a hex string with 0x prefix")
 				}
 
@@ -159,7 +157,7 @@ macro_rules! impl_serde_deserialize {
 /// Does not include the `Impl` section since it gets very complicated when it comes to generics.
 macro_rules! impl_debug {
 	() => {
-		fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
 			write!(f, "{}", hex_encode(&self.serialize().to_vec()))
 		}
 	};

@@ -8,7 +8,6 @@ use eth_rpc_client::{
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
 use sp_core::crypto::AccountId32;
-use std::{thread, time};
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
@@ -40,12 +39,20 @@ pub fn verify_light_client_snapshot(
 	)
 }
 
+pub fn get_typed_chain_id(config: &Config) -> TypedChainId {
+	match config.ethereum_network {
+		crate::eth_network::EthNetwork::Mainnet => TypedChainId::Evm(1),
+		crate::eth_network::EthNetwork::Kiln => TypedChainId::Evm(1337802),
+		crate::eth_network::EthNetwork::Ropsten => TypedChainId::Evm(3),
+		crate::eth_network::EthNetwork::Goerli => TypedChainId::Evm(5),
+	}
+}
+
 pub async fn init_pallet(
 	config: &Config,
 	eth_client_pallet: &mut EthClientPallet,
 ) -> Result<(), Box<dyn std::error::Error>> {
 	info!(target: "relay", "=== Contract initialization ===");
-
 	if let SubstrateNetwork::Mainnet = config.substrate_network_id {
 		assert!(
 			config.validate_updates.unwrap_or(true),
@@ -64,20 +71,23 @@ pub async fn init_pallet(
 
 	let light_client_update_with_next_sync_committee = beacon_rpc_client
 		.get_light_client_update_for_last_period()
+		.await
 		.expect("Error on fetching finality light client update with sync committee update");
 	let finality_light_client_update = beacon_rpc_client
 		.get_finality_light_client_update()
+		.await
 		.expect("Error on fetching finality light client update");
 
 	let finality_slot =
 		finality_light_client_update.finality_update.header_update.beacon_header.slot;
 
-	let block_id = format!("{}", finality_slot);
+	let block_id = format!("{finality_slot}");
 
 	let finalized_header: ExtendedBeaconBlockHeader =
 		ExtendedBeaconBlockHeader::from(finality_light_client_update.finality_update.header_update);
 	let finalized_body = beacon_rpc_client
 		.get_beacon_block_body_for_block_id(&block_id)
+		.await
 		.expect("Error on fetching finalized body");
 
 	let finalized_execution_header: BlockHeader = eth1_rpc_client
@@ -88,6 +98,7 @@ pub async fn init_pallet(
 				.execution_payload
 				.block_number,
 		)
+		.await
 		.expect("Error on fetching finalized execution header");
 
 	let next_sync_committee = light_client_update_with_next_sync_committee
@@ -96,12 +107,16 @@ pub async fn init_pallet(
 		.next_sync_committee;
 
 	let init_block_root = match config.init_block_root.clone() {
-		None => beacon_rpc_client.get_checkpoint_root().expect("Fail to get last checkpoint"),
+		None => beacon_rpc_client
+			.get_checkpoint_root()
+			.await
+			.expect("Fail to get last checkpoint"),
 		Some(init_block_str) => init_block_str,
 	};
 
 	let light_client_snapshot = beacon_rpc_client
 		.get_bootstrap(init_block_root.clone())
+		.await
 		.expect("Unable to fetch bootstrap state");
 
 	info!(target: "relay", "init_block_root: {}", init_block_root);
@@ -125,12 +140,7 @@ pub async fn init_pallet(
 		);
 	}
 
-	let typed_chain_id = match config.ethereum_network {
-		crate::eth_network::EthNetwork::Mainnet => TypedChainId::Evm(1),
-		crate::eth_network::EthNetwork::Kiln => TypedChainId::Evm(1337802),
-		crate::eth_network::EthNetwork::Ropsten => TypedChainId::Evm(3),
-		crate::eth_network::EthNetwork::Goerli => TypedChainId::Evm(5),
-	};
+	let typed_chain_id = get_typed_chain_id(config);
 
 	eth_client_pallet
 		.init(
@@ -148,61 +158,33 @@ pub async fn init_pallet(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
 	Ok(())
 }
 
 #[cfg(test)]
 mod tests {
 	use crate::{
-		config_for_tests::ConfigForTests,
+		config::Config,
+		eth_client_pallet_trait::EthClientPalletTrait,
 		init_pallet::init_pallet,
-		substrate_network::SubstrateNetwork,
 		substrate_pallet_client::{setup_api, EthClientPallet},
 	};
-	use eth_rpc_client::beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion};
-	use tokio::runtime::Runtime;
+	use eth_rpc_client::beacon_rpc_client::BeaconRPCClient;
+	use webb_proposals::TypedChainId;
 
 	const ONE_EPOCH_IN_SLOTS: u64 = 32;
-
-	fn get_init_config(
-		config_for_test: &ConfigForTests,
-		eth_client_pallet: &EthClientPallet,
-	) -> crate::config::Config {
-		return crate::config::Config {
-			beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
-			eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
-			substrate_endpoint: "https://localhost:9944".to_string(),
-			signer_account_id: "NaN".to_string(),
-			path_to_signer_secret_key: "NaN".to_string(),
-			contract_account_id: "NaN".to_string(),
-			ethereum_network: config_for_test.network_name.clone(),
-			substrate_network_id: config_for_test.substrate_network_id.clone(),
-			output_dir: None,
-			eth_requests_timeout_seconds: Some(30),
-			validate_updates: Some(true),
-			verify_bls_signature: Some(false),
-			hashes_gc_threshold: Some(51000),
-			max_submitted_blocks_by_account: Some(8000),
-			trusted_signer_account_id: Some(eth_client_pallet.get_signer_account_id().to_string()),
-			init_block_root: None,
-			beacon_rpc_version: BeaconRPCVersion::V1_1,
-		}
-	}
 
 	#[tokio::test]
 	#[should_panic(expected = "The updates validation can't be disabled for mainnet")]
 	async fn test_init_pallet_on_mainnet_without_validation() {
-		let config_for_test =
-			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
+		let mut config_for_test =
+			Config::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let api = setup_api().await;
-		let mut eth_client_pallet = EthClientPallet::new(api);
-		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
-		init_config.validate_updates = Some(false);
-		init_config.substrate_network_id = SubstrateNetwork::Testnet;
+		let api = setup_api().await.unwrap();
+		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::Evm(1));
+		config_for_test.validate_updates = Some(false);
 
-		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&config_for_test, &mut eth_client_pallet).await.unwrap();
 	}
 
 	#[tokio::test]
@@ -210,42 +192,40 @@ mod tests {
 		expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
 	)]
 	async fn test_init_pallet_on_mainnet_without_trusted_signature() {
-		let config_for_test =
-			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
+		let mut config_for_test =
+			Config::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let api = setup_api().await;
-		let mut eth_client_pallet = EthClientPallet::new(api);
-		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
-		init_config.substrate_network_id = SubstrateNetwork::Testnet;
-		init_config.trusted_signer_account_id = None;
+		let api = setup_api().await.unwrap();
+		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::Evm(1));
+		config_for_test.trusted_signer_account_id = None;
 
-		init_pallet(&init_config, &mut eth_client_pallet).await.unwrap();
+		init_pallet(&config_for_test, &mut eth_client_pallet).await.unwrap();
 	}
 
 	#[tokio::test]
 	async fn test_sync_with_eth_after_init() {
-		let config_for_test =
-			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
+		let config_for_test = Config::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let api = setup_api().await;
-		let mut eth_client_pallet = EthClientPallet::new(api);
-		let init_config = get_init_config(&config_for_test, &eth_client_pallet);
+		let api = setup_api().await.unwrap();
+		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::Evm(1));
 
-		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&config_for_test, &mut eth_client_pallet).await.unwrap();
 
 		let last_finalized_slot_eth_client = eth_client_pallet
 			.get_finalized_beacon_block_slot()
+			.await
 			.expect("Error on getting last finalized beacon block slot(Eth client)");
 
 		let beacon_rpc_client = BeaconRPCClient::new(
-			&init_config.beacon_endpoint,
-			init_config.eth_requests_timeout_seconds.unwrap_or(10),
-			init_config.eth_requests_timeout_seconds.unwrap_or(10),
+			&config_for_test.beacon_endpoint,
+			config_for_test.eth_requests_timeout_seconds.unwrap_or(10),
+			config_for_test.eth_requests_timeout_seconds.unwrap_or(10),
 			None,
 		);
 
 		let last_finalized_slot_eth_network = beacon_rpc_client
 			.get_last_finalized_slot_number()
+			.await
 			.expect("Error on getting last finalized beacon block slot");
 
 		const MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS: u64 = 3;
@@ -253,7 +233,7 @@ mod tests {
 		assert!(
 			last_finalized_slot_eth_client +
 				ONE_EPOCH_IN_SLOTS * MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS >=
-				last_finalized_slot_eth_network.as_u64()
+				last_finalized_slot_eth_network
 		);
 	}
 }

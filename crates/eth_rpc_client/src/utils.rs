@@ -11,5 +11,5 @@ pub fn trim_quotes(s: String) -> String {
 }
 
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
-	std::fs::read_to_string(format!("data/{}", file_name)).expect("Unable to read file")
+	std::fs::read_to_string(format!("data/{file_name}")).expect("Unable to read file")
 }

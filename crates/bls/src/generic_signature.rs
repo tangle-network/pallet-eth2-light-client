@@ -8,7 +8,6 @@ use alloc::{
 	vec::Vec,
 };
 use core::{
-	fmt,
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
@@ -162,7 +161,7 @@ impl<PublicKey, T: TSignature<PublicKey>> Hash for GenericSignature<PublicKey, T
 }
 
 #[cfg(feature = "std")]
-impl<PublicKey, T: TSignature<PublicKey>> fmt::Display for GenericSignature<PublicKey, T> {
+impl<PublicKey, T: TSignature<PublicKey>> std::fmt::Display for GenericSignature<PublicKey, T> {
 	impl_display!();
 }
 
@@ -181,7 +180,7 @@ impl<'de, PublicKey, T: TSignature<PublicKey>> Deserialize<'de> for GenericSigna
 }
 
 #[cfg(feature = "std")]
-impl<PublicKey, T: TSignature<PublicKey>> fmt::Debug for GenericSignature<PublicKey, T> {
+impl<PublicKey, T: TSignature<PublicKey>> std::fmt::Debug for GenericSignature<PublicKey, T> {
 	impl_debug!();
 }
 

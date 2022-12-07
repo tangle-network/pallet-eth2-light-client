@@ -26,7 +26,7 @@ impl log::Log for SimpleLogger {
 				.deref_mut()
 				.write_all(format!("{}: {}\n", record.level(), record.args()).as_bytes())
 			{
-				eprintln!("Error on flush: {}", err);
+				eprintln!("Error on flush: {err}");
 			}
 
 			if record.metadata().level() <= Level::Warn {
@@ -39,7 +39,7 @@ impl log::Log for SimpleLogger {
 
 	fn flush(&self) {
 		if let Err(err) = self.file.borrow_mut().deref_mut().flush() {
-			eprintln!("Error on flush: {}", err);
+			eprintln!("Error on flush: {err}");
 		}
 	}
 }

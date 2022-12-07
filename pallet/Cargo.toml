@@ -10,7 +10,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-webb-proposals = { version = "0.5.4", default-features = false, features = ["scale", "evm", "substrate"] }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm", "substrate"] }
 ethereum-types = { version = "0.14.0", default-features = false }
 derive_more = { version = "^0.99.2", default-features = false }
 rlp = { version = "0.5.0", default-features = false }
@@ -18,18 +18,19 @@ rlp-derive = { version = "0.1.0", default-features = false }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
+eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
 eth2_ssz = { path = "../crates/ssz", default-features = false }
 merkle_proof = { path = "../crates/merkle_proof", default-features = false }
 bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
 tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
 
-frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
@@ -58,6 +59,7 @@ std = [
 	"serde/std",
 	"hex/std",
 	"sp-core/std",
+    "eth-types/std",
 ]
 
 try-runtime = ["frame-support/try-runtime"]

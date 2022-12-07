@@ -46,7 +46,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
 
-mod eth_types;
 use eth_types::{
 	eth2::{
 		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,
@@ -101,6 +100,7 @@ pub use traits::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
+	use eth_types::eth2::BeaconBlockHeader;
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::{OptionQuery, *},
@@ -292,10 +292,38 @@ pub mod pallet {
 	/************* STORAGE ************ */
 
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		Init {
+			typed_chain_id: TypedChainId,
+			header_info: ExecutionHeaderInfo<T::AccountId>,
+		},
+		RegisterSubmitter {
+			typed_chain_id: TypedChainId,
+			submitter: T::AccountId,
+		},
+		UnregisterSubmitter {
+			typed_chain_id: TypedChainId,
+			submitter: T::AccountId,
+		},
+		SubmitBeaconChainLightClientUpdate {
+			typed_chain_id: TypedChainId,
+			submitter: T::AccountId,
+			beacon_block_header: BeaconBlockHeader,
+		},
+		SubmitExecutionHeader {
+			typed_chain_id: TypedChainId,
+			header_info: ExecutionHeaderInfo<T::AccountId>,
+		},
+		UpdateTrustedSigner {
+			trusted_signer: T::AccountId,
+		},
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// The light client is already initialized for the typed chain ID
+		AlreadyInitialized,
 		/// For attempting to register
 		SubmitterAlreadyRegistered,
 		/// For attempting to unregister
@@ -346,12 +374,18 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(0)]
+		#[pallet::call_index(0)]
 		pub fn init(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
 			args: Box<InitInput<T::AccountId>>,
 		) -> DispatchResultWithPostInfo {
 			let signer = ensure_signed(origin)?;
+			ensure!(
+				!<FinalizedBeaconHeader<T>>::contains_key(typed_chain_id),
+				Error::<T>::AlreadyInitialized
+			);
+
 			let min_storage_balance_for_submitter =
 				Self::calculate_min_storage_balance_for_submitter(
 					args.max_submitted_blocks_by_account,
@@ -378,7 +412,7 @@ pub mod pallet {
 			);
 
 			let finalized_execution_header_info = ExecutionHeaderInfo {
-				parent_hash: args.finalized_execution_header.parent_hash,
+				parent_hash: args.finalized_execution_header.parent_hash.0,
 				block_number: args.finalized_execution_header.number,
 				submitter: signer,
 			};
@@ -397,13 +431,23 @@ pub mod pallet {
 			);
 			MinSubmitterBalance::<T>::insert(typed_chain_id, min_storage_balance_for_submitter);
 			FinalizedBeaconHeader::<T>::insert(typed_chain_id, args.finalized_beacon_header);
-			FinalizedExecutionHeader::<T>::insert(typed_chain_id, finalized_execution_header_info);
+			FinalizedExecutionHeader::<T>::insert(
+				typed_chain_id,
+				finalized_execution_header_info.clone(),
+			);
 			CurrentSyncCommittee::<T>::insert(typed_chain_id, args.current_sync_committee);
 			NextSyncCommittee::<T>::insert(typed_chain_id, args.next_sync_committee);
+
+			Self::deposit_event(Event::Init {
+				typed_chain_id,
+				header_info: finalized_execution_header_info,
+			});
+
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(1)]
+		#[pallet::call_index(1)]
 		pub fn register_submitter(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -422,11 +466,25 @@ pub mod pallet {
 				ExistenceRequirement::AllowDeath,
 			)?;
 			// Register the submitter
-			Submitters::<T>::insert(typed_chain_id, submitter, 0);
+			Submitters::<T>::insert(typed_chain_id, submitter.clone(), 0);
+			Self::deposit_event(Event::RegisterSubmitter {
+				typed_chain_id,
+				submitter: submitter.clone(),
+			});
+			ensure!(
+				Submitters::<T>::contains_key(typed_chain_id, &submitter),
+				Error::<T>::SubmitterNotRegistered
+			);
+			ensure!(
+				Self::submitters(typed_chain_id, submitter).is_some(),
+				// The submitter should be present
+				Error::<T>::SubmitterNotRegistered
+			);
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(2)]
+		#[pallet::call_index(2)]
 		pub fn unregister_submitter(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -447,10 +505,14 @@ pub mod pallet {
 				deposit,
 				ExistenceRequirement::AllowDeath,
 			)?;
+
+			Self::deposit_event(Event::UnregisterSubmitter { typed_chain_id, submitter });
+
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(3)]
+		#[pallet::call_index(3)]
 		pub fn submit_beacon_chain_light_client_update(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -465,11 +527,17 @@ pub mod pallet {
 				Self::validate_light_client_update(typed_chain_id, &light_client_update)?;
 			}
 
-			Self::commit_light_client_update(typed_chain_id, light_client_update)?;
+			Self::commit_light_client_update(typed_chain_id, light_client_update.clone())?;
+			Self::deposit_event(Event::SubmitBeaconChainLightClientUpdate {
+				typed_chain_id,
+				submitter,
+				beacon_block_header: light_client_update.attested_beacon_header,
+			});
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(4)]
+		#[pallet::call_index(4)]
 		pub fn submit_execution_header(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -493,7 +561,7 @@ pub mod pallet {
 			frame_support::log::debug!("Submitted header hash {:?}", block_hash);
 
 			let block_info = ExecutionHeaderInfo {
-				parent_hash: block_header.parent_hash,
+				parent_hash: block_header.parent_hash.0,
 				block_number: block_header.number,
 				submitter,
 			};
@@ -504,17 +572,27 @@ pub mod pallet {
 				Error::<T>::BlockAlreadySubmitted,
 			);
 			UnfinalizedHeaders::<T>::insert(typed_chain_id, block_hash, &block_info);
+
+			Self::deposit_event(Event::SubmitExecutionHeader {
+				typed_chain_id,
+				header_info: block_info,
+			});
+
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(5)]
+		#[pallet::call_index(5)]
 		pub fn update_trusted_signer(
 			origin: OriginFor<T>,
 			trusted_signer: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(TrustedSigner::<T>::get() == Some(origin), Error::<T>::NotTrustedSigner);
-			TrustedSigner::<T>::put(trusted_signer);
+			TrustedSigner::<T>::put(trusted_signer.clone());
+
+			Self::deposit_event(Event::UpdateTrustedSigner { trusted_signer });
+
 			Ok(().into())
 		}
 	}
@@ -526,9 +604,8 @@ impl<T: Config> Pallet<T> {
 	) -> BalanceOf<T> {
 		const STORAGE_BYTES_PER_BLOCK: u32 = 105; // prefix: 3B + key: 32B + HeaderInfo 70B
 		const STORAGE_BYTES_PER_ACCOUNT: u32 = 39; // prefix: 3B + account_id: 32B + counter 4B
-		let storage_bytes_per_account = (STORAGE_BYTES_PER_BLOCK *
-			max_submitted_blocks_by_account as u32) +
-			STORAGE_BYTES_PER_ACCOUNT;
+		let storage_bytes_per_account =
+			(STORAGE_BYTES_PER_BLOCK * max_submitted_blocks_by_account) + STORAGE_BYTES_PER_ACCOUNT;
 		T::StoragePricePerByte::get().saturating_mul(storage_bytes_per_account.into())
 	}
 
@@ -724,8 +801,10 @@ impl<T: Config> Pallet<T> {
 			.map(|x| bls::PublicKey::deserialize(&x.0).unwrap())
 			.collect();
 		ensure!(
-			aggregate_signature
-				.fast_aggregate_verify(signing_root.0, &pubkeys.iter().collect::<Vec<_>>()),
+			aggregate_signature.fast_aggregate_verify(
+				signing_root.0 .0.into(),
+				&pubkeys.iter().collect::<Vec<_>>()
+			),
 			// Failed to verify the bls signature
 			Error::<T>::InvalidBlsSignature
 		);
@@ -865,18 +944,21 @@ impl<T: Config> Pallet<T> {
 				cursor_header_hash,
 			);
 
-			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash {
+			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash.0 {
 				break
 			}
 
-			cursor_header_hash = cursor_header.parent_hash;
+			cursor_header_hash = cursor_header.parent_hash.into();
 			ensure!(
 				Self::unfinalized_headers(typed_chain_id, cursor_header_hash).is_some(),
 				// The unfinalized header should be present
 				Error::<T>::UnfinalizedHeaderNotPresent
 			);
-			cursor_header =
-				Self::unfinalized_headers(typed_chain_id, cursor_header.parent_hash).unwrap();
+			cursor_header = Self::unfinalized_headers(
+				typed_chain_id,
+				eth_types::H256::from(cursor_header.parent_hash.0),
+			)
+			.unwrap();
 		}
 		FinalizedBeaconHeader::<T>::insert(typed_chain_id, finalized_header);
 		FinalizedExecutionHeader::<T>::insert(

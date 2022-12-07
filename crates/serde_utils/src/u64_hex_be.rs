@@ -30,16 +30,16 @@ impl<'de> Visitor<'de> for QuantityVisitor {
 		let stripped = value.trim_start_matches("0x");
 
 		if stripped.is_empty() {
-			Err(de::Error::custom(format!("quantity cannot be {}", stripped)))
+			Err(de::Error::custom(format!("quantity cannot be {stripped}")))
 		} else if stripped == "0" {
 			Ok(vec![0])
 		} else if stripped.starts_with('0') {
 			Err(de::Error::custom("cannot have leading zero"))
 		} else if stripped.len() % 2 != 0 {
-			hex::decode(&format!("0{}", stripped))
-				.map_err(|e| de::Error::custom(format!("invalid hex ({:?})", e)))
+			hex::decode(format!("0{stripped}"))
+				.map_err(|e| de::Error::custom(format!("invalid hex ({e:?})")))
 		} else {
-			hex::decode(stripped).map_err(|e| de::Error::custom(format!("invalid hex ({:?})", e)))
+			hex::decode(stripped).map_err(|e| de::Error::custom(format!("invalid hex ({e:?})")))
 		}
 	}
 }

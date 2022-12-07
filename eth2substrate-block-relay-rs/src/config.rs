@@ -1,10 +1,14 @@
+use eth2_pallet_init::substrate_network::SubstrateNetwork;
 use eth_rpc_client::beacon_rpc_client::BeaconRPCVersion;
 use reqwest::Url;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
+	pub enabled: bool,
+	pub name: String,
+	pub chain_id: u32,
 	// endpoint to a full node of Eth2 Beacon chain with Light Client API
 	pub beacon_endpoint: String,
 
@@ -19,6 +23,9 @@ pub struct Config {
 
 	// The Substrate network name (Tangle, Polkadot, Kusama)
 	pub substrate_network_name: String,
+
+	// The network name (e.g., Mainnet, Testnet)
+	pub substrate_network_id: SubstrateNetwork,
 
 	// Account id from which relay make requests
 	pub signer_account_id: String,
@@ -75,6 +82,14 @@ pub struct Config {
 
 	// Beacon rpc version (V1_1, V1_2)
 	pub beacon_rpc_version: BeaconRPCVersion,
+
+	pub validate_updates: Option<bool>,
+
+	pub validate_bls_signature: Option<bool>,
+
+	pub trusted_signer_account_id: Option<String>,
+
+	pub init_block_root: Option<String>,
 }
 
 impl Config {
@@ -97,5 +112,32 @@ impl Config {
 
 		// check `substrate_endpoint`
 		Url::parse(&self.substrate_endpoint).expect("Error on Substrate endpoint URL parsing");
+	}
+}
+
+impl From<Config> for eth2_pallet_init::config::Config {
+	fn from(val: Config) -> Self {
+		eth2_pallet_init::config::Config {
+			enabled: val.enabled,
+			name: val.name,
+			chain_id: val.chain_id,
+			beacon_endpoint: val.beacon_endpoint,
+			eth1_endpoint: val.eth1_endpoint,
+			substrate_endpoint: val.substrate_endpoint,
+			signer_account_id: val.signer_account_id,
+			path_to_signer_secret_key: val.path_to_signer_secret_key,
+			contract_account_id: val.contract_account_id,
+			ethereum_network: std::str::FromStr::from_str(&val.ethereum_network).unwrap(),
+			substrate_network_id: val.substrate_network_id,
+			output_dir: val.output_dir,
+			eth_requests_timeout_seconds: Some(val.eth_requests_timeout_seconds),
+			validate_updates: val.validate_updates,
+			verify_bls_signature: val.validate_bls_signature,
+			hashes_gc_threshold: val.hashes_gc_threshold,
+			max_submitted_blocks_by_account: val.max_submitted_blocks_by_account,
+			trusted_signer_account_id: val.trusted_signer_account_id,
+			init_block_root: val.init_block_root,
+			beacon_rpc_version: val.beacon_rpc_version,
+		}
 	}
 }

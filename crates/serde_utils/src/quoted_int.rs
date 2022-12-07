@@ -175,7 +175,7 @@ pub mod quoted_u256 {
 	where
 		S: Serializer,
 	{
-		serializer.serialize_str(&format!("{}", value))
+		serializer.serialize_str(&format!("{value}"))
 	}
 
 	/// Deserialize with quotes.

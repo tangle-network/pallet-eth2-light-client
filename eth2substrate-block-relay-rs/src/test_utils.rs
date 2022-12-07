@@ -6,8 +6,8 @@ use bitvec::macros::internal::funty::Fundamental;
 use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 	eth_network::EthNetwork,
-	init_pallet,
 	init_pallet::init_pallet,
+	substrate_network::SubstrateNetwork,
 	substrate_pallet_client::{setup_api, EthClientPallet},
 };
 use eth_rpc_client::{
@@ -18,9 +18,8 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientUpdate, SyncCommittee},
 	BlockHeader,
 };
-use std::{thread, time};
+use std::time;
 use tree_hash::TreeHash;
-use webb::substrate::subxt::tx::PairSigner;
 use webb_proposals::TypedChainId;
 
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
@@ -85,7 +84,7 @@ pub async fn init_pallet_from_files(
 
 	eth_client_pallet
 		.init(
-			typed_chain_id,
+			typed_chain_id.chain_id().into(),
 			finalized_execution_header.unwrap(),
 			finalized_beacon_header,
 			current_sync_committee,
@@ -99,9 +98,7 @@ pub async fn init_pallet_from_files(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
-
-	eth_client_pallet
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 pub async fn init_pallet_from_specific_slot(
@@ -128,19 +125,21 @@ pub async fn init_pallet_from_specific_slot(
 	let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 
 	let finality_header = beacon_rpc_client
-		.get_beacon_block_header_for_block_id(&format!("{}", finality_slot))
+		.get_beacon_block_header_for_block_id(&format!("{finality_slot}"))
+		.await
 		.unwrap();
 
 	let finality_header = eth_types::eth2::BeaconBlockHeader {
 		slot: finality_header.slot.as_u64(),
 		proposer_index: finality_header.proposer_index,
-		parent_root: finality_header.parent_root.into(),
-		state_root: finality_header.state_root.into(),
-		body_root: finality_header.body_root.into(),
+		parent_root: finality_header.parent_root,
+		state_root: finality_header.state_root,
+		body_root: finality_header.body_root,
 	};
 
 	let finalized_body = beacon_rpc_client
-		.get_beacon_block_body_for_block_id(&format!("{}", finality_slot))
+		.get_beacon_block_body_for_block_id(&format!("{finality_slot}"))
+		.await
 		.unwrap();
 
 	let finalized_beacon_header = ExtendedBeaconBlockHeader {
@@ -152,6 +151,7 @@ pub async fn init_pallet_from_specific_slot(
 			.execution_payload
 			.block_hash
 			.into_root()
+			.0
 			.into(),
 	};
 
@@ -159,11 +159,12 @@ pub async fn init_pallet_from_specific_slot(
 		.get_block_header_by_number(
 			finalized_body.execution_payload().unwrap().execution_payload.block_number,
 		)
+		.await
 		.unwrap();
 
 	eth_client_pallet
 		.init(
-			config_for_test.network_name.clone(),
+			config_for_test.type_chain_id.chain_id().into(),
 			finalized_execution_header,
 			finalized_beacon_header,
 			current_sync_committee,
@@ -174,20 +175,24 @@ pub async fn init_pallet_from_specific_slot(
 			None,
 			Some(eth_client_pallet.get_signer_account_id()),
 		)
-		.await;
+		.await
+		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 fn get_config(config_for_test: &ConfigForTests) -> Config {
 	Config {
+		enabled: true,
+		chain_id: 123,
+		name: "test config".into(),
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,
 		signer_account_id: "NaN".to_string(),
 		path_to_signer_secret_key: "NaN".to_string(),
 		contract_account_id: "NaN".to_string(),
-		ethereum_network: config_for_test.network_name.clone(),
+		ethereum_network: config_for_test.network_name.to_string(),
 		interval_between_light_client_updates_submission_in_epochs: 1,
 		max_blocks_for_finalization: 5000,
 		prometheus_metrics_port: Some(32221),
@@ -202,7 +207,12 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		max_submitted_blocks_by_account: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
-		substrate_network_name: "Tangle Testnet".to_string(),
+		substrate_network_name: config_for_test.substrate_network_id.to_string(),
+		init_block_root: None,
+		substrate_network_id: SubstrateNetwork::Testnet,
+		trusted_signer_account_id: None,
+		validate_bls_signature: None,
+		validate_updates: None,
 	}
 }
 
@@ -211,6 +221,9 @@ fn get_init_config(
 	eth_client_pallet: &EthClientPallet,
 ) -> eth2_pallet_init::config::Config {
 	eth2_pallet_init::config::Config {
+		enabled: true,
+		chain_id: 123,
+		name: "test config".into(),
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		signer_account_id: "alice".to_string(),
@@ -227,7 +240,7 @@ fn get_init_config(
 		init_block_root: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
-		substrate_network_id: 1080,
+		substrate_network_id: config_for_test.substrate_network_id.clone(),
 	}
 }
 
@@ -236,9 +249,9 @@ pub async fn get_client_pallet(
 	config_for_test: &ConfigForTests,
 ) -> Box<dyn EthClientPalletTrait> {
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api);
+	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
 
-	let mut config = get_init_config(config_for_test, eth_client_pallet);
+	let mut config = get_init_config(config_for_test, &eth_client_pallet);
 	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
 
 	match from_file {
@@ -293,9 +306,9 @@ pub async fn get_relay_from_slot(
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api);
+	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
 
-	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test);
+	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test).await;
 
 	Eth2SubstrateRelay::init(&config, Box::new(eth_client_pallet), enable_binsearch, false).await
 }

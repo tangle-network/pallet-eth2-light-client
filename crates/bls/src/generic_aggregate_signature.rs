@@ -10,7 +10,6 @@ use alloc::{
 	vec::Vec,
 };
 use core::{
-	fmt,
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
@@ -67,7 +66,7 @@ pub trait TAggregateSignature<Pub, AggPub, Sig>: Sized + Clone {
 ///
 /// Provides generic functionality whilst deferring all serious cryptographic operations to the
 /// generics.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct GenericAggregateSignature<Pub, AggPub, Sig, AggSig> {
 	/// The underlying point which performs *actual* cryptographic operations.
 	point: Option<AggSig>,
@@ -277,7 +276,7 @@ where
 }
 
 /// Hashes the `self.serialize()` bytes.
-#[allow(clippy::derive_hash_xor_eq)]
+#[allow(clippy::derived_hash_with_manual_eq)]
 impl<Pub, AggPub, Sig, AggSig> Hash for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
@@ -289,7 +288,8 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<Pub, AggPub, Sig, AggSig> fmt::Display for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
+impl<Pub, AggPub, Sig, AggSig> std::fmt::Display
+	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
 	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
@@ -326,7 +326,8 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<Pub, AggPub, Sig, AggSig> fmt::Debug for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
+impl<Pub, AggPub, Sig, AggSig> std::fmt::Debug
+	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
 	AggSig: TAggregateSignature<Pub, AggPub, Sig>,

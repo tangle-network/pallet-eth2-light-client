@@ -1,19 +1,22 @@
 use eth_rpc_client::beacon_rpc_client;
 use reqwest::Url;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
 use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
+	pub enabled: bool,
+	pub name: String,
+	pub chain_id: u32,
 	// endpoint to a full node of Eth2 Beacon chain with Light Client API
 	pub beacon_endpoint: String,
 
 	// endpoint for the Ethereum full node, which supports Eth1 RPC API
 	pub eth1_endpoint: String,
 
-	// endpoint for a full node on the NEAR chain
+	// endpoint for a full node on the SUBSTRATE chain
 	pub substrate_endpoint: String,
 
 	// Account id from which relay make requests
@@ -22,7 +25,7 @@ pub struct Config {
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
-	// Account id for eth client contract on NEAR
+	// Account id for eth client contract on SUBSTRATE
 	pub contract_account_id: String,
 
 	// The Ethereum network name (mainnet, kiln, ropsten, goerli)
@@ -60,7 +63,10 @@ impl Config {
 		let mut config = std::fs::File::open(path).expect("Error on opening file with config");
 		let mut content = String::new();
 		config.read_to_string(&mut content).expect("Error on reading config");
-		let config = toml::from_str(content.as_str()).expect("Error on parse config");
+		let mut config: Config = toml::from_str(content.as_str()).expect("Error on parse config");
+
+		let api_key_string = std::env::var("ETH1_INFURA_API_KEY").unwrap();
+		config.eth1_endpoint = config.eth1_endpoint.replace("ETH1_INFURA_API_KEY", &api_key_string);
 
 		Self::check_urls(&config);
 		config
@@ -74,6 +80,6 @@ impl Config {
 		Url::parse(&self.eth1_endpoint).expect("Incorrect ETH1 endpoint");
 
 		// check `substrate_endpoint`
-		Url::parse(&self.substrate_endpoint).expect("Incorrect NEAR endpoint");
+		Url::parse(&self.substrate_endpoint).expect("Incorrect SUBSTRATE endpoint");
 	}
 }

@@ -1,11 +1,5 @@
-use crate::{
-	generic_public_key::{GenericPublicKey, TPublicKey},
-	Error,
-};
-use core::{
-	fmt::{self, Debug},
-	marker::PhantomData,
-};
+use crate::{generic_public_key::GenericPublicKey, Error};
+use core::marker::PhantomData;
 
 /// Implemented on some struct from a BLS library so it may be used internally in this crate.
 pub trait TAggregatePublicKey<Pub>: Sized + Clone {
@@ -41,12 +35,12 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<Pub, AggPub> Debug for GenericAggregatePublicKey<Pub, AggPub>
+impl<Pub, AggPub> std::fmt::Debug for GenericAggregatePublicKey<Pub, AggPub>
 where
 	AggPub: TAggregatePublicKey<Pub>,
-	Pub: TPublicKey,
+	Pub: crate::generic_public_key::TPublicKey,
 {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		write!(f, "{:?}", self.to_public_key())
 	}
 }

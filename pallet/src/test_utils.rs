@@ -1,8 +1,7 @@
-use crate::eth_types::eth2::LightClientUpdate;
+use eth_types::eth2::LightClientUpdate;
 
-use crate::eth_types::{eth2::*, pallet::InitInput, BlockHeader};
+use eth_types::{eth2::*, pallet::InitInput, BlockHeader};
 use lazy_static::lazy_static;
-use sp_runtime::AccountId32;
 
 pub fn read_beacon_header(filename: String) -> BeaconBlockHeader {
 	serde_json::from_reader(std::fs::File::open(std::path::Path::new(&filename)).unwrap()).unwrap()
@@ -24,8 +23,7 @@ pub fn read_client_updates(
 	let mut updates = vec![];
 	for period_idx in start_period..=end_period {
 		let client_update = read_client_update(format!(
-			"./src/data/{}/light_client_update_period_{}.json",
-			network, period_idx
+			"./src/data/{network}/light_client_update_period_{period_idx}.json"
 		));
 		updates.push(client_update);
 	}
@@ -42,8 +40,8 @@ pub struct InitOptions<AccountId> {
 }
 
 pub fn get_kiln_test_data(
-	init_options: Option<InitOptions<AccountId32>>,
-) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<AccountId32>) {
+	init_options: Option<InitOptions<[u8; 32]>>,
+) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<[u8; 32]>) {
 	const NETWORK: &str = "kiln";
 	lazy_static! {
 		static ref INIT_UPDATE: LightClientUpdate =
@@ -91,7 +89,7 @@ pub fn get_kiln_test_data(
 }
 
 pub fn get_test_data(
-	init_options: Option<InitOptions<AccountId32>>,
-) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<AccountId32>) {
+	init_options: Option<InitOptions<[u8; 32]>>,
+) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<[u8; 32]>) {
 	get_kiln_test_data(init_options)
 }

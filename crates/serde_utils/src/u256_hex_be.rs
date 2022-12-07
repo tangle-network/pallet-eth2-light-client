@@ -30,7 +30,7 @@ impl<'de> Visitor<'de> for U256Visitor {
 		}
 		let stripped = &value[2..];
 		if stripped.is_empty() {
-			Err(de::Error::custom(format!("quantity cannot be {:?}", stripped)))
+			Err(de::Error::custom(format!("quantity cannot be {stripped:?}")))
 		} else if stripped == "0" {
 			Ok(value.to_string())
 		} else if stripped.starts_with('0') {
@@ -47,7 +47,7 @@ where
 {
 	let decoded = deserializer.deserialize_string(U256Visitor)?;
 
-	U256::from_str(&decoded).map_err(|e| de::Error::custom(format!("Invalid U256 string: {}", e)))
+	U256::from_str(&decoded).map_err(|e| de::Error::custom(format!("Invalid U256 string: {e}")))
 }
 
 #[cfg(test)]
