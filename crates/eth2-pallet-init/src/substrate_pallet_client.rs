@@ -93,9 +93,13 @@ impl EthClientPallet {
 }
 
 #[async_trait]
-impl EthClientPalletTrait for EthClientPallet {
+impl<H256, LightClientUpdate, BlockHeader>
+	EthClientPalletTrait<H256, LightClientUpdate, BlockHeader> for EthClientPallet
+{
 	async fn get_last_submitted_slot(&self) -> u64 {
-		self.get_finalized_beacon_block_slot().await.unwrap_or_default()
+		self.get_finalized_beacon_block_slot()
+			.await
+			.expect("Unable to obtain finalized beacon slot")
 	}
 
 	async fn is_known_block(
@@ -143,7 +147,22 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn get_finalized_beacon_block_hash(
 		&self,
 	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
-		Ok(eth_types::H256::from([0u8; 32]))
+		let storage_address = subxt::dynamic::storage(
+			"Eth2Client",
+			"FinalizedBeaconHeader",
+			vec![Value::from_bytes(&self.chain.chain_id().encode())],
+		);
+		let maybe_unfinalized_header: DecodedValueThunk =
+			self.api.storage().fetch_or_default(&storage_address, None).await?;
+
+		let extended_beacon_header =
+			Option::<ExtendedBeaconBlockHeader>::decode(&mut maybe_unfinalized_header.encoded())?;
+
+		if let Some(extended_beacon_header) = extended_beacon_header {
+			Ok(extended_beacon_header.execution_block_hash)
+		} else {
+			Err(Box::new(Error::Generic("Unable to obtain ExtendedBeaconBlockHeader")))
+		}
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
