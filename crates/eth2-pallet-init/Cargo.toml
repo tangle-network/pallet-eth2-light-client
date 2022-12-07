@@ -27,5 +27,3 @@ webb = { path = "../../../webb-rs", features = [
 webb-proposals = { path = "../../../webb-rs/proposals" }
 tokio = { version = "1.1", features = ["macros", "rt", "time"] }
 
-[dev-dependencies]
-workspaces = "0.5.0"

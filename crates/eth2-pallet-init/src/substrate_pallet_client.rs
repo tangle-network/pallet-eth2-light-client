@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, SyncCommittee},
-	pallet::InitInput,
+	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader,
 };
 use sp_core::{crypto::AccountId32, sr25519::Pair, Decode};
@@ -29,12 +29,13 @@ pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
 	signer: PairSigner<PolkadotConfig, Pair>,
+	chain: TypedChainId,
 }
 
 impl EthClientPallet {
 	pub fn new(api: OnlineClient<PolkadotConfig>) -> Self {
 		let signer = PairSigner::new(AccountKeyring::Alice.pair());
-		Self { api, signer }
+		Self { api, signer, chain: TypedChainId::Evm(5) }
 	}
 
 	pub fn get_signer_account_id(&self) -> AccountId32 {
@@ -75,33 +76,17 @@ impl EthClientPallet {
 		Ok(())
 	}
 
-	async fn finalized_beacon_block_slot(typed_chain_id: TypedChainId) -> Result<u64, Error> {
-		let api = setup_api().await?;
-
-		let storage_address = subxt::dynamic::storage(
-			"Eth2Client",
-			"FinalizedBeaconHeader",
-			vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
-		);
-		let maybe_finalized_beacon_header_value: DecodedValueThunk =
-			api.storage().fetch_or_default(&storage_address, None).await?;
-
-		let finalized_beacon_header_value: ExtendedBeaconBlockHeader =
-			ExtendedBeaconBlockHeader::decode(&mut maybe_finalized_beacon_header_value.encoded())
-				.unwrap();
-		Ok(0)
-	}
-
-	pub async fn get_last_eth2_slot_on_tangle(typed_chain_id: TypedChainId) -> Result<u64, Error> {
-		let api = setup_api().await?;
-
+	pub async fn get_last_eth2_slot_on_tangle(
+		&self,
+		typed_chain_id: TypedChainId,
+	) -> Result<u64, Error> {
 		let storage_address = subxt::dynamic::storage(
 			"Eth2Client",
 			"FinalizedHeaderUpdate",
 			vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
 		);
 		let _finalized_header_update: DecodedValueThunk =
-			api.storage().fetch_or_default(&storage_address, None).await?;
+			self.api.storage().fetch_or_default(&storage_address, None).await?;
 
 		Ok(0)
 	}
@@ -110,20 +95,48 @@ impl EthClientPallet {
 #[async_trait]
 impl EthClientPalletTrait for EthClientPallet {
 	async fn get_last_submitted_slot(&self) -> u64 {
-		0
+		self.get_finalized_beacon_block_slot().await.unwrap_or_default()
 	}
 
 	async fn is_known_block(
 		&self,
-		_execution_block_hash: &eth_types::H256,
+		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, Box<dyn std::error::Error>> {
-		Ok(false)
+		let storage_address = subxt::dynamic::storage(
+			"Eth2Client",
+			// Name of the storage variable in the pallet/src/lib.rs
+			"UnfinalizedHeaders",
+			vec![
+				Value::from_bytes(&self.chain.chain_id().encode()),
+				Value::from_bytes(&execution_block_hash.0),
+			],
+		);
+		let maybe_unfinalized_header: DecodedValueThunk =
+			self.api.storage().fetch_or_default(&storage_address, None).await?;
+
+		let unfinalized_header = Option::<ExecutionHeaderInfo<AccountId32>>::decode(
+			&mut maybe_unfinalized_header.encoded(),
+		)?;
+
+		Ok(unfinalized_header.is_some())
 	}
 
 	async fn send_light_client_update(
 		&mut self,
-		_light_client_update: eth_types::eth2::LightClientUpdate,
+		light_client_update: eth_types::eth2::LightClientUpdate,
 	) -> Result<(), Box<dyn std::error::Error>> {
+		let tx = subxt::dynamic::tx(
+			"Eth2Client",
+			// Name of the transaction in the pallet/src/lib.rs
+			"submit_beacon_chain_light_client_update",
+			vec![
+				Value::from_bytes(&self.chain.chain_id().encode()),
+				Value::from_bytes(&light_client_update.encode()),
+			],
+		);
+
+		let tx_hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
+		println!("Submitted tx with hash {tx_hash}");
 		Ok(())
 	}
 
@@ -134,7 +147,18 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
-		Ok(0)
+		let storage_address = subxt::dynamic::storage(
+			"Eth2Client",
+			"FinalizedBeaconHeader",
+			vec![Value::from_bytes(&self.chain.chain_id().encode())],
+		);
+		let maybe_finalized_beacon_header_value: DecodedValueThunk =
+			self.api.storage().fetch_or_default(&storage_address, None).await?;
+
+		let finalized_beacon_header_value: ExtendedBeaconBlockHeader =
+			ExtendedBeaconBlockHeader::decode(&mut maybe_finalized_beacon_header_value.encoded())
+				.unwrap();
+		Ok(finalized_beacon_header_value.header.slot)
 	}
 
 	async fn send_headers(

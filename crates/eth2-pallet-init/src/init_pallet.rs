@@ -154,37 +154,25 @@ pub async fn init_pallet(
 
 #[cfg(test)]
 mod tests {
-	use crate::{config_for_tests::ConfigForTests, init_pallet::init_pallet};
-	use contract_wrapper::{
-		near_network::NearNetwork, sandbox_contract_wrapper::SandboxContractWrapper,
+	use crate::{
+		config_for_tests::ConfigForTests,
+		init_pallet::init_pallet,
+		substrate_network::SubstrateNetwork,
+		substrate_pallet_client::{setup_api, EthClientPallet},
 	};
 	use eth_rpc_client::beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion};
 	use tokio::runtime::Runtime;
-	use workspaces::{Account, Contract};
 
 	const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
-	fn create_contract(config_for_test: &ConfigForTests) -> (Account, Contract) {
-		let rt = Runtime::new().unwrap();
-		let worker = rt.block_on(workspaces::sandbox()).unwrap();
-
-		// create accounts
-		let owner: Account = worker.root_account().unwrap();
-
-		let wasm = std::fs::read(&config_for_test.wasm_filepath).unwrap();
-		let contract = rt.block_on(owner.deploy(&wasm)).unwrap().unwrap();
-
-		(owner, contract)
-	}
-
 	fn get_init_config(
 		config_for_test: &ConfigForTests,
-		eth_client_pallet: &EthClientContract,
+		eth_client_pallet: &EthClientPallet,
 	) -> crate::config::Config {
 		return crate::config::Config {
 			beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 			eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
-			substrate_endpoint: "https://rpc.testnet.near.org".to_string(),
+			substrate_endpoint: "https://localhost:9944".to_string(),
 			signer_account_id: "NaN".to_string(),
 			path_to_signer_secret_key: "NaN".to_string(),
 			contract_account_id: "NaN".to_string(),
@@ -202,51 +190,45 @@ mod tests {
 		}
 	}
 
-	#[test]
+	#[tokio::test]
 	#[should_panic(expected = "The updates validation can't be disabled for mainnet")]
-	fn test_init_pallet_on_mainnet_without_validation() {
+	async fn test_init_pallet_on_mainnet_without_validation() {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let (relay_account, contract) = create_contract(&config_for_test);
-		let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
-
-		let mut eth_client_pallet = EthClientContract::new(contract_wrapper);
+		let api = setup_api().await;
+		let mut eth_client_pallet = EthClientPallet::new(api);
 		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
 		init_config.validate_updates = Some(false);
-		init_config.substrate_network_id = NearNetwork::Mainnet;
+		init_config.substrate_network_id = SubstrateNetwork::Testnet;
 
 		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
 	}
 
-	#[test]
+	#[tokio::test]
 	#[should_panic(
 		expected = "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet"
 	)]
-	fn test_init_pallet_on_mainnet_without_trusted_signature() {
+	async fn test_init_pallet_on_mainnet_without_trusted_signature() {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let (relay_account, contract) = create_contract(&config_for_test);
-		let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
-
-		let mut eth_client_pallet = EthClientContract::new(contract_wrapper);
+		let api = setup_api().await;
+		let mut eth_client_pallet = EthClientPallet::new(api);
 		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
-		init_config.substrate_network_id = NearNetwork::Mainnet;
+		init_config.substrate_network_id = SubstrateNetwork::Testnet;
 		init_config.trusted_signer_account_id = None;
 
-		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&init_config, &mut eth_client_pallet).await.unwrap();
 	}
 
-	#[test]
-	fn test_sync_with_eth_after_init() {
+	#[tokio::test]
+	async fn test_sync_with_eth_after_init() {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let (relay_account, contract) = create_contract(&config_for_test);
-		let contract_wrapper = Box::new(SandboxContractWrapper::new(&relay_account, contract));
-
-		let mut eth_client_pallet = EthClientContract::new(contract_wrapper);
+		let api = setup_api().await;
+		let mut eth_client_pallet = EthClientPallet::new(api);
 		let init_config = get_init_config(&config_for_test, &eth_client_pallet);
 
 		init_pallet(&init_config, &mut eth_client_pallet).unwrap();

@@ -19,11 +19,11 @@ use webb_proposals::TypedChainId;
 use crate::mock::Eth2Client;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 
-pub struct EthClientPallet {
+pub struct MockEthClientPallet {
 	network: TypedChainId,
 }
 
-impl EthClientPallet {
+impl MockEthClientPallet {
 	pub fn init(
 		&self,
 		_typed_chain_id: TypedChainId,
@@ -39,7 +39,7 @@ impl EthClientPallet {
 }
 
 #[async_trait]
-impl EthClientPalletTrait for EthClientPallet {
+impl EthClientPalletTrait for MockEthClientPallet {
 	async fn get_last_submitted_slot(&self) -> u64 {
 		let header: ExtendedBeaconBlockHeader =
 			Eth2Client::finalized_beacon_header(self.network).unwrap();
@@ -49,9 +49,9 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn is_known_block(
 		&self,
-		_execution_block_hash: &eth_types::H256,
+		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, Box<dyn std::error::Error>> {
-		Ok(false)
+		Eth2Client::is_known_execution_header(self.network, execution_block_hash)
 	}
 
 	async fn send_light_client_update(
