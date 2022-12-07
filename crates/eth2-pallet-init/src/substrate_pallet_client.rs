@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use eth_types::{
-	eth2::{ExtendedBeaconBlockHeader, SyncCommittee},
+	eth2::{ExtendedBeaconBlockHeader, LightClientState, SyncCommittee},
 	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader,
 };
@@ -90,6 +90,26 @@ impl EthClientPallet {
 
 		Ok(0)
 	}
+
+	// Gets a value from subxt storage where the only input argument is the type chain id
+	async fn get_value_with_simple_type_chain_argument<T: Decode>(
+		&self,
+		entry_name: &str,
+	) -> Result<Option<T>, Box<dyn std::error::Error>> {
+		let storage_address =
+			subxt::dynamic::storage("Eth2Client", entry_name, vec![self.get_type_chain_argument()]);
+
+		let maybe_existant_value: DecodedValueThunk =
+			self.api.storage().fetch_or_default(&storage_address, None).await?;
+
+		let finalized_value: Option<T> = Option::<T>::decode(&mut maybe_existant_value.encoded())?;
+
+		Ok(finalized_value)
+	}
+
+	fn get_type_chain_argument(&self) -> Value {
+		Value::from_bytes(&self.chain.chain_id().encode())
+	}
 }
 
 #[async_trait]
@@ -148,20 +168,12 @@ where
 		Ok(())
 	}
 
-	async fn get_finalized_beacon_block_hash(
-		&self,
-	) -> Result<H256, Box<dyn std::error::Error>> {
-		let storage_address = subxt::dynamic::storage(
-			"Eth2Client",
-			"FinalizedBeaconHeader",
-			vec![Value::from_bytes(&self.chain.chain_id().encode())],
-		);
-		let maybe_extended_beacon_header: DecodedValueThunk =
-			self.api.storage().fetch_or_default(&storage_address, None).await?;
-
-		let extended_beacon_header = Option::<ExtendedBeaconBlockHeader>::decode(
-			&mut maybe_extended_beacon_header.encoded(),
-		)?;
+	async fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn std::error::Error>> {
+		let extended_beacon_header = self
+			.get_value_with_simple_type_chain_argument::<ExtendedBeaconBlockHeader>(
+				"FinalizedBeaconHeader",
+			)
+			.await?;
 
 		if let Some(extended_beacon_header) = extended_beacon_header {
 			Ok(extended_beacon_header.beacon_block_root)
@@ -171,18 +183,17 @@ where
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
-		let storage_address = subxt::dynamic::storage(
-			"Eth2Client",
-			"FinalizedBeaconHeader",
-			vec![Value::from_bytes(&self.chain.chain_id().encode())],
-		);
-		let maybe_finalized_beacon_header_value: DecodedValueThunk =
-			self.api.storage().fetch_or_default(&storage_address, None).await?;
+		let finalized_beacon_header_value = self
+			.get_value_with_simple_type_chain_argument::<ExtendedBeaconBlockHeader>(
+				"FinalizedBeaconHeader",
+			)
+			.await?;
 
-		let finalized_beacon_header_value: ExtendedBeaconBlockHeader =
-			ExtendedBeaconBlockHeader::decode(&mut maybe_finalized_beacon_header_value.encoded())
-				.unwrap();
-		Ok(finalized_beacon_header_value.header.slot)
+		if let Some(finalized_beacon_header_value) = finalized_beacon_header_value {
+			Ok(finalized_beacon_header_value.header.slot)
+		} else {
+			Err(Box::new(Error::Generic("Unable to obtain FinalizedBeaconHeader")))
+		}
 	}
 
 	async fn send_headers(
@@ -190,7 +201,7 @@ where
 		_headers: &[BlockHeader],
 		_end_slot: u64,
 	) -> Result<(), Box<dyn std::error::Error>> {
-		let txes = vec![];
+		let mut txes = vec![];
 		for header in _headers {
 			let tx = subxt::dynamic::tx(
 				"Eth2Client",
@@ -202,7 +213,6 @@ where
 			);
 			txes.push(tx);
 		}
-		
 
 		let batch_tx = subxt::dynamic::tx(
 			"Utility",
@@ -240,7 +250,26 @@ where
 	async fn get_light_client_state(
 		&self,
 	) -> Result<eth_types::eth2::LightClientState, Box<dyn std::error::Error>> {
-		Ok(eth_types::eth2::LightClientState::default())
+		let task0 = self.get_value_with_simple_type_chain_argument("FinalizedBeaconHeader");
+		let task1 = self.get_value_with_simple_type_chain_argument("CurrentSyncCommittee");
+		let task2 = self.get_value_with_simple_type_chain_argument("NextSyncCommittee");
+
+		let (finalized_beacon_header, current_sync_committee, next_sync_committee) =
+			tokio::try_join!(task0, task1, task2)?;
+
+		match (finalized_beacon_header, current_sync_committee, next_sync_committee) {
+			(
+				Some(finalized_beacon_header),
+				Some(current_sync_committee),
+				Some(next_sync_committee),
+			) => Ok(LightClientState {
+				finalized_beacon_header,
+				current_sync_committee,
+				next_sync_committee,
+			}),
+
+			_ => Err(Box::new(Error::Generic("Unable to obtain all values"))),
+		}
 	}
 
 	async fn get_num_of_submitted_blocks_by_account(
