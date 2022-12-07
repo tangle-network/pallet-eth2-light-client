@@ -95,6 +95,10 @@ impl EthClientPallet {
 #[async_trait]
 impl<H256, LightClientUpdate, BlockHeader>
 	EthClientPalletTrait<H256, LightClientUpdate, BlockHeader> for EthClientPallet
+where
+	H256: Encode + Decode + Clone + Send + Sync + 'static,
+	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
+	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
 {
 	async fn get_last_submitted_slot(&self) -> u64 {
 		self.get_finalized_beacon_block_slot()
@@ -104,7 +108,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 
 	async fn is_known_block(
 		&self,
-		execution_block_hash: &eth_types::H256,
+		execution_block_hash: &H256,
 	) -> Result<bool, Box<dyn std::error::Error>> {
 		let storage_address = subxt::dynamic::storage(
 			"Eth2Client",
@@ -112,7 +116,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 			"UnfinalizedHeaders",
 			vec![
 				Value::from_bytes(&self.chain.chain_id().encode()),
-				Value::from_bytes(&execution_block_hash.0),
+				Value::from_bytes(&execution_block_hash.encode()),
 			],
 		);
 		let maybe_unfinalized_header: DecodedValueThunk =
@@ -127,7 +131,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 
 	async fn send_light_client_update(
 		&mut self,
-		light_client_update: eth_types::eth2::LightClientUpdate,
+		light_client_update: LightClientUpdate,
 	) -> Result<(), Box<dyn std::error::Error>> {
 		let tx = subxt::dynamic::tx(
 			"Eth2Client",
@@ -146,7 +150,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 
 	async fn get_finalized_beacon_block_hash(
 		&self,
-	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
+	) -> Result<H256, Box<dyn std::error::Error>> {
 		let storage_address = subxt::dynamic::storage(
 			"Eth2Client",
 			"FinalizedBeaconHeader",
@@ -183,7 +187,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 
 	async fn send_headers(
 		&mut self,
-		_headers: &[eth_types::BlockHeader],
+		_headers: &[BlockHeader],
 		_end_slot: u64,
 	) -> Result<(), Box<dyn std::error::Error>> {
 		let txes = vec![];
@@ -203,7 +207,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 		let batch_tx = subxt::dynamic::tx(
 			"Utility",
 			"batch",
-			txes.iter().map(|tx| tx).collect(),
+			txes.iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
 		);
 
 		let tx_hash = self.api.tx().sign_and_submit_default(&batch_tx, &self.signer).await?;
