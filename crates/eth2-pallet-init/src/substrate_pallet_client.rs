@@ -160,7 +160,7 @@ impl<H256, LightClientUpdate, BlockHeader>
 		)?;
 
 		if let Some(extended_beacon_header) = extended_beacon_header {
-			Ok(extended_beacon_header.execution_block_hash)
+			Ok(extended_beacon_header.beacon_block_root)
 		} else {
 			Err(Box::new(Error::Generic("Unable to obtain ExtendedBeaconBlockHeader")))
 		}
