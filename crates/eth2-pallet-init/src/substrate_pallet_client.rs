@@ -221,7 +221,7 @@ where
 			txes.into_iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
 		);
 
-		let tx_hash = self.api.tx().sign_and_submit_default(&batch_tx, &self.signer).await?;
+		let _tx_hash = self.api.tx().sign_and_submit_default(&batch_tx, &self.signer).await?;
 		Ok(())
 	}
 
@@ -250,7 +250,7 @@ where
 		account_id: Option<AccountId32>,
 	) -> Result<bool, Box<dyn std::error::Error>> {
 		let exists = self
-			.get_value_with_keys::<Option<ExecutionHeaderInfo<AccountId32>>>(
+			.get_value_with_keys::<Option<u32>>(
 				"Submitters",
 				vec![self.get_type_chain_argument(), account_id.as_value()],
 			)
@@ -291,7 +291,16 @@ where
 	async fn get_num_of_submitted_blocks_by_account(
 		&self,
 	) -> Result<u32, Box<dyn std::error::Error>> {
-		Ok(0)
+		let account_id = self.signer.account_id();
+		let count = self
+			.get_value_with_keys::<Option<u32>>(
+				"Submitters",
+				vec![self.get_type_chain_argument(), account_id.as_value()],
+			)
+			.await?
+			.ok_or(Error::Generic("Value not found for Submitters"))?;
+
+		Ok(count)
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, Box<dyn std::error::Error>> {
