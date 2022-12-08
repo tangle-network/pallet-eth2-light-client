@@ -5,10 +5,10 @@ use eth_types::{
 	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader,
 };
-use sp_core::{crypto::AccountId32, sr25519::Pair, Decode};
+use sp_core::{crypto::AccountId32, sr25519::Pair};
 use sp_keyring::AccountKeyring;
 use webb::substrate::{
-	scale::Encode,
+	scale::{Decode, Encode},
 	subxt::{
 		self,
 		dynamic::{DecodedValueThunk, Value},
@@ -120,9 +120,11 @@ where
 	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
 {
 	async fn get_last_submitted_slot(&self) -> u64 {
-		self.get_finalized_beacon_block_slot()
-			.await
-			.expect("Unable to obtain finalized beacon slot")
+		EthClientPalletTrait::<LightClientUpdate, BlockHeader>::get_finalized_beacon_block_slot(
+			self,
+		)
+		.await
+		.expect("Unable to obtain finalized beacon slot")
 	}
 
 	async fn is_known_block(
@@ -133,10 +135,7 @@ where
 			"Eth2Client",
 			// Name of the storage variable in the pallet/src/lib.rs
 			"UnfinalizedHeaders",
-			vec![
-				Value::from_bytes(&self.chain.chain_id().encode()),
-				Value::from_bytes(&execution_block_hash.encode()),
-			],
+			vec![self.get_type_chain_argument(), Value::from_bytes(&execution_block_hash.encode())],
 		);
 		let maybe_unfinalized_header: DecodedValueThunk =
 			self.api.storage().fetch_or_default(&storage_address, None).await?;
@@ -156,10 +155,7 @@ where
 			"Eth2Client",
 			// Name of the transaction in the pallet/src/lib.rs
 			"submit_beacon_chain_light_client_update",
-			vec![
-				Value::from_bytes(&self.chain.chain_id().encode()),
-				Value::from_bytes(&light_client_update.encode()),
-			],
+			vec![self.get_type_chain_argument(), Value::from_bytes(&light_client_update.encode())],
 		);
 
 		let tx_hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
@@ -199,18 +195,15 @@ where
 
 	async fn send_headers(
 		&mut self,
-		_headers: &[BlockHeader],
+		headers: &[BlockHeader],
 		_end_slot: u64,
 	) -> Result<(), Box<dyn std::error::Error>> {
 		let mut txes = vec![];
-		for header in _headers {
+		for header in headers {
 			let tx = subxt::dynamic::tx(
 				"Eth2Client",
 				"submit_execution_header",
-				vec![
-					Value::from_bytes(&self.chain.chain_id().encode()),
-					Value::from_bytes(&header.encode()),
-				],
+				vec![self.get_type_chain_argument(), Value::from_bytes(&header.encode())],
 			);
 			txes.push(tx);
 		}
@@ -218,7 +211,7 @@ where
 		let batch_tx = subxt::dynamic::tx(
 			"Utility",
 			"batch",
-			txes.iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
+			txes.into_iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
 		);
 
 		let tx_hash = self.api.tx().sign_and_submit_default(&batch_tx, &self.signer).await?;

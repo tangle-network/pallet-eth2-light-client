@@ -8,7 +8,7 @@ use eth2_pallet_init::{
 	eth_network::EthNetwork,
 	init_pallet,
 	init_pallet::init_pallet,
-	substrate_pallet_client::{setup_api, EthClientPallet},
+	substrate_pallet_client::{setup_api, EthClientPalletTrait},
 };
 use eth_rpc_client::{
 	beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion},
