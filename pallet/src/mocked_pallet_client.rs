@@ -39,7 +39,12 @@ impl MockEthClientPallet {
 }
 
 #[async_trait]
-impl EthClientPalletTrait for MockEthClientPallet {
+impl<LightClientUpdate, BlockHeader> EthClientPalletTrait<LightClientUpdate, BlockHeader>
+	for MockEthClientPallet
+where
+	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
+	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
+{
 	async fn get_last_submitted_slot(&self) -> u64 {
 		let header: ExtendedBeaconBlockHeader =
 			Eth2Client::finalized_beacon_header(self.network).unwrap();

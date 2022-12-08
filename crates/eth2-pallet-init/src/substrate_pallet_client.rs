@@ -19,7 +19,7 @@ use webb::substrate::{
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
 
-use crate::eth_client_pallet_trait::EthClientPalletTrait;
+use crate::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
 
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new().await?;
@@ -95,7 +95,7 @@ impl EthClientPallet {
 	async fn get_value_with_simple_type_chain_argument<T: Decode>(
 		&self,
 		entry_name: &str,
-	) -> Result<Option<T>, Box<dyn std::error::Error>> {
+	) -> Result<Option<T>, Error> {
 		let storage_address =
 			subxt::dynamic::storage("Eth2Client", entry_name, vec![self.get_type_chain_argument()]);
 
@@ -113,10 +113,9 @@ impl EthClientPallet {
 }
 
 #[async_trait]
-impl<H256, LightClientUpdate, BlockHeader>
-	EthClientPalletTrait<H256, LightClientUpdate, BlockHeader> for EthClientPallet
+impl<LightClientUpdate, BlockHeader> EthClientPalletTrait<LightClientUpdate, BlockHeader>
+	for EthClientPallet
 where
-	H256: Encode + Decode + Clone + Send + Sync + 'static,
 	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
 	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
 {
@@ -128,7 +127,7 @@ where
 
 	async fn is_known_block(
 		&self,
-		execution_block_hash: &H256,
+		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, Box<dyn std::error::Error>> {
 		let storage_address = subxt::dynamic::storage(
 			"Eth2Client",
@@ -168,7 +167,9 @@ where
 		Ok(())
 	}
 
-	async fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn std::error::Error>> {
+	async fn get_finalized_beacon_block_hash(
+		&self,
+	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
 		let extended_beacon_header = self
 			.get_value_with_simple_type_chain_argument::<ExtendedBeaconBlockHeader>(
 				"FinalizedBeaconHeader",
@@ -227,7 +228,14 @@ where
 	async fn get_min_deposit(
 		&self,
 	) -> Result<crate::eth_client_pallet_trait::Balance, Box<dyn std::error::Error>> {
-		Ok(0)
+		if let Some(val) = self
+			.get_value_with_simple_type_chain_argument::<Balance>("MinSubmitterBalance")
+			.await?
+		{
+			Ok(val)
+		} else {
+			Err(Box::new(Error::Generic("Unable to obtain MinSubmitterBalance")))
+		}
 	}
 
 	async fn register_submitter(&self) -> Result<(), Box<dyn std::error::Error>> {

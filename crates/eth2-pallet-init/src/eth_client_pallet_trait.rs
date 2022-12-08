@@ -2,17 +2,25 @@ use async_trait::async_trait;
 use eth_types::eth2::LightClientState;
 use sp_core::crypto::AccountId32;
 use std::error::Error;
+use webb::substrate::scale::{Decode, Encode};
 
 pub type Balance = u128;
 
 /// Interface for using Ethereum Light Client
 #[async_trait]
-pub trait EthClientPalletTrait<H256, LightClientUpdate, BlockHeader> {
+pub trait EthClientPalletTrait<LightClientUpdate, BlockHeader>
+where
+	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
+	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
+{
 	/// Returns the last submitted slot by this relay
 	async fn get_last_submitted_slot(&self) -> u64;
 
 	/// Checks if the block with the execution block hash is known to Ethereum Light Client on NEAR
-	async fn is_known_block(&self, execution_block_hash: &H256) -> Result<bool, Box<dyn Error>>;
+	async fn is_known_block(
+		&self,
+		execution_block_hash: &eth_types::H256,
+	) -> Result<bool, Box<dyn Error>>;
 
 	/// Submits the Light Client Update to Ethereum Light Client on NEAR. Returns the final
 	/// execution outcome or an error
@@ -22,7 +30,7 @@ pub trait EthClientPalletTrait<H256, LightClientUpdate, BlockHeader> {
 	) -> Result<(), Box<dyn Error>>;
 
 	/// Gets finalized beacon block hash from Ethereum Light Client on NEAR
-	async fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn Error>>;
+	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, Box<dyn Error>>;
 
 	/// Gets finalized beacon block slot from Ethereum Light Client on NEAR
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn Error>>;
