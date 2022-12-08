@@ -19,7 +19,10 @@ use webb::substrate::{
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
 
-use crate::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
+use crate::{
+	eth_client_pallet_trait::{Balance, EthClientPalletTrait},
+	misc::AsValue,
+};
 
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new().await?;
@@ -108,7 +111,7 @@ impl EthClientPallet {
 	}
 
 	fn get_type_chain_argument(&self) -> Value {
-		Value::from_bytes(&self.chain.chain_id().encode())
+		self.chain.chain_id().as_value()
 	}
 }
 
@@ -135,7 +138,7 @@ where
 			"Eth2Client",
 			// Name of the storage variable in the pallet/src/lib.rs
 			"UnfinalizedHeaders",
-			vec![self.get_type_chain_argument(), Value::from_bytes(&execution_block_hash.encode())],
+			vec![self.get_type_chain_argument(), execution_block_hash.as_value()],
 		);
 		let maybe_unfinalized_header: DecodedValueThunk =
 			self.api.storage().fetch_or_default(&storage_address, None).await?;
@@ -155,7 +158,7 @@ where
 			"Eth2Client",
 			// Name of the transaction in the pallet/src/lib.rs
 			"submit_beacon_chain_light_client_update",
-			vec![self.get_type_chain_argument(), Value::from_bytes(&light_client_update.encode())],
+			vec![self.get_type_chain_argument(), light_client_update.as_value()],
 		);
 
 		let tx_hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
@@ -203,7 +206,7 @@ where
 			let tx = subxt::dynamic::tx(
 				"Eth2Client",
 				"submit_execution_header",
-				vec![self.get_type_chain_argument(), Value::from_bytes(&header.encode())],
+				vec![self.get_type_chain_argument(), header.as_value()],
 			);
 			txes.push(tx);
 		}
