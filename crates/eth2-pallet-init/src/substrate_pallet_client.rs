@@ -94,20 +94,29 @@ impl EthClientPallet {
 		Ok(0)
 	}
 
-	// Gets a value from subxt storage where the only input argument is the type chain id
-	async fn get_value_with_simple_type_chain_argument<T: Decode>(
+	// Gets a value from subxt storage with multiple arguments
+	async fn get_value_with_keys<T: Decode>(
 		&self,
 		entry_name: &str,
-	) -> Result<Option<T>, Error> {
-		let storage_address =
-			subxt::dynamic::storage("Eth2Client", entry_name, vec![self.get_type_chain_argument()]);
+		keys: impl Into<Vec<Value>>,
+	) -> Result<T, Error> {
+		let storage_address = subxt::dynamic::storage("Eth2Client", entry_name, keys.into());
 
 		let maybe_existant_value: DecodedValueThunk =
 			self.api.storage().fetch_or_default(&storage_address, None).await?;
 
-		let finalized_value: Option<T> = Option::<T>::decode(&mut maybe_existant_value.encoded())?;
+		let finalized_value: T = T::decode(&mut maybe_existant_value.encoded())?;
 
 		Ok(finalized_value)
+	}
+
+	// Gets a value from subxt storage where the only input argument is the type chain id
+	async fn get_value_with_simple_type_chain_argument<T: Decode>(
+		&self,
+		entry_name: &str,
+	) -> Result<T, Error> {
+		self.get_value_with_keys::<T>(entry_name, vec![self.get_type_chain_argument()])
+			.await
 	}
 
 	fn get_type_chain_argument(&self) -> Value {
@@ -134,20 +143,15 @@ where
 		&self,
 		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, Box<dyn std::error::Error>> {
-		let storage_address = subxt::dynamic::storage(
-			"Eth2Client",
-			// Name of the storage variable in the pallet/src/lib.rs
-			"UnfinalizedHeaders",
-			vec![self.get_type_chain_argument(), execution_block_hash.as_value()],
-		);
-		let maybe_unfinalized_header: DecodedValueThunk =
-			self.api.storage().fetch_or_default(&storage_address, None).await?;
+		let exists = self
+			.get_value_with_keys::<Option<ExecutionHeaderInfo<AccountId32>>>(
+				"UnfinalizedHeaders",
+				vec![self.get_type_chain_argument(), execution_block_hash.as_value()],
+			)
+			.await
+			.map(|r| r.is_some())?;
 
-		let unfinalized_header = Option::<ExecutionHeaderInfo<AccountId32>>::decode(
-			&mut maybe_unfinalized_header.encoded(),
-		)?;
-
-		Ok(unfinalized_header.is_some())
+		Ok(exists)
 	}
 
 	async fn send_light_client_update(
@@ -170,7 +174,7 @@ where
 		&self,
 	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
 		let extended_beacon_header = self
-			.get_value_with_simple_type_chain_argument::<ExtendedBeaconBlockHeader>(
+			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
 				"FinalizedBeaconHeader",
 			)
 			.await?;
@@ -184,7 +188,7 @@ where
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
 		let finalized_beacon_header_value = self
-			.get_value_with_simple_type_chain_argument::<ExtendedBeaconBlockHeader>(
+			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
 				"FinalizedBeaconHeader",
 			)
 			.await?;
@@ -224,14 +228,11 @@ where
 	async fn get_min_deposit(
 		&self,
 	) -> Result<crate::eth_client_pallet_trait::Balance, Box<dyn std::error::Error>> {
-		if let Some(val) = self
+		let ret = self
 			.get_value_with_simple_type_chain_argument::<Balance>("MinSubmitterBalance")
-			.await?
-		{
-			Ok(val)
-		} else {
-			Err(Box::new(Error::Generic("Unable to obtain MinSubmitterBalance")))
-		}
+			.await?;
+
+		Ok(ret)
 	}
 
 	async fn register_submitter(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -246,17 +247,28 @@ where
 
 	async fn is_submitter_registered(
 		&self,
-		_account_id: Option<AccountId32>,
+		account_id: Option<AccountId32>,
 	) -> Result<bool, Box<dyn std::error::Error>> {
-		Ok(true)
+		let exists = self
+			.get_value_with_keys::<Option<ExecutionHeaderInfo<AccountId32>>>(
+				"Submitters",
+				vec![self.get_type_chain_argument(), account_id.as_value()],
+			)
+			.await
+			.map(|r| r.is_some())?;
+
+		Ok(exists)
 	}
 
 	async fn get_light_client_state(
 		&self,
 	) -> Result<eth_types::eth2::LightClientState, Box<dyn std::error::Error>> {
-		let task0 = self.get_value_with_simple_type_chain_argument("FinalizedBeaconHeader");
-		let task1 = self.get_value_with_simple_type_chain_argument("CurrentSyncCommittee");
-		let task2 = self.get_value_with_simple_type_chain_argument("NextSyncCommittee");
+		let task0 =
+			self.get_value_with_simple_type_chain_argument::<Option<_>>("FinalizedBeaconHeader");
+		let task1 =
+			self.get_value_with_simple_type_chain_argument::<Option<_>>("CurrentSyncCommittee");
+		let task2 =
+			self.get_value_with_simple_type_chain_argument::<Option<_>>("NextSyncCommittee");
 
 		let (finalized_beacon_header, current_sync_committee, next_sync_committee) =
 			tokio::try_join!(task0, task1, task2)?;
@@ -283,6 +295,10 @@ where
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, Box<dyn std::error::Error>> {
-		Ok(0)
+		let ret = self
+			.get_value_with_simple_type_chain_argument::<u32>("MaxUnfinalizedBlocksPerSubmitter")
+			.await?;
+
+		Ok(ret)
 	}
 }
