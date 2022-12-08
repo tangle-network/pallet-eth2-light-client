@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use eth_types::{
-	eth2::{ExtendedBeaconBlockHeader, LightClientState, SyncCommittee},
+	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader,
 };
@@ -125,18 +125,11 @@ impl EthClientPallet {
 }
 
 #[async_trait]
-impl<LightClientUpdate, BlockHeader> EthClientPalletTrait<LightClientUpdate, BlockHeader>
-	for EthClientPallet
-where
-	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
-	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
-{
+impl EthClientPalletTrait for EthClientPallet {
 	async fn get_last_submitted_slot(&self) -> u64 {
-		EthClientPalletTrait::<LightClientUpdate, BlockHeader>::get_finalized_beacon_block_slot(
-			self,
-		)
-		.await
-		.expect("Unable to obtain finalized beacon slot")
+		self.get_finalized_beacon_block_slot()
+			.await
+			.expect("Unable to obtain finalized beacon slot")
 	}
 
 	async fn is_known_block(

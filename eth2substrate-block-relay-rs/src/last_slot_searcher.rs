@@ -6,14 +6,15 @@ use eth_rpc_client::{
 use eth_types::H256;
 use log::{info, trace};
 use std::{cmp, error::Error};
+
 pub struct LastSlotSearcher {
 	enable_binsearch: bool,
 }
 
 // Implementation of functions for searching last slot on NEAR contract
 impl LastSlotSearcher {
-	pub fn new(enable_binsearch: bool) -> LastSlotSearcher {
-		LastSlotSearcher { enable_binsearch }
+	pub fn new(enable_binsearch: bool) -> Self {
+		Self { enable_binsearch }
 	}
 
 	pub async fn get_last_slot(
@@ -467,6 +468,7 @@ mod tests {
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
 	use std::error::Error;
+	use webb::substrate::scale::{Decode, Encode};
 
 	const TIMEOUT_SECONDS: u64 = 30;
 	const TIMEOUT_STATE_SECONDS: u64 = 1000;

@@ -639,7 +639,7 @@ impl Eth2SubstrateRelay {
 			}
 
 			trace!(target: "relay", "Hand made light client update: {:?}", light_client_update);
-			self.send_specific_light_client_update(light_client_update);
+			self.send_specific_light_client_update(light_client_update).await;
 			return
 		}
 	}

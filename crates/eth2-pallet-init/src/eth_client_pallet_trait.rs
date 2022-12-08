@@ -1,18 +1,16 @@
 use async_trait::async_trait;
-use eth_types::eth2::LightClientState;
+use eth_types::{
+	eth2::{LightClientState, LightClientUpdate},
+	BlockHeader,
+};
 use sp_core::crypto::AccountId32;
 use std::error::Error;
-use webb::substrate::scale::{Decode, Encode};
 
 pub type Balance = u128;
 
 /// Interface for using Ethereum Light Client
 #[async_trait]
-pub trait EthClientPalletTrait<LightClientUpdate, BlockHeader>
-where
-	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
-	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
-{
+pub trait EthClientPalletTrait {
 	/// Returns the last submitted slot by this relay
 	async fn get_last_submitted_slot(&self) -> u64;
 
