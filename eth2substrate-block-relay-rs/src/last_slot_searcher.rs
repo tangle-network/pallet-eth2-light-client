@@ -468,7 +468,6 @@ mod tests {
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
 	use std::error::Error;
-	use webb::substrate::scale::{Decode, Encode};
 
 	const TIMEOUT_SECONDS: u64 = 30;
 	const TIMEOUT_STATE_SECONDS: u64 = 1000;
@@ -733,7 +732,8 @@ mod tests {
 			&eth1_rpc_client,
 			slot,
 			config_for_test.slot_without_block - 2,
-		);
+		)
+		.await;
 
 		let last_block_on_near = last_slot_searcher
 			.linear_search_forward(
@@ -791,7 +791,8 @@ mod tests {
 			&eth1_rpc_client,
 			slot,
 			config_for_test.slot_without_block - 1,
-		);
+		)
+		.await;
 
 		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
 

@@ -1,23 +1,17 @@
 use async_trait::async_trait;
 
 use crate::{
-	eth_types::{
-		self,
-		eth2::{ExtendedBeaconBlockHeader, SyncCommittee},
-		pallet::InitInput,
-		BlockHeader,
-	},
 	mock::RuntimeOrigin,
 	test_utils::{get_test_data, InitOptions},
-	tests::{ALICE, KILN_CHAIN},
+	tests::ALICE,
 };
-use eth2_pallet_init::eth_network::EthNetwork;
 use frame_support::assert_ok;
-use sp_core::{crypto::AccountId32, sr25519::Pair, Decode};
+use sp_core::crypto::AccountId32;
 use webb_proposals::TypedChainId;
 
 use crate::mock::Eth2Client;
-use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
+use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
+use eth_types::{self, eth2::ExtendedBeaconBlockHeader};
 
 pub struct MockEthClientPallet {
 	network: TypedChainId,
@@ -39,12 +33,7 @@ impl MockEthClientPallet {
 }
 
 #[async_trait]
-impl<LightClientUpdate, BlockHeader> EthClientPalletTrait<LightClientUpdate, BlockHeader>
-	for MockEthClientPallet
-where
-	LightClientUpdate: Encode + Decode + Clone + Send + Sync + 'static,
-	BlockHeader: Encode + Decode + Clone + Send + Sync + 'static,
-{
+impl EthClientPalletTrait for MockEthClientPallet {
 	async fn get_last_submitted_slot(&self) -> u64 {
 		let header: ExtendedBeaconBlockHeader =
 			Eth2Client::finalized_beacon_header(self.network).unwrap();
@@ -56,7 +45,7 @@ where
 		&self,
 		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, Box<dyn std::error::Error>> {
-		Eth2Client::is_known_execution_header(self.network, execution_block_hash)
+		Ok(Eth2Client::is_known_execution_header(self.network, *execution_block_hash))
 	}
 
 	async fn send_light_client_update(
@@ -84,9 +73,7 @@ where
 		Ok(())
 	}
 
-	async fn get_min_deposit(
-		&self,
-	) -> Result<crate::eth_client_pallet_trait::Balance, Box<dyn std::error::Error>> {
+	async fn get_min_deposit(&self) -> Result<Balance, Box<dyn std::error::Error>> {
 		Ok(0)
 	}
 
@@ -96,7 +83,7 @@ where
 
 	async fn is_submitter_registered(
 		&self,
-		_account_id: Option<AccountId32>,
+		_account_id: Option<sp_core::crypto::AccountId32>,
 	) -> Result<bool, Box<dyn std::error::Error>> {
 		Ok(true)
 	}

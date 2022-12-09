@@ -156,12 +156,12 @@ pub async fn init_pallet(
 mod tests {
 	use crate::{
 		config_for_tests::ConfigForTests,
+		eth_client_pallet_trait::EthClientPalletTrait,
 		init_pallet::init_pallet,
 		substrate_network::SubstrateNetwork,
 		substrate_pallet_client::{setup_api, EthClientPallet},
 	};
 	use eth_rpc_client::beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion};
-	use tokio::runtime::Runtime;
 
 	const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
@@ -177,7 +177,7 @@ mod tests {
 			path_to_signer_secret_key: "NaN".to_string(),
 			contract_account_id: "NaN".to_string(),
 			ethereum_network: config_for_test.network_name.clone(),
-			substrate_network_id: config_for_test.substrate_network_id.clone(),
+			substrate_network_id: SubstrateNetwork::Testnet,
 			output_dir: None,
 			eth_requests_timeout_seconds: Some(30),
 			validate_updates: Some(true),
@@ -196,13 +196,13 @@ mod tests {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let api = setup_api().await;
+		let api = setup_api().await.unwrap();
 		let mut eth_client_pallet = EthClientPallet::new(api);
 		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
 		init_config.validate_updates = Some(false);
 		init_config.substrate_network_id = SubstrateNetwork::Testnet;
 
-		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&init_config, &mut eth_client_pallet).await.unwrap();
 	}
 
 	#[tokio::test]
@@ -213,7 +213,7 @@ mod tests {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let api = setup_api().await;
+		let api = setup_api().await.unwrap();
 		let mut eth_client_pallet = EthClientPallet::new(api);
 		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
 		init_config.substrate_network_id = SubstrateNetwork::Testnet;
@@ -227,14 +227,15 @@ mod tests {
 		let config_for_test =
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
-		let api = setup_api().await;
+		let api = setup_api().await.unwrap();
 		let mut eth_client_pallet = EthClientPallet::new(api);
 		let init_config = get_init_config(&config_for_test, &eth_client_pallet);
 
-		init_pallet(&init_config, &mut eth_client_pallet).unwrap();
+		init_pallet(&init_config, &mut eth_client_pallet).await.unwrap();
 
 		let last_finalized_slot_eth_client = eth_client_pallet
 			.get_finalized_beacon_block_slot()
+			.await
 			.expect("Error on getting last finalized beacon block slot(Eth client)");
 
 		let beacon_rpc_client = BeaconRPCClient::new(
@@ -253,7 +254,7 @@ mod tests {
 		assert!(
 			last_finalized_slot_eth_client +
 				ONE_EPOCH_IN_SLOTS * MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS >=
-				last_finalized_slot_eth_network.as_u64()
+				last_finalized_slot_eth_network
 		);
 	}
 }

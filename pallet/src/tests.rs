@@ -1,9 +1,10 @@
 use crate::{
-	eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, H256, U256},
 	mock::{Eth2Client, RuntimeOrigin},
 	test_utils::*,
 };
+
 use bitvec::{bitarr, order::Lsb0};
+use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, H256, U256};
 use frame_support::{assert_err, assert_ok};
 use hex::FromHex;
 use sp_runtime::AccountId32;

@@ -46,7 +46,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
 
-mod eth_types;
 use eth_types::{
 	eth2::{
 		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,
@@ -378,7 +377,7 @@ pub mod pallet {
 			);
 
 			let finalized_execution_header_info = ExecutionHeaderInfo {
-				parent_hash: args.finalized_execution_header.parent_hash,
+				parent_hash: args.finalized_execution_header.parent_hash.0,
 				block_number: args.finalized_execution_header.number,
 				submitter: signer,
 			};
@@ -493,7 +492,7 @@ pub mod pallet {
 			frame_support::log::debug!("Submitted header hash {:?}", block_hash);
 
 			let block_info = ExecutionHeaderInfo {
-				parent_hash: block_header.parent_hash,
+				parent_hash: block_header.parent_hash.0,
 				block_number: block_header.number,
 				submitter,
 			};
@@ -865,18 +864,21 @@ impl<T: Config> Pallet<T> {
 				cursor_header_hash,
 			);
 
-			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash {
+			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash.0 {
 				break
 			}
 
-			cursor_header_hash = cursor_header.parent_hash;
+			cursor_header_hash = cursor_header.parent_hash.into();
 			ensure!(
 				Self::unfinalized_headers(typed_chain_id, cursor_header_hash).is_some(),
 				// The unfinalized header should be present
 				Error::<T>::UnfinalizedHeaderNotPresent
 			);
-			cursor_header =
-				Self::unfinalized_headers(typed_chain_id, cursor_header.parent_hash).unwrap();
+			cursor_header = Self::unfinalized_headers(
+				typed_chain_id,
+				eth_types::H256::from(cursor_header.parent_hash.0),
+			)
+			.unwrap();
 		}
 		FinalizedBeaconHeader::<T>::insert(typed_chain_id, finalized_header);
 		FinalizedExecutionHeader::<T>::insert(

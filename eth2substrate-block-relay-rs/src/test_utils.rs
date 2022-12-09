@@ -6,9 +6,8 @@ use bitvec::macros::internal::funty::Fundamental;
 use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 	eth_network::EthNetwork,
-	init_pallet,
 	init_pallet::init_pallet,
-	substrate_pallet_client::{setup_api, EthClientPalletTrait},
+	substrate_pallet_client::{setup_api, EthClientPallet},
 };
 use eth_rpc_client::{
 	beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion},
@@ -20,7 +19,6 @@ use eth_types::{
 };
 use std::{thread, time};
 use tree_hash::TreeHash;
-use webb::substrate::subxt::tx::PairSigner;
 use webb_proposals::TypedChainId;
 
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
@@ -100,8 +98,6 @@ pub async fn init_pallet_from_files(
 		.unwrap();
 
 	thread::sleep(time::Duration::from_secs(30));
-
-	eth_client_pallet
 }
 
 pub async fn init_pallet_from_specific_slot(
@@ -152,6 +148,7 @@ pub async fn init_pallet_from_specific_slot(
 			.execution_payload
 			.block_hash
 			.into_root()
+			.0
 			.into(),
 	};
 
@@ -163,7 +160,7 @@ pub async fn init_pallet_from_specific_slot(
 
 	eth_client_pallet
 		.init(
-			config_for_test.network_name.clone(),
+			config_for_test.type_chain_id,
 			finalized_execution_header,
 			finalized_beacon_header,
 			current_sync_committee,
@@ -174,7 +171,8 @@ pub async fn init_pallet_from_specific_slot(
 			None,
 			Some(eth_client_pallet.get_signer_account_id()),
 		)
-		.await;
+		.await
+		.unwrap();
 
 	thread::sleep(time::Duration::from_secs(30));
 }
@@ -187,7 +185,7 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		signer_account_id: "NaN".to_string(),
 		path_to_signer_secret_key: "NaN".to_string(),
 		contract_account_id: "NaN".to_string(),
-		ethereum_network: config_for_test.network_name.clone(),
+		ethereum_network: config_for_test.network_name.to_string(),
 		interval_between_light_client_updates_submission_in_epochs: 1,
 		max_blocks_for_finalization: 5000,
 		prometheus_metrics_port: Some(32221),
@@ -202,7 +200,7 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		max_submitted_blocks_by_account: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
-		substrate_network_name: "Tangle Testnet".to_string(),
+		substrate_network_name: config_for_test.substrate_network_id.to_string(),
 	}
 }
 
@@ -227,7 +225,7 @@ fn get_init_config(
 		init_block_root: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
-		substrate_network_id: 1080,
+		substrate_network_id: config_for_test.substrate_network_id.clone(),
 	}
 }
 
@@ -238,7 +236,7 @@ pub async fn get_client_pallet(
 	let api = setup_api().await.unwrap();
 	let mut eth_client_pallet = EthClientPallet::new(api);
 
-	let mut config = get_init_config(config_for_test, eth_client_pallet);
+	let mut config = get_init_config(config_for_test, &eth_client_pallet);
 	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
 
 	match from_file {
@@ -295,7 +293,7 @@ pub async fn get_relay_from_slot(
 	let api = setup_api().await.unwrap();
 	let mut eth_client_pallet = EthClientPallet::new(api);
 
-	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test);
+	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test).await;
 
 	Eth2SubstrateRelay::init(&config, Box::new(eth_client_pallet), enable_binsearch, false).await
 }

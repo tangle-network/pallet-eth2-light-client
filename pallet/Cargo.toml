@@ -29,8 +29,9 @@ frame-system = { default-features = false, git = "https://github.com/paritytech/
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
 sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
 sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git" }
+sp-core = { default-features = false, version = "7.0.0" }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
+eth-types = { path = "../crates/eth-types", default-features = false }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
@@ -58,6 +59,7 @@ std = [
 	"serde/std",
 	"hex/std",
 	"sp-core/std",
+    "eth-types/std"
 ]
 
 try-runtime = ["frame-support/try-runtime"]
