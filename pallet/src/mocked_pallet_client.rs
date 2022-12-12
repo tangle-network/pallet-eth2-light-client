@@ -74,10 +74,11 @@ impl EthClientPalletTrait for MockEthClientPallet {
 	}
 
 	async fn get_min_deposit(&self) -> Result<Balance, Box<dyn std::error::Error>> {
-		Eth2Client::get_min_deposit(self.network)
+		Ok(0)
 	}
 
 	async fn register_submitter(&self) -> Result<(), Box<dyn std::error::Error>> {
+		let _ = Eth2Client::register_submitter(crate::mock::RuntimeOrigin::root(), self.network).map_err(generic_error)?;
 		Ok(())
 	}
 
@@ -101,7 +102,7 @@ impl EthClientPalletTrait for MockEthClientPallet {
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, Box<dyn std::error::Error>> {
-		Ok(0)
+		Ok(100)
 	}
 }
 
