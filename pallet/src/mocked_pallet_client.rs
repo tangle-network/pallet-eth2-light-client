@@ -6,7 +6,6 @@ use crate::{
 	tests::ALICE,
 };
 use frame_support::assert_ok;
-use sp_core::crypto::AccountId32;
 use webb_proposals::TypedChainId;
 
 use crate::mock::Eth2Client;
@@ -18,16 +17,12 @@ pub struct MockEthClientPallet {
 }
 
 impl MockEthClientPallet {
-	pub fn init(
-		&self,
-		_typed_chain_id: TypedChainId,
-		init_options: Option<InitOptions<AccountId32>>,
-	) {
+	pub fn init(&self, _typed_chain_id: TypedChainId, init_options: Option<InitOptions<[u8; 32]>>) {
 		let (headers, updates, init_input) = get_test_data(init_options);
 		assert_ok!(Eth2Client::init(
 			RuntimeOrigin::signed(ALICE.clone()),
 			self.network,
-			Box::new(init_input.clone())
+			Box::new(init_input.map_into())
 		));
 	}
 }
