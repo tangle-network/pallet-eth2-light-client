@@ -20,7 +20,7 @@ use eth_types::{
 	BlockHeader,
 };
 use finality_update_verify::network_config::{Network, NetworkConfig};
-use funty::Fundamental;
+use bitvec::macros::internal::funty::Fundamental;
 use log::{debug, info, trace, warn};
 use std::{cmp, error::Error, str::FromStr, thread, thread::sleep, time::Duration, vec::Vec};
 

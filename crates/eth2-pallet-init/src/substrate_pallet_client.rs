@@ -5,8 +5,8 @@ use eth_types::{
 	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader,
 };
-use sp_core::{crypto::AccountId32, sr25519::Pair};
-use sp_keyring::AccountKeyring;
+use sp_core::crypto::AccountId32;
+use webb::substrate::subxt::ext::sp_core::sr25519::Pair;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
@@ -37,12 +37,12 @@ pub struct EthClientPallet {
 
 impl EthClientPallet {
 	pub fn new(api: OnlineClient<PolkadotConfig>) -> Self {
-		let signer = PairSigner::new(AccountKeyring::Alice.pair());
+		let signer = PairSigner::new(sp_keyring::AccountKeyring::Alice.pair());
 		Self { api, signer, chain: TypedChainId::Evm(5) }
 	}
 
 	pub fn get_signer_account_id(&self) -> AccountId32 {
-		self.signer.account_id().clone()
+		(*AsRef::<[u8; 32]>::as_ref(&self.signer.account_id())).into()
 	}
 
 	pub async fn init(

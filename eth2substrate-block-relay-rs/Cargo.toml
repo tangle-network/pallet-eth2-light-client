@@ -22,9 +22,8 @@ webb = { path = "../../webb-rs", features = [
 ]}
 webb-proposals = { path = "../../webb-rs/proposals" }
 
-funty = "2.0.0"
-sp-keyring = "7.0.0"
-sp-core = "7.0.0"
+sp-keyring = { default-features=false, version = "7.0.0" }
+sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", features = ["derive"] }
