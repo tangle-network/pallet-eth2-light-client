@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-eth-types = { path = "../eth-types" }
+eth-types = { path = "../eth-types", features = ["eth2", "eip1559"] }
 consensus_types = { path = "../consensus_types" }
 bls = { path = "../bls" }
 tree_hash = { path = "../tree_hash" }

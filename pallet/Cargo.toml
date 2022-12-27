@@ -31,7 +31,7 @@ sp-runtime = { default-features = false, git = "https://github.com/paritytech/su
 sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
-eth-types = { path = "../crates/eth-types", default-features = false }
+eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
 
 [dev-dependencies]
 lazy_static = "1.4.0"

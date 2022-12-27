@@ -8,7 +8,7 @@ tree_hash = { path = "../tree_hash", default-features = false }
 merkle_proof = { path = "../merkle_proof", default-features = false }
 consensus_types = { path = "../consensus_types" }
 eth_rpc_client = { path = "../eth_rpc_client" }
-eth-types = { path = "../eth-types/", features = ["eip1559"]}
+eth-types = { path = "../eth-types/", features = ["eth2", "eip1559"]}
 log = { version = "0.4", features = ["std", "serde"] }
 clap = { version = "3.1.6", features = ["derive"] }
 reqwest = { version = "0.11", features = ["blocking"] }
