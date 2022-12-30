@@ -12,7 +12,7 @@ ethereum-types = { version = "0.14.0", features = ["codec", "rlp", "serialize"],
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
-eth-types = { path = "../eth-types", features = ["eth2", "eip1559"] }
+eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
 eth2_ssz = { path = "../ssz", default-features = false, optional = true }
 eth2_ssz_derive = { path = "../ssz_derive", default-features = false, optional = true }
 tree_hash = { path = "../tree_hash", default-features = false, optional = true }

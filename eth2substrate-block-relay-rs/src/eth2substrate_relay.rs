@@ -95,6 +95,7 @@ pub struct Eth2SubstrateRelay {
 	sleep_time_on_sync_secs: u64,
 	sleep_time_after_submission_secs: u64,
 	max_submitted_blocks_by_account: u32,
+	#[allow(dead_code)]
 	substrate_network_name: String,
 }
 

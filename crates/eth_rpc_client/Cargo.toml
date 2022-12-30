@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eth-types = { path = "../eth-types", features = ["eth2", "eip1559"] }
+eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
 finality-update-verify = { path = "../finality-update-verify" }
 types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
@@ -19,14 +19,14 @@ funty = "2.0.0"
 
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "3.1.6", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time"] }
 env_logger = "0.9.0"
 borsh = "0.9.3"
 futures = { version = "0.3.21", default-features = false }
-async-std = "1.12.0"
+async-std = { version = "1.12.0", default-features = false }
 hex = "*"
 toml = "0.5.9"
 atomic_refcell = "0.1.8"

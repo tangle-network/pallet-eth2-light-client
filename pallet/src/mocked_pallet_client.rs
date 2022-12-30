@@ -17,6 +17,7 @@ pub struct MockEthClientPallet {
 }
 
 impl MockEthClientPallet {
+	#[allow(dead_code)]
 	pub fn init(&self, _typed_chain_id: TypedChainId, init_options: Option<InitOptions<[u8; 32]>>) {
 		let (_headers, _updates, init_input) = get_test_data(init_options);
 		assert_ok!(Eth2Client::init(
@@ -67,8 +68,8 @@ impl EthClientPalletTrait for MockEthClientPallet {
 
 	async fn send_headers(
 		&mut self,
-		headers: &[eth_types::BlockHeader],
-		end_slot: u64,
+		_headers: &[eth_types::BlockHeader],
+		_end_slot: u64,
 	) -> Result<(), Box<dyn std::error::Error>> {
 		todo!()
 	}
