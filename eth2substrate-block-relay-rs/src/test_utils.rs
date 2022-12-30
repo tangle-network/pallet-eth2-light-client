@@ -83,7 +83,7 @@ pub async fn init_pallet_from_files(
 
 	eth_client_pallet
 		.init(
-			typed_chain_id,
+			typed_chain_id.chain_id().into(),
 			finalized_execution_header.unwrap(),
 			finalized_beacon_header,
 			current_sync_committee,
@@ -160,7 +160,7 @@ pub async fn init_pallet_from_specific_slot(
 
 	eth_client_pallet
 		.init(
-			config_for_test.type_chain_id,
+			config_for_test.type_chain_id.chain_id().into(),
 			finalized_execution_header,
 			finalized_beacon_header,
 			current_sync_committee,
