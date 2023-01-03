@@ -7,18 +7,18 @@ edition = "2021"
 
 [dependencies]
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
-finality-update-verify = { path = "../finality-update-verify" }
-types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-eth2_hashing = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
-eth2_ssz = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+finality-update-verify = { default-features = false, path = "../finality-update-verify" }
+types = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+tree_hash = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+merkle_proof = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+eth2_hashing = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+eth2_ssz = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 
 ethereum-types = "0.13.1"
 funty = "2.0.0"
 
 log = { version = "0.4", features = ["std", "serde"] }
-serde_json = "1.0.74"
+serde_json = { version = "1.0.74", default-features = false }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "3.1.6", features = ["derive"] }
