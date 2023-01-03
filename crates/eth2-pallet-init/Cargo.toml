@@ -20,7 +20,7 @@ sp-keyring = { default-features=false, version = "7.0.0" }
 sp-core = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "polkadot-v0.9.36" }
 
 webb-relayer-utils = { path = "../../../relayer/crates/relayer-utils" }
-webb = { git = "https://github.com/webb-tools/webb-rs.git", branch = "drew/update-deps", features = [
+webb = { git = "https://github.com/webb-tools/webb-rs.git", branch = "drew/update-deps", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
 ]}
