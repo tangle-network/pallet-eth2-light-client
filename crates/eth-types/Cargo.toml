@@ -28,6 +28,7 @@ std = [
 	"scale-info/std",
 	"ethereum-types/std",
 	"eth2_serde_utils/std",
+	"ethereum-types/serialize"
 ]
 eip1559 = []
 eth2 = []
