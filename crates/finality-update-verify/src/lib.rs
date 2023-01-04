@@ -83,7 +83,7 @@ pub fn is_correct_finality_update(
 	}
 
 	Ok(aggregate_signature
-		.fast_aggregate_verify(h256_to_hash256(signing_root), &pubkeys.iter().collect::<Vec<_>>()))
+		.fast_aggregate_verify(h256_to_hash256(signing_root).0.into(), &pubkeys.iter().collect::<Vec<_>>()))
 }
 
 #[cfg(test)]

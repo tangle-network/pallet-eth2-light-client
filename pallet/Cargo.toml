@@ -59,7 +59,7 @@ std = [
 	"serde/std",
 	"hex/std",
 	"sp-core/std",
-    "eth-types/std"
+    "eth-types/std",
 ]
 
 try-runtime = ["frame-support/try-runtime"]

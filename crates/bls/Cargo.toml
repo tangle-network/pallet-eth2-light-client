@@ -14,7 +14,7 @@ serde = { version = "1.0.101", features = ["derive"], optional = true, default-f
 eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 eth2_hashing = { path = "../eth2_hashing", default-features = false, features = ["zero_hash_cache"] }
-ethereum-types = { version = "0.14.0", default-features = false }
+ethereum-types = { version = "0.13.1", default-features = false }
 zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
 
 [features]
