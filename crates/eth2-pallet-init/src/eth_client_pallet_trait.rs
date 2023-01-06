@@ -8,7 +8,7 @@ use sp_core::crypto::AccountId32;
 pub type Balance = u128;
 
 pub struct Eth2LightClientError {
-	pub error: String
+	pub error: String,
 }
 
 /// Interface for using Ethereum Light Client

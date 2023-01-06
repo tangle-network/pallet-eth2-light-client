@@ -6,12 +6,12 @@ use eth_types::{
 	BlockHeader,
 };
 use sp_core::crypto::AccountId32;
-use webb::substrate::subxt::ext::sp_core::sr25519::Pair;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
 		self,
 		dynamic::{DecodedValueThunk, Value},
+		ext::sp_core::sr25519::Pair,
 		tx::PairSigner,
 		OnlineClient, PolkadotConfig,
 	},
@@ -25,8 +25,9 @@ use crate::{
 };
 
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
-	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new().await
-	.map_err(|_| Error::Generic("Failed to setup online client"))?;
+	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new()
+		.await
+		.map_err(|_| Error::Generic("Failed to setup online client"))?;
 	Ok(api)
 }
 
@@ -75,8 +76,12 @@ impl EthClientPallet {
 			subxt::dynamic::tx("Eth2Client", "init", vec![Value::from_bytes(init_input.encode())]);
 
 		// submit the transaction with default params:
-		let _hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await
-		.map_err(|_| Error::Generic("Failed to get hash storage value"))?;
+		let _hash = self
+			.api
+			.tx()
+			.sign_and_submit_default(&tx, &self.signer)
+			.await
+			.map_err(|_| Error::Generic("Failed to get hash storage value"))?;
 
 		Ok(())
 	}
@@ -91,8 +96,9 @@ impl EthClientPallet {
 			vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
 		);
 		let _finalized_header_update: DecodedValueThunk =
-			self.api.storage().fetch_or_default(&storage_address, None).await
-			.map_err(|_| Error::Generic("Failed to get finalized header update storage value"))?;
+			self.api.storage().fetch_or_default(&storage_address, None).await.map_err(|_| {
+				Error::Generic("Failed to get finalized header update storage value")
+			})?;
 
 		Ok(0)
 	}
@@ -105,8 +111,11 @@ impl EthClientPallet {
 	) -> Result<T, Error> {
 		let storage_address = subxt::dynamic::storage("Eth2Client", entry_name, keys.into());
 
-		let maybe_existant_value: DecodedValueThunk =
-			self.api.storage().fetch_or_default(&storage_address, None).await
+		let maybe_existant_value: DecodedValueThunk = self
+			.api
+			.storage()
+			.fetch_or_default(&storage_address, None)
+			.await
 			.map_err(|_| Error::Generic("Failed to get api storage value"))?;
 
 		let finalized_value: T = T::decode(&mut maybe_existant_value.encoded())?;

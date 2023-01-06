@@ -717,8 +717,10 @@ impl<T: Config> Pallet<T> {
 			.map(|x| bls::PublicKey::deserialize(&x.0).unwrap())
 			.collect();
 		ensure!(
-			aggregate_signature
-				.fast_aggregate_verify(signing_root.0.0.into(), &pubkeys.iter().collect::<Vec<_>>()),
+			aggregate_signature.fast_aggregate_verify(
+				signing_root.0 .0.into(),
+				&pubkeys.iter().collect::<Vec<_>>()
+			),
 			// Failed to verify the bls signature
 			Error::<T>::InvalidBlsSignature
 		);

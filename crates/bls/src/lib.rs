@@ -94,7 +94,8 @@ macro_rules! define_mod {
 			pub type PublicKeyBytes = GenericPublicKeyBytes<bls_variant::PublicKeyVt>;
 			pub type AggregatePublicKey =
 				GenericAggregatePublicKey<bls_variant::PublicKeyVt, bls_variant::MultiPublicKeyVt>;
-			pub type Signature = GenericSignature<bls_variant::PublicKeyVt, bls_variant::SignatureVt>;
+			pub type Signature =
+				GenericSignature<bls_variant::PublicKeyVt, bls_variant::SignatureVt>;
 			pub type AggregateSignature = GenericAggregateSignature<
 				bls_variant::PublicKeyVt,
 				bls_variant::MultiPublicKeyVt,
@@ -141,6 +142,6 @@ impl<T> OkOr<T> for subtle::CtOption<T> {
 			Ok(self.unwrap())
 		} else {
 			Err(err)
-		}		
+		}
 	}
 }

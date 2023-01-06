@@ -9,7 +9,9 @@ use frame_support::assert_ok;
 use webb_proposals::TypedChainId;
 
 use crate::mock::Eth2Client;
-use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait, Eth2LightClientError};
+use eth2_pallet_init::eth_client_pallet_trait::{
+	Balance, Eth2LightClientError, EthClientPalletTrait,
+};
 use eth_types::{self, eth2::ExtendedBeaconBlockHeader};
 
 pub struct MockEthClientPallet {
@@ -28,7 +30,8 @@ impl MockEthClientPallet {
 	}
 
 	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, Box<dyn std::error::Error>> {
-		Eth2Client::finalized_beacon_header(self.network).ok_or(generic_error("Unable to obtain finalized beacon header"))
+		Eth2Client::finalized_beacon_header(self.network)
+			.ok_or(generic_error("Unable to obtain finalized beacon header"))
 	}
 }
 
@@ -53,7 +56,8 @@ impl EthClientPalletTrait for MockEthClientPallet {
 		&mut self,
 		light_client_update: eth_types::eth2::LightClientUpdate,
 	) -> Result<(), Eth2LightClientError> {
-		Eth2Client::commit_light_client_update(self.network, light_client_update).map_err(generic_error)?;
+		Eth2Client::commit_light_client_update(self.network, light_client_update)
+			.map_err(generic_error)?;
 		Ok(())
 	}
 
@@ -81,7 +85,8 @@ impl EthClientPalletTrait for MockEthClientPallet {
 	}
 
 	async fn register_submitter(&self) -> Result<(), Eth2LightClientError> {
-		let _ = Eth2Client::register_submitter(crate::mock::RuntimeOrigin::root(), self.network).map_err(generic_error)?;
+		let _ = Eth2Client::register_submitter(crate::mock::RuntimeOrigin::root(), self.network)
+			.map_err(generic_error)?;
 		Ok(())
 	}
 
@@ -98,9 +103,7 @@ impl EthClientPalletTrait for MockEthClientPallet {
 		Ok(eth_types::eth2::LightClientState::default())
 	}
 
-	async fn get_num_of_submitted_blocks_by_account(
-		&self,
-	) -> Result<u32, Eth2LightClientError> {
+	async fn get_num_of_submitted_blocks_by_account(&self) -> Result<u32, Eth2LightClientError> {
 		Ok(0)
 	}
 
