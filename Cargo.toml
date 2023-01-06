@@ -1,6 +1,7 @@
 [workspace]
 members = [
+    "bug-hunt",
     "pallet",
-	"crates/*",
+    "crates/*",
     "eth2substrate-block-relay-rs",
 ]
