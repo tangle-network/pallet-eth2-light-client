@@ -5,6 +5,7 @@ use eth_types::{
 	H256,
 };
 use tree_hash::TreeHash;
+use sp_std::{vec, vec::Vec};
 
 pub const EPOCHS_PER_SYNC_COMMITTEE_PERIOD: u64 = 256;
 pub const MIN_SYNC_COMMITTEE_PARTICIPANTS: u64 = 1;
@@ -74,7 +75,7 @@ pub fn get_participant_pubkeys(
 	public_keys: &[PublicKeyBytes],
 	sync_committee_bits: &BitVec<u8, Lsb0>,
 ) -> Vec<PublicKeyBytes> {
-	let mut result: Vec<PublicKeyBytes> = sp_std::vec![];
+	let mut result: Vec<PublicKeyBytes> = vec![];
 	for (idx, bit) in sync_committee_bits.iter().by_vals().enumerate() {
 		if bit {
 			result.push(public_keys[idx].clone());
