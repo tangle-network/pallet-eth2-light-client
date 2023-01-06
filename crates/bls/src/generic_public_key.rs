@@ -34,7 +34,7 @@ pub trait TPublicKey: Sized + Clone {
 	fn serialize(&self) -> [u8; PUBLIC_KEY_BYTES_LEN];
 
 	/// Deserialize `self` from compressed bytes.
-	fn deserialize(bytes: &[u8]) -> Result<Self, Error>;
+	fn deserialize(bytes: [u8; PUBLIC_KEY_BYTES_LEN]) -> Result<Self, Error>;
 }
 
 /// A BLS public key that is generic across some BLS point (`Pub`).
@@ -81,7 +81,13 @@ where
 		if bytes == &INFINITY_PUBLIC_KEY[..] {
 			Err(Error::InvalidInfinityPublicKey)
 		} else {
-			Ok(Self { point: Pub::deserialize(bytes)? })
+			if bytes.len() != PUBLIC_KEY_BYTES_LEN {
+				Err(Error::InvalidByteLength { got: bytes.len(), expected: PUBLIC_KEY_BYTES_LEN })
+			} else {
+				let slice = [0u8; PUBLIC_KEY_BYTES_LEN];
+				slice.copy_from_slice(bytes);
+				Ok(Self { point: Pub::deserialize(slice)? })
+			}
 		}
 	}
 }

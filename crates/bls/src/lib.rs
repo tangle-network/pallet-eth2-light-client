@@ -43,14 +43,14 @@ pub use generic_signature::{INFINITY_SIGNATURE, SIGNATURE_BYTES_LEN};
 pub use get_withdrawal_credentials::get_withdrawal_credentials;
 pub use zeroize_hash::ZeroizeHash;
 
-use milagro_bls::AmclError;
+use signature_bls::Error as BlsError;
 
 pub type Hash256 = ethereum_types::H256;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum Error {
 	/// An error was raised from the Milagro BLS library.
-	MilagroError(AmclError),
+	BlsError(BlsError),
 	/// The provided bytes were an incorrect length.
 	InvalidByteLength { got: usize, expected: usize },
 	/// The provided secret key bytes were an incorrect length.
@@ -61,9 +61,9 @@ pub enum Error {
 	InvalidZeroSecretKey,
 }
 
-impl From<AmclError> for Error {
-	fn from(e: AmclError) -> Error {
-		Error::MilagroError(e)
+impl From<BlsError> for Error {
+	fn from(e: BlsError) -> Error {
+		Error::BlsError(e)
 	}
 }
 
@@ -90,28 +90,28 @@ macro_rules! define_mod {
 
 			pub use bls_variant::{verify_signature_sets, SignatureSet};
 
-			pub type PublicKey = GenericPublicKey<bls_variant::PublicKey>;
-			pub type PublicKeyBytes = GenericPublicKeyBytes<bls_variant::PublicKey>;
+			pub type PublicKey = GenericPublicKey<bls_variant::PublicKeyVt>;
+			pub type PublicKeyBytes = GenericPublicKeyBytes<bls_variant::PublicKeyVt>;
 			pub type AggregatePublicKey =
-				GenericAggregatePublicKey<bls_variant::PublicKey, bls_variant::AggregatePublicKey>;
-			pub type Signature = GenericSignature<bls_variant::PublicKey, bls_variant::Signature>;
+				GenericAggregatePublicKey<bls_variant::PublicKeyVt, bls_variant::MultiPublicKeyVt>;
+			pub type Signature = GenericSignature<bls_variant::PublicKeyVt, bls_variant::SignatureVt>;
 			pub type AggregateSignature = GenericAggregateSignature<
-				bls_variant::PublicKey,
-				bls_variant::AggregatePublicKey,
-				bls_variant::Signature,
-				bls_variant::AggregateSignature,
+				bls_variant::PublicKeyVt,
+				bls_variant::MultiPublicKeyVt,
+				bls_variant::SignatureVt,
+				bls_variant::AggregateSignatureVt,
 			>;
 			pub type SignatureBytes =
-				GenericSignatureBytes<bls_variant::PublicKey, bls_variant::Signature>;
+				GenericSignatureBytes<bls_variant::PublicKeyVt, bls_variant::SignatureVt>;
 			pub type SecretKey = GenericSecretKey<
-				bls_variant::Signature,
-				bls_variant::PublicKey,
+				bls_variant::SignatureVt,
+				bls_variant::PublicKeyVt,
 				bls_variant::SecretKey,
 			>;
 			pub type Keypair = GenericKeypair<
-				bls_variant::PublicKey,
+				bls_variant::PublicKeyVt,
 				bls_variant::SecretKey,
-				bls_variant::Signature,
+				bls_variant::SignatureVt,
 			>;
 		}
 	};
@@ -119,3 +119,28 @@ macro_rules! define_mod {
 
 define_mod!(milagro_implementations, crate::impls::milagro::types);
 pub use milagro_implementations::*;
+
+pub(crate) fn fit_to_array<const N: usize>(bytes: impl AsRef<[u8]>) -> Result<[u8; N], Error> {
+	let bytes = bytes.as_ref();
+	if bytes.len() != N {
+		Err(Error::InvalidByteLength { got: bytes.len(), expected: N })
+	} else {
+		let mut slice = [0u8; N];
+		slice.copy_from_slice(bytes);
+		Ok(slice)
+	}
+}
+
+pub(crate) trait OkOr<T>: Sized {
+	fn ok_or<E>(self, err: E) -> Result<T, E>;
+}
+
+impl<T> OkOr<T> for subtle::CtOption<T> {
+	fn ok_or<E>(self, err: E) -> Result<T, E> {
+		if self.is_some().into() {
+			Ok(self.unwrap())
+		} else {
+			Err(err)
+		}		
+	}
+}

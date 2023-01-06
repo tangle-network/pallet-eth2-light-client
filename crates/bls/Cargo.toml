@@ -7,7 +7,8 @@ edition = "2021"
 [dependencies]
 eth2_ssz = { path = "../ssz", default-features = false }
 tree_hash = { path = "../tree_hash", default-features = false }
-milagro_bls = { git = "https://github.com/webb-tools/milagro_bls", default-features = false }
+signature_bls = { git = "https://github.com/webb-tools/signature_bls", default-features = false }
+subtle = { version = "2.4.1", default-features = false }
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 serde = { version = "1.0.101", features = ["derive"], optional = true, default-features = false}
@@ -24,8 +25,8 @@ std = [
     "rand/std",
     "rand_chacha/std",
     "hex/std",
-    "milagro_bls/std",
     "eth2_hashing/std",
     "ethereum-types/std",
     "eth2_serde_utils/std",
+    "signature_bls/default"
 ]
