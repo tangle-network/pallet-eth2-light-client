@@ -74,7 +74,7 @@ pub fn get_participant_pubkeys(
 	public_keys: &[PublicKeyBytes],
 	sync_committee_bits: &BitVec<u8, Lsb0>,
 ) -> Vec<PublicKeyBytes> {
-	let mut result: Vec<PublicKeyBytes> = vec![];
+	let mut result: Vec<PublicKeyBytes> = sp_std::vec![];
 	for (idx, bit) in sync_committee_bits.iter().by_vals().enumerate() {
 		if bit {
 			result.push(public_keys[idx].clone());
