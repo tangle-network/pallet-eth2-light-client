@@ -9,7 +9,7 @@ use frame_support::assert_ok;
 use webb_proposals::TypedChainId;
 
 use crate::mock::Eth2Client;
-use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
+use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait, Eth2LightClientError};
 use eth_types::{self, eth2::ExtendedBeaconBlockHeader};
 
 pub struct MockEthClientPallet {
@@ -34,6 +34,8 @@ impl MockEthClientPallet {
 
 #[async_trait]
 impl EthClientPalletTrait for MockEthClientPallet {
+	type Error = Eth2LightClientError;
+
 	async fn get_last_submitted_slot(&self) -> u64 {
 		let header = self.get_header().unwrap();
 		let slot = header.header.slot;
@@ -43,26 +45,26 @@ impl EthClientPalletTrait for MockEthClientPallet {
 	async fn is_known_block(
 		&self,
 		execution_block_hash: &eth_types::H256,
-	) -> Result<bool, Box<dyn std::error::Error>> {
+	) -> Result<bool, Eth2LightClientError> {
 		Ok(Eth2Client::is_known_execution_header(self.network, *execution_block_hash))
 	}
 
 	async fn send_light_client_update(
 		&mut self,
 		light_client_update: eth_types::eth2::LightClientUpdate,
-	) -> Result<(), Box<dyn std::error::Error>> {
+	) -> Result<(), Eth2LightClientError> {
 		Eth2Client::commit_light_client_update(self.network, light_client_update).map_err(generic_error)?;
 		Ok(())
 	}
 
 	async fn get_finalized_beacon_block_hash(
 		&self,
-	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
+	) -> Result<eth_types::H256, Eth2LightClientError> {
 		let header = self.get_header()?;
 		Ok(header.execution_block_hash)
 	}
 
-	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
+	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Eth2LightClientError> {
 		Ok(Eth2Client::finalized_beacon_block_slot(self.network))
 	}
 
@@ -70,15 +72,15 @@ impl EthClientPalletTrait for MockEthClientPallet {
 		&mut self,
 		_headers: &[eth_types::BlockHeader],
 		_end_slot: u64,
-	) -> Result<(), Box<dyn std::error::Error>> {
+	) -> Result<(), Eth2LightClientError> {
 		todo!()
 	}
 
-	async fn get_min_deposit(&self) -> Result<Balance, Box<dyn std::error::Error>> {
+	async fn get_min_deposit(&self) -> Result<Balance, Eth2LightClientError> {
 		Ok(0)
 	}
 
-	async fn register_submitter(&self) -> Result<(), Box<dyn std::error::Error>> {
+	async fn register_submitter(&self) -> Result<(), Eth2LightClientError> {
 		let _ = Eth2Client::register_submitter(crate::mock::RuntimeOrigin::root(), self.network).map_err(generic_error)?;
 		Ok(())
 	}
@@ -86,27 +88,27 @@ impl EthClientPalletTrait for MockEthClientPallet {
 	async fn is_submitter_registered(
 		&self,
 		_account_id: Option<sp_core::crypto::AccountId32>,
-	) -> Result<bool, Box<dyn std::error::Error>> {
+	) -> Result<bool, Eth2LightClientError> {
 		Ok(true)
 	}
 
 	async fn get_light_client_state(
 		&self,
-	) -> Result<eth_types::eth2::LightClientState, Box<dyn std::error::Error>> {
+	) -> Result<eth_types::eth2::LightClientState, Eth2LightClientError> {
 		Ok(eth_types::eth2::LightClientState::default())
 	}
 
 	async fn get_num_of_submitted_blocks_by_account(
 		&self,
-	) -> Result<u32, Box<dyn std::error::Error>> {
+	) -> Result<u32, Eth2LightClientError> {
 		Ok(0)
 	}
 
-	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, Box<dyn std::error::Error>> {
+	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, Eth2LightClientError> {
 		Ok(100)
 	}
 }
 
-fn generic_error<T: std::fmt::Debug>(err: T) -> Box<dyn std::error::Error> {
-	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{:?}", err)))
+fn generic_error<T: sp_std::fmt::Debug>(err: T) -> Eth2LightClientError {
+	Eth2LightClientError { error: format!("{:?}", err) }
 }

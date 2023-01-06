@@ -130,6 +130,7 @@ impl EthClientPallet {
 
 #[async_trait]
 impl EthClientPalletTrait for EthClientPallet {
+	type Error = Box<dyn std::error::Error>;
 	async fn get_last_submitted_slot(&self) -> u64 {
 		self.get_finalized_beacon_block_slot()
 			.await

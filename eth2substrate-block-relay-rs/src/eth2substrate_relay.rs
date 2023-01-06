@@ -81,7 +81,7 @@ macro_rules! return_on_fail_and_sleep {
 pub struct Eth2SubstrateRelay {
 	beacon_rpc_client: BeaconRPCClient,
 	eth1_rpc_client: Eth1RPCClient,
-	eth_client_pallet: Box<dyn EthClientPalletTrait>,
+	eth_client_pallet: Box<dyn EthClientPalletTrait<Error=Box<dyn std::error::Error>>>,
 	headers_batch_size: u64,
 	bellatrix_fork_epoch: Epoch,
 	bellatrix_fork_version: ForkVersion,
@@ -102,7 +102,7 @@ pub struct Eth2SubstrateRelay {
 impl Eth2SubstrateRelay {
 	pub async fn init(
 		config: &Config,
-		eth_pallet: Box<dyn EthClientPalletTrait>,
+		eth_pallet: Box<dyn EthClientPalletTrait<Error=Box<dyn std::error::Error>>>,
 		enable_binsearch: bool,
 		submit_only_finalized_blocks: bool,
 	) -> Self {
