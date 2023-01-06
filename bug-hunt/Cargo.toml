@@ -42,24 +42,24 @@ async-trait = "0.1.58"
 [features]
 default = ["std"]
 std = [
+	"serde",
 	"codec/std",
 	"scale-info/std",
 	"webb-proposals/std",
-	"tree_hash/std",
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
 	"sp-runtime/std",
 	"sp-std/std",
 	"ethereum-types/std",
-	"merkle_proof/std",
-	"bls/std",
 	"bitvec/std",
 	"rlp/std",
-	"serde/std",
 	"hex/std",
 	"sp-core/std",
     "eth-types/std",
+    "merkle_proof/std",
+	"bls/std",
+    "tree_hash/std",
 ]
 
 try-runtime = ["frame-support/try-runtime"]
