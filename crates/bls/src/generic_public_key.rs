@@ -84,7 +84,7 @@ where
 			if bytes.len() != PUBLIC_KEY_BYTES_LEN {
 				Err(Error::InvalidByteLength { got: bytes.len(), expected: PUBLIC_KEY_BYTES_LEN })
 			} else {
-				let slice = [0u8; PUBLIC_KEY_BYTES_LEN];
+				let mut slice = [0u8; PUBLIC_KEY_BYTES_LEN];
 				slice.copy_from_slice(bytes);
 				Ok(Self { point: Pub::deserialize(slice)? })
 			}
