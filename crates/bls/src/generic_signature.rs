@@ -151,6 +151,7 @@ impl<PublicKey, T: TSignature<PublicKey>> Hash for GenericSignature<PublicKey, T
 	}
 }
 
+#[cfg(feature = "std")]
 impl<T, V> std::fmt::Debug for GenericSignature<T, V> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "GenericSignature")
