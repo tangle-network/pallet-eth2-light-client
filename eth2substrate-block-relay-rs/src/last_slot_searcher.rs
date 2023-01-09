@@ -11,7 +11,7 @@ pub struct LastSlotSearcher {
 	enable_binsearch: bool,
 }
 
-type EthClientContract = Box<dyn EthClientPalletTrait<Error=Box<dyn std::error::Error>>>;
+type EthClientContract = Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>;
 
 // Implementation of functions for searching last slot on NEAR contract
 impl LastSlotSearcher {

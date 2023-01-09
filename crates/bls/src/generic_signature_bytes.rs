@@ -3,10 +3,7 @@ use crate::{
 	generic_signature::{GenericSignature, TSignature},
 	Error, INFINITY_SIGNATURE, SIGNATURE_BYTES_LEN,
 };
-use alloc::{
-	format,
-	vec::Vec,
-};
+use alloc::{format, vec::Vec};
 use core::{
 	convert::TryInto,
 	hash::{Hash, Hasher},

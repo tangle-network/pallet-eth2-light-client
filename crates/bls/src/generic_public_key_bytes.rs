@@ -2,11 +2,7 @@ use crate::{
 	generic_public_key::{GenericPublicKey, TPublicKey},
 	Error, PUBLIC_KEY_BYTES_LEN,
 };
-use alloc::{
-	format,
-	string::{String},
-	vec::Vec,
-};
+use alloc::{format, string::String, vec::Vec};
 use core::{
 	convert::TryInto,
 	fmt,

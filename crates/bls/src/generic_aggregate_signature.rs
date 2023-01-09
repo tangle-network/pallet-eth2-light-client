@@ -4,10 +4,7 @@ use crate::{
 	generic_signature::{GenericSignature, TSignature},
 	Error, Hash256, INFINITY_SIGNATURE, SIGNATURE_BYTES_LEN,
 };
-use alloc::{
-	format,
-	vec::Vec,
-};
+use alloc::{format, vec::Vec};
 use core::{
 	fmt,
 	hash::{Hash, Hasher},

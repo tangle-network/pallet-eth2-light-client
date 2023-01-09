@@ -2,10 +2,7 @@ use crate::{
 	generic_public_key::{GenericPublicKey, TPublicKey},
 	Error, Hash256,
 };
-use alloc::{
-	format,
-	vec::Vec,
-};
+use alloc::{format, vec::Vec};
 use core::{
 	fmt,
 	hash::{Hash, Hasher},

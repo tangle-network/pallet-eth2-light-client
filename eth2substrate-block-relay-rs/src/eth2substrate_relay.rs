@@ -9,6 +9,7 @@ use crate::{
 		LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_NEAR,
 	},
 };
+use bitvec::macros::internal::funty::Fundamental;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
@@ -20,7 +21,6 @@ use eth_types::{
 	BlockHeader,
 };
 use finality_update_verify::network_config::{Network, NetworkConfig};
-use bitvec::macros::internal::funty::Fundamental;
 use log::{debug, info, trace, warn};
 use std::{cmp, error::Error, str::FromStr, thread, thread::sleep, time::Duration, vec::Vec};
 
@@ -81,7 +81,7 @@ macro_rules! return_on_fail_and_sleep {
 pub struct Eth2SubstrateRelay {
 	beacon_rpc_client: BeaconRPCClient,
 	eth1_rpc_client: Eth1RPCClient,
-	eth_client_pallet: Box<dyn EthClientPalletTrait<Error=Box<dyn std::error::Error>>>,
+	eth_client_pallet: Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>,
 	headers_batch_size: u64,
 	bellatrix_fork_epoch: Epoch,
 	bellatrix_fork_version: ForkVersion,
@@ -102,7 +102,7 @@ pub struct Eth2SubstrateRelay {
 impl Eth2SubstrateRelay {
 	pub async fn init(
 		config: &Config,
-		eth_pallet: Box<dyn EthClientPalletTrait<Error=Box<dyn std::error::Error>>>,
+		eth_pallet: Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>,
 		enable_binsearch: bool,
 		submit_only_finalized_blocks: bool,
 	) -> Self {

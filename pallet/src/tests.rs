@@ -611,7 +611,11 @@ mod mainnet_tests {
 			}));
 
 			assert_err!(
-				Eth2Client::init(RuntimeOrigin::signed(ALICE), MAINNET_CHAIN, Box::new(init_input.map_into())),
+				Eth2Client::init(
+					RuntimeOrigin::signed(ALICE),
+					MAINNET_CHAIN,
+					Box::new(init_input.map_into())
+				),
 				Error::<Test>::TrustlessModeError,
 			);
 		})
