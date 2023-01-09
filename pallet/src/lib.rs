@@ -721,7 +721,6 @@ impl<T: Config> Pallet<T> {
 		let signing_root =
 			compute_signing_root(H256(update.attested_beacon_header.tree_hash_root()), domain);
 
-		/*
 		let aggregate_signature =
 			bls::AggregateSignature::deserialize(&update.sync_aggregate.sync_committee_signature.0)
 				.unwrap();
@@ -734,7 +733,7 @@ impl<T: Config> Pallet<T> {
 				.fast_aggregate_verify(signing_root.0.0.into(), &pubkeys.iter().collect::<Vec<_>>()),
 			// Failed to verify the bls signature
 			Error::<T>::InvalidBlsSignature
-		);*/
+		);
 
 		Ok(())
 	}

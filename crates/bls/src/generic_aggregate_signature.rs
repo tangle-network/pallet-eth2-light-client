@@ -6,7 +6,6 @@ use crate::{
 };
 use alloc::{
 	format,
-	string::{String, ToString},
 	vec::Vec,
 };
 use core::{
@@ -16,11 +15,6 @@ use core::{
 };
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
-#[cfg(feature = "std")]
-use serde::{
-	de::{Deserialize, Deserializer},
-	ser::{Serialize, Serializer},
-};
 use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
@@ -286,43 +280,6 @@ where
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.serialize().hash(state);
 	}
-}
-
-#[cfg(feature = "std")]
-impl<Pub, AggPub, Sig, AggSig> fmt::Display for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
-where
-	Sig: TSignature<Pub>,
-	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
-{
-	impl_display!();
-}
-
-impl<Pub, AggPub, Sig, AggSig> core::str::FromStr
-	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
-where
-	Sig: TSignature<Pub>,
-	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
-{
-	impl_from_str!();
-}
-
-#[cfg(feature = "std")]
-impl<Pub, AggPub, Sig, AggSig> Serialize for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
-where
-	Sig: TSignature<Pub>,
-	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
-{
-	impl_serde_serialize!();
-}
-
-#[cfg(feature = "std")]
-impl<'de, Pub, AggPub, Sig, AggSig> Deserialize<'de>
-	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
-where
-	Sig: TSignature<Pub>,
-	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
-{
-	impl_serde_deserialize!();
 }
 
 #[cfg(feature = "std")]

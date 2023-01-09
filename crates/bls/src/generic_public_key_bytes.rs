@@ -4,7 +4,7 @@ use crate::{
 };
 use alloc::{
 	format,
-	string::{String, ToString},
+	string::{String},
 	vec::Vec,
 };
 use core::{
@@ -15,11 +15,6 @@ use core::{
 };
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
-#[cfg(feature = "std")]
-use serde::{
-	de::{Deserialize, Deserializer},
-	ser::{Serialize, Serializer},
-};
 use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
@@ -151,25 +146,6 @@ impl<Pub> Decode for GenericPublicKeyBytes<Pub> {
 
 impl<Pub> TreeHash for GenericPublicKeyBytes<Pub> {
 	impl_tree_hash!(PUBLIC_KEY_BYTES_LEN);
-}
-
-#[cfg(feature = "std")]
-impl<Pub> fmt::Display for GenericPublicKeyBytes<Pub> {
-	impl_display!();
-}
-
-impl<Pub> core::str::FromStr for GenericPublicKeyBytes<Pub> {
-	impl_from_str!();
-}
-
-#[cfg(feature = "std")]
-impl<Pub> Serialize for GenericPublicKeyBytes<Pub> {
-	impl_serde_serialize!();
-}
-
-#[cfg(feature = "std")]
-impl<'de, Pub> Deserialize<'de> for GenericPublicKeyBytes<Pub> {
-	impl_serde_deserialize!();
 }
 
 #[cfg(feature = "std")]

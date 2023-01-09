@@ -1,20 +1,11 @@
 use crate::{generic_public_key_bytes::GenericPublicKeyBytes, Error};
-use alloc::{
-	format,
-	string::{String, ToString},
-	vec::Vec,
-};
+use alloc::{format, string::String, vec::Vec};
 use core::{
 	fmt,
 	hash::{Hash, Hasher},
 };
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
-#[cfg(feature = "std")]
-use serde::{
-	de::{Deserialize, Deserializer},
-	ser::{Serialize, Serializer},
-};
 use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
@@ -81,13 +72,8 @@ where
 		if bytes == &INFINITY_PUBLIC_KEY[..] {
 			Err(Error::InvalidInfinityPublicKey)
 		} else {
-			if bytes.len() != PUBLIC_KEY_BYTES_LEN {
-				Err(Error::InvalidByteLength { got: bytes.len(), expected: PUBLIC_KEY_BYTES_LEN })
-			} else {
-				let mut slice = [0u8; PUBLIC_KEY_BYTES_LEN];
-				slice.copy_from_slice(bytes);
-				Ok(Self { point: Pub::deserialize(slice)? })
-			}
+			let slice = crate::fit_to_array(bytes)?;
+			Ok(Self { point: Pub::deserialize(slice)? })
 		}
 	}
 }
@@ -117,25 +103,6 @@ impl<Pub: TPublicKey> Decode for GenericPublicKey<Pub> {
 
 impl<Pub: TPublicKey> TreeHash for GenericPublicKey<Pub> {
 	impl_tree_hash!(PUBLIC_KEY_BYTES_LEN);
-}
-
-#[cfg(feature = "std")]
-impl<Pub: TPublicKey> fmt::Display for GenericPublicKey<Pub> {
-	impl_display!();
-}
-
-impl<Pub: TPublicKey> core::str::FromStr for GenericPublicKey<Pub> {
-	impl_from_str!();
-}
-
-#[cfg(feature = "std")]
-impl<Pub: TPublicKey> Serialize for GenericPublicKey<Pub> {
-	impl_serde_serialize!();
-}
-
-#[cfg(feature = "std")]
-impl<'de, Pub: TPublicKey> Deserialize<'de> for GenericPublicKey<Pub> {
-	impl_serde_deserialize!();
 }
 
 #[cfg(feature = "std")]

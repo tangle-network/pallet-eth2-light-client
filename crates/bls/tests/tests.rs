@@ -2,11 +2,13 @@ extern crate alloc;
 
 use alloc::borrow::Cow;
 use bls::{Hash256, INFINITY_SIGNATURE, SECRET_KEY_BYTES_LEN};
-use core::fmt::Debug;
+
 use ssz::{Decode, Encode};
 
-fn ssz_round_trip<T: Encode + Decode + PartialEq + Debug>(item: T) {
-	assert_eq!(item, T::from_ssz_bytes(&item.as_ssz_bytes()).unwrap());
+fn ssz_round_trip<T: Encode + Decode + PartialEq>(item: T) {
+	if item != T::from_ssz_bytes(&item.as_ssz_bytes()).unwrap() {
+		panic!("Failed ssz_round_trip")
+	}
 }
 
 macro_rules! test_suite {

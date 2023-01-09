@@ -4,7 +4,6 @@ use crate::{
 };
 use alloc::{
 	format,
-	string::{String, ToString},
 	vec::Vec,
 };
 use core::{
@@ -12,13 +11,7 @@ use core::{
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
-#[cfg(feature = "std")]
-use eth2_serde_utils::hex::encode as hex_encode;
-#[cfg(feature = "std")]
-use serde::{
-	de::{Deserialize, Deserializer},
-	ser::{Serialize, Serializer},
-};
+
 use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
@@ -161,28 +154,10 @@ impl<PublicKey, T: TSignature<PublicKey>> Hash for GenericSignature<PublicKey, T
 	}
 }
 
-#[cfg(feature = "std")]
-impl<PublicKey, T: TSignature<PublicKey>> fmt::Display for GenericSignature<PublicKey, T> {
-	impl_display!();
-}
-
-impl<PublicKey, T: TSignature<PublicKey>> core::str::FromStr for GenericSignature<PublicKey, T> {
-	impl_from_str!();
-}
-
-#[cfg(feature = "std")]
-impl<PublicKey, T: TSignature<PublicKey>> Serialize for GenericSignature<PublicKey, T> {
-	impl_serde_serialize!();
-}
-
-#[cfg(feature = "std")]
-impl<'de, PublicKey, T: TSignature<PublicKey>> Deserialize<'de> for GenericSignature<PublicKey, T> {
-	impl_serde_deserialize!();
-}
-
-#[cfg(feature = "std")]
-impl<PublicKey, T: TSignature<PublicKey>> fmt::Debug for GenericSignature<PublicKey, T> {
-	impl_debug!();
+impl<T, V> std::fmt::Debug for GenericSignature<T, V> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "GenericSignature")
+	}
 }
 
 #[cfg(feature = "arbitrary")]
