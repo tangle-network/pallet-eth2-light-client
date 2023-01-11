@@ -1,11 +1,19 @@
 use crate::{generic_public_key_bytes::GenericPublicKeyBytes, Error};
-use alloc::{format, string::String, vec::Vec};
+use alloc::{
+	format,
+	string::{String, ToString},
+	vec::Vec,
+};
 use core::{
-	fmt,
 	hash::{Hash, Hasher},
 };
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
+#[cfg(feature = "std")]
+use serde::{
+	de::{Deserialize, Deserializer},
+	ser::{Serialize, Serializer},
+};
 use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
@@ -25,7 +33,7 @@ pub trait TPublicKey: Sized + Clone {
 	fn serialize(&self) -> [u8; PUBLIC_KEY_BYTES_LEN];
 
 	/// Deserialize `self` from compressed bytes.
-	fn deserialize(bytes: [u8; PUBLIC_KEY_BYTES_LEN]) -> Result<Self, Error>;
+	fn deserialize(bytes: &[u8]) -> Result<Self, Error>;
 }
 
 /// A BLS public key that is generic across some BLS point (`Pub`).
@@ -72,8 +80,7 @@ where
 		if bytes == &INFINITY_PUBLIC_KEY[..] {
 			Err(Error::InvalidInfinityPublicKey)
 		} else {
-			let slice = crate::fit_to_array(bytes)?;
-			Ok(Self { point: Pub::deserialize(slice)? })
+			Ok(Self { point: Pub::deserialize(bytes)? })
 		}
 	}
 }
@@ -103,6 +110,25 @@ impl<Pub: TPublicKey> Decode for GenericPublicKey<Pub> {
 
 impl<Pub: TPublicKey> TreeHash for GenericPublicKey<Pub> {
 	impl_tree_hash!(PUBLIC_KEY_BYTES_LEN);
+}
+
+#[cfg(feature = "std")]
+impl<Pub: TPublicKey> fmt::Display for GenericPublicKey<Pub> {
+	impl_display!();
+}
+
+impl<Pub: TPublicKey> core::str::FromStr for GenericPublicKey<Pub> {
+	impl_from_str!();
+}
+
+#[cfg(feature = "std")]
+impl<Pub: TPublicKey> Serialize for GenericPublicKey<Pub> {
+	impl_serde_serialize!();
+}
+
+#[cfg(feature = "std")]
+impl<'de, Pub: TPublicKey> Deserialize<'de> for GenericPublicKey<Pub> {
+	impl_serde_deserialize!();
 }
 
 #[cfg(feature = "std")]

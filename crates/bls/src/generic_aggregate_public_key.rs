@@ -1,9 +1,8 @@
 use crate::{
-	generic_public_key::{GenericPublicKey, TPublicKey},
+	generic_public_key::{GenericPublicKey},
 	Error,
 };
 use core::{
-	fmt::{self, Debug},
 	marker::PhantomData,
 };
 
