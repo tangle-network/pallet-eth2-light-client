@@ -153,7 +153,7 @@ impl<Pub> TreeHash for GenericPublicKeyBytes<Pub> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub> fmt::Display for GenericPublicKeyBytes<Pub> {
+impl<Pub> std::fmt::Display for GenericPublicKeyBytes<Pub> {
 	impl_display!();
 }
 
@@ -172,7 +172,7 @@ impl<'de, Pub> Deserialize<'de> for GenericPublicKeyBytes<Pub> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub> fmt::Debug for GenericPublicKeyBytes<Pub> {
+impl<Pub> std::fmt::Debug for GenericPublicKeyBytes<Pub> {
 	impl_debug!();
 }
 
