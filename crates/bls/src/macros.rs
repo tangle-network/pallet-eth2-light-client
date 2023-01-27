@@ -79,24 +79,6 @@ macro_rules! impl_ssz_decode {
 	};
 }
 
-/// Contains the functions required for a `fmt::Display` implementation.
-///
-/// Does not include the `Impl` section since it gets very complicated when it comes to generics.
-macro_rules! impl_from_str {
-	() => {
-		type Err = String;
-
-		fn from_str(s: &str) -> Result<Self, Self::Err> {
-			if let Some(stripped) = s.strip_prefix("0x") {
-				let bytes = hex::decode(stripped).map_err(|e| e.to_string())?;
-				Self::deserialize(&bytes[..]).map_err(|e| format!("{:?}", e))
-			} else {
-				Err("must start with 0x".to_string())
-			}
-		}
-	};
-}
-
 /// Does not include the `Impl` section since it gets very complicated when it comes to generics.
 macro_rules! impl_display {
 	() => {

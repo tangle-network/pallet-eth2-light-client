@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
 finality-update-verify = { default-features = false, path = "../finality-update-verify" }
-types = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 tree_hash = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 merkle_proof = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 eth2_hashing = { default-features = false, git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }

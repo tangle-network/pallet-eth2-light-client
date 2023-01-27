@@ -30,8 +30,12 @@ impl MockEthClientPallet {
 	}
 
 	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, Box<dyn std::error::Error>> {
-		Eth2Client::finalized_beacon_header(self.network)
-			.ok_or(generic_error("Unable to obtain finalized beacon header"))
+		Eth2Client::finalized_beacon_header(self.network).ok_or_else(|| {
+			Box::new(std::io::Error::new(
+				std::io::ErrorKind::Other,
+				"Unable to obtain finalized beacon header",
+			)) as Box<dyn std::error::Error>
+		})
 	}
 }
 
@@ -64,7 +68,7 @@ impl EthClientPalletTrait for MockEthClientPallet {
 	async fn get_finalized_beacon_block_hash(
 		&self,
 	) -> Result<eth_types::H256, Eth2LightClientError> {
-		let header = self.get_header()?;
+		let header = self.get_header().map_err(generic_error)?;
 		Ok(header.execution_block_hash)
 	}
 

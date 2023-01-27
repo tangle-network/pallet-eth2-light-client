@@ -4,9 +4,7 @@ use alloc::{
 	string::{String, ToString},
 	vec::Vec,
 };
-use core::{
-	hash::{Hash, Hasher},
-};
+use core::hash::{Hash, Hasher};
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
 #[cfg(feature = "std")]

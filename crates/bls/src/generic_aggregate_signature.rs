@@ -288,7 +288,8 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<Pub, AggPub, Sig, AggSig> std::fmt::Display for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
+impl<Pub, AggPub, Sig, AggSig> std::fmt::Display
+	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
 	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
@@ -325,7 +326,8 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<Pub, AggPub, Sig, AggSig> std::fmt::Debug for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
+impl<Pub, AggPub, Sig, AggSig> std::fmt::Debug
+	for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
 	AggSig: TAggregateSignature<Pub, AggPub, Sig>,
