@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 
-webb-relayer-utils = { path = "../../relayer/crates/relayer-utils" }
+webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
 tree_hash = { path = "../crates/tree_hash" }
 merkle_proof = { path = "../crates/merkle_proof" }
