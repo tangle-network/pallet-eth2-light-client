@@ -5,3 +5,4 @@ target
 .env
 **/*.idea
 .DS_Store
+**/*.xml
