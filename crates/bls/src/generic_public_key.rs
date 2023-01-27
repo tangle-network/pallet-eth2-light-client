@@ -60,7 +60,7 @@ where
 	/// Returns `self.serialize()` as a `0x`-prefixed hex string.
 	#[cfg(feature = "std")]
 	pub fn as_hex_string(&self) -> String {
-		format!("{:?}", self)
+		format!("{self:?}")
 	}
 
 	/// Returns `self` in the compressed `PublicKeyBytes` representation.

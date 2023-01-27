@@ -45,8 +45,8 @@ impl EthClientPalletTrait for MockEthClientPallet {
 
 	async fn get_last_submitted_slot(&self) -> u64 {
 		let header = self.get_header().unwrap();
-		let slot = header.header.slot;
-		slot
+		
+		header.header.slot
 	}
 
 	async fn is_known_block(
@@ -117,5 +117,5 @@ impl EthClientPalletTrait for MockEthClientPallet {
 }
 
 fn generic_error<T: sp_std::fmt::Debug>(err: T) -> Eth2LightClientError {
-	Eth2LightClientError { error: format!("{:?}", err) }
+	Eth2LightClientError { error: format!("{err:?}") }
 }

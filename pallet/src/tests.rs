@@ -105,8 +105,7 @@ mod kiln_tests {
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
-					"Execution block hash is not finalized: {:?}",
-					header_hash
+					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
 
@@ -156,8 +155,7 @@ mod kiln_tests {
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
-					"Execution block hash is not finalized: {:?}",
-					header_hash
+					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
 

@@ -23,8 +23,7 @@ pub fn read_client_updates(
 	let mut updates = vec![];
 	for period_idx in start_period..=end_period {
 		let client_update = read_client_update(format!(
-			"./src/data/{}/light_client_update_period_{}.json",
-			network, period_idx
+			"./src/data/{network}/light_client_update_period_{period_idx}.json"
 		));
 		updates.push(client_update);
 	}
