@@ -20,6 +20,13 @@ pub type DomainType = [u8; 4];
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 pub struct PublicKeyBytes(pub [u8; PUBLIC_KEY_BYTES_LEN]);
+
+impl Default for PublicKeyBytes {
+	fn default() -> Self {
+		PublicKeyBytes([0u8; PUBLIC_KEY_BYTES_LEN])
+	}
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 pub struct SignatureBytes(pub [u8; SIGNATURE_BYTES_LEN]);
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
@@ -29,7 +36,9 @@ arr_wrapper_impl_tree_hash!(PublicKeyBytes, PUBLIC_KEY_BYTES_LEN);
 arr_wrapper_impl_tree_hash!(SignatureBytes, SIGNATURE_BYTES_LEN);
 arr_wrapper_impl_tree_hash!(SyncCommitteeBits, SYNC_COMMITTEE_BITS_SIZE_IN_BYTES);
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
+#[derive(
+	Default, Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BeaconBlockHeader {
 	#[cfg_attr(feature = "std", serde(with = "eth2_serde_utils::quoted_u64"))]
@@ -53,7 +62,7 @@ pub struct SigningData {
 	pub domain: H256,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ExtendedBeaconBlockHeader {
 	pub header: BeaconBlockHeader,
@@ -72,12 +81,14 @@ impl From<HeaderUpdate> for ExtendedBeaconBlockHeader {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SyncCommitteePublicKeys(pub Vec<PublicKeyBytes>);
 vec_wrapper_impl_tree_hash!(SyncCommitteePublicKeys);
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash)]
+#[derive(
+	Default, Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, tree_hash_derive::TreeHash,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SyncCommittee {
 	pub pubkeys: SyncCommitteePublicKeys,
@@ -124,7 +135,7 @@ pub struct LightClientUpdate {
 	pub sync_committee_update: Option<SyncCommitteeUpdate>,
 }
 
-#[derive(Clone, Encode, Decode)]
+#[derive(Default, Clone, Encode, Decode)]
 pub struct LightClientState {
 	pub finalized_beacon_header: ExtendedBeaconBlockHeader,
 	pub current_sync_committee: SyncCommittee,

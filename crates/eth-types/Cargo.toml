@@ -8,7 +8,7 @@ edition = "2021"
 serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
-ethereum-types = { version = "0.13.1", features = ["codec", "rlp", "serialize"], default-features = false }
+ethereum-types = { version = "0.14.0", features = ["codec", "rlp"], default-features = false }
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
@@ -26,7 +26,9 @@ std = [
 	"serde/std",
 	"codec/std",
 	"scale-info/std",
+	"ethereum-types/std",
 	"eth2_serde_utils/std",
+	"ethereum-types/serialize"
 ]
 eip1559 = []
 eth2 = []

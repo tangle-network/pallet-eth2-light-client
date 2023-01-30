@@ -10,7 +10,6 @@ use alloc::{
 };
 use core::{
 	convert::TryInto,
-	fmt,
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
@@ -141,7 +140,7 @@ impl<Pub, Sig> TreeHash for GenericSignatureBytes<Pub, Sig> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub, Sig> fmt::Display for GenericSignatureBytes<Pub, Sig> {
+impl<Pub, Sig> std::fmt::Display for GenericSignatureBytes<Pub, Sig> {
 	impl_display!();
 }
 
@@ -160,7 +159,7 @@ impl<'de, Pub, Sig> Deserialize<'de> for GenericSignatureBytes<Pub, Sig> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub, Sig> fmt::Debug for GenericSignatureBytes<Pub, Sig> {
+impl<Pub, Sig> std::fmt::Debug for GenericSignatureBytes<Pub, Sig> {
 	impl_debug!();
 }
 

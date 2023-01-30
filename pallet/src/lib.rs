@@ -46,12 +46,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
 
-mod eth_types;
 use eth_types::{
 	eth2::{
 		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,
 		SyncCommittee,
 	},
+	pallet::{ExecutionHeaderInfo, InitInput},
 	BlockHeader, H256,
 };
 use frame_support::{
@@ -62,17 +62,10 @@ use frame_support::{
 use sp_runtime::traits::Saturating;
 use sp_std::{collections::btree_map::BTreeMap, convert::TryInto, prelude::*};
 use tree_hash::TreeHash;
-use types::{ExecutionHeaderInfo, InitInput};
 use webb_proposals::TypedChainId;
 
 pub use pallet::*;
 
-use crate::consensus::{
-	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
-	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
-	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
-	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
-};
 use bitvec::prelude::{BitVec, Lsb0};
 
 use frame_support::traits::{Currency, ExistenceRequirement};
@@ -84,14 +77,23 @@ type BalanceOf<T> =
 mod mock;
 
 #[cfg(test)]
+mod mocked_pallet_client;
+
+#[cfg(test)]
 mod tests;
 
 #[cfg(test)]
 mod test_utils;
 
 pub mod consensus;
+use consensus::{
+	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
+	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
+	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
+	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
+};
+
 pub mod traits;
-pub mod types;
 
 pub use traits::*;
 
@@ -213,7 +215,7 @@ pub mod pallet {
 		TypedChainId,
 		Blake2_128Concat,
 		H256,
-		types::ExecutionHeaderInfo<T::AccountId>,
+		ExecutionHeaderInfo<T::AccountId>,
 		OptionQuery,
 	>;
 
@@ -257,7 +259,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		TypedChainId,
-		types::ExecutionHeaderInfo<T::AccountId>,
+		ExecutionHeaderInfo<T::AccountId>,
 		OptionQuery,
 	>;
 
@@ -332,6 +334,9 @@ pub mod pallet {
 		SubmitterExhaustedLimit,
 		HeaderHashDoesNotExist,
 		BlockHashesDoNotMatch,
+		InvalidSignaturePeriod,
+		CurrentSyncCommitteeNotSet,
+		NextSyncCommitteeNotSet,
 	}
 
 	#[pallet::hooks]
@@ -340,6 +345,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(0)]
+		#[pallet::call_index(0)]
 		pub fn init(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -371,8 +377,8 @@ pub mod pallet {
 				Error::<T>::InvalidExecutionBlock,
 			);
 
-			let finalized_execution_header_info = types::ExecutionHeaderInfo {
-				parent_hash: args.finalized_execution_header.parent_hash,
+			let finalized_execution_header_info = ExecutionHeaderInfo {
+				parent_hash: args.finalized_execution_header.parent_hash.0,
 				block_number: args.finalized_execution_header.number,
 				submitter: signer,
 			};
@@ -397,7 +403,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(1)]
+		#[pallet::call_index(1)]
 		pub fn register_submitter(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -420,7 +427,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(2)]
+		#[pallet::call_index(2)]
 		pub fn unregister_submitter(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -444,7 +452,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(3)]
+		#[pallet::call_index(3)]
 		pub fn submit_beacon_chain_light_client_update(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -463,7 +472,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(4)]
+		#[pallet::call_index(4)]
 		pub fn submit_execution_header(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
@@ -487,7 +497,7 @@ pub mod pallet {
 			frame_support::log::debug!("Submitted header hash {:?}", block_hash);
 
 			let block_info = ExecutionHeaderInfo {
-				parent_hash: block_header.parent_hash,
+				parent_hash: block_header.parent_hash.0,
 				block_number: block_header.number,
 				submitter,
 			};
@@ -501,7 +511,8 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight(5)]
+		#[pallet::call_index(5)]
 		pub fn update_trusted_signer(
 			origin: OriginFor<T>,
 			trusted_signer: T::AccountId,
@@ -521,7 +532,7 @@ impl<T: Config> Pallet<T> {
 		const STORAGE_BYTES_PER_BLOCK: u32 = 105; // prefix: 3B + key: 32B + HeaderInfo 70B
 		const STORAGE_BYTES_PER_ACCOUNT: u32 = 39; // prefix: 3B + account_id: 32B + counter 4B
 		let storage_bytes_per_account = (STORAGE_BYTES_PER_BLOCK *
-			max_submitted_blocks_by_account as u32) +
+			max_submitted_blocks_by_account) +
 			STORAGE_BYTES_PER_ACCOUNT;
 		T::StoragePricePerByte::get().saturating_mul(storage_bytes_per_account.into())
 	}
@@ -665,16 +676,29 @@ impl<T: Config> Pallet<T> {
 		finalized_period: u64,
 	) -> Result<(), DispatchError> {
 		let signature_period = compute_sync_committee_period(update.signature_slot);
+		// Verify signature period does not skip a sync committee period
+		// The acceptable signature periods are `signature_period`, `signature_period + 1`
+		ensure!(
+			signature_period == finalized_period || signature_period == finalized_period + 1,
+			Error::<T>::InvalidSignaturePeriod
+		);
 		// Verify sync committee aggregate signature
-		// TODO: Ensure these storage values exist before unwrapping
 		let sync_committee = if signature_period == finalized_period {
+			ensure!(
+				Self::current_sync_committee(typed_chain_id).is_some(),
+				Error::<T>::CurrentSyncCommitteeNotSet
+			);
 			Self::current_sync_committee(typed_chain_id).unwrap()
 		} else {
+			ensure!(
+				Self::next_sync_committee(typed_chain_id).is_some(),
+				Error::<T>::NextSyncCommitteeNotSet
+			);
 			Self::next_sync_committee(typed_chain_id).unwrap()
 		};
 
 		let participant_pubkeys =
-			get_participant_pubkeys(&sync_committee.pubkeys.0, &sync_committee_bits);
+			get_participant_pubkeys(sync_committee.pubkeys.0.as_slice(), &sync_committee_bits);
 		ensure!(
 			Self::bellatrix_fork_version(typed_chain_id).is_some(),
 			Error::<T>::ForkVersionNotFound
@@ -689,8 +713,11 @@ impl<T: Config> Pallet<T> {
 		);
 		let fork_version = Self::bellatrix_fork_version(typed_chain_id).unwrap();
 		let genesis_validators_root = Self::genesis_validators_root(typed_chain_id).unwrap();
-		let domain =
-			compute_domain(DOMAIN_SYNC_COMMITTEE, fork_version, genesis_validators_root.into());
+		let domain = compute_domain(
+			DOMAIN_SYNC_COMMITTEE,
+			fork_version,
+			H256::from(genesis_validators_root),
+		);
 		let signing_root =
 			compute_signing_root(H256(update.attested_beacon_header.tree_hash_root()), domain);
 
@@ -702,8 +729,10 @@ impl<T: Config> Pallet<T> {
 			.map(|x| bls::PublicKey::deserialize(&x.0).unwrap())
 			.collect();
 		ensure!(
-			aggregate_signature
-				.fast_aggregate_verify(signing_root.0, &pubkeys.iter().collect::<Vec<_>>()),
+			aggregate_signature.fast_aggregate_verify(
+				signing_root.0 .0.into(),
+				&pubkeys.iter().collect::<Vec<_>>()
+			),
 			// Failed to verify the bls signature
 			Error::<T>::InvalidBlsSignature
 		);
@@ -843,18 +872,21 @@ impl<T: Config> Pallet<T> {
 				cursor_header_hash,
 			);
 
-			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash {
+			if cursor_header.parent_hash == current_finalized_beacon_header.execution_block_hash.0 {
 				break
 			}
 
-			cursor_header_hash = cursor_header.parent_hash;
+			cursor_header_hash = cursor_header.parent_hash.into();
 			ensure!(
 				Self::unfinalized_headers(typed_chain_id, cursor_header_hash).is_some(),
 				// The unfinalized header should be present
 				Error::<T>::UnfinalizedHeaderNotPresent
 			);
-			cursor_header =
-				Self::unfinalized_headers(typed_chain_id, cursor_header.parent_hash).unwrap();
+			cursor_header = Self::unfinalized_headers(
+				typed_chain_id,
+				eth_types::H256::from(cursor_header.parent_hash.0),
+			)
+			.unwrap();
 		}
 		FinalizedBeaconHeader::<T>::insert(typed_chain_id, finalized_header);
 		FinalizedExecutionHeader::<T>::insert(

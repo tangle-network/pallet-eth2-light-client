@@ -4,10 +4,7 @@ use alloc::{
 	string::{String, ToString},
 	vec::Vec,
 };
-use core::{
-	fmt,
-	hash::{Hash, Hasher},
-};
+use core::hash::{Hash, Hasher};
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
 #[cfg(feature = "std")]
@@ -63,7 +60,7 @@ where
 	/// Returns `self.serialize()` as a `0x`-prefixed hex string.
 	#[cfg(feature = "std")]
 	pub fn as_hex_string(&self) -> String {
-		format!("{:?}", self)
+		format!("{self:?}")
 	}
 
 	/// Returns `self` in the compressed `PublicKeyBytes` representation.
@@ -114,7 +111,7 @@ impl<Pub: TPublicKey> TreeHash for GenericPublicKey<Pub> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub: TPublicKey> fmt::Display for GenericPublicKey<Pub> {
+impl<Pub: TPublicKey> std::fmt::Display for GenericPublicKey<Pub> {
 	impl_display!();
 }
 
@@ -133,7 +130,7 @@ impl<'de, Pub: TPublicKey> Deserialize<'de> for GenericPublicKey<Pub> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub: TPublicKey> fmt::Debug for GenericPublicKey<Pub> {
+impl<Pub: TPublicKey> std::fmt::Debug for GenericPublicKey<Pub> {
 	impl_debug!();
 }
 

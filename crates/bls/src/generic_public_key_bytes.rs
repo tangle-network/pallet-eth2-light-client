@@ -9,7 +9,6 @@ use alloc::{
 };
 use core::{
 	convert::TryInto,
-	fmt,
 	hash::{Hash, Hasher},
 	marker::PhantomData,
 };
@@ -77,7 +76,7 @@ impl<Pub> GenericPublicKeyBytes<Pub> {
 	/// Returns `self.serialize()` as a `0x`-prefixed hex string.
 	#[cfg(feature = "std")]
 	pub fn as_hex_string(&self) -> String {
-		format!("{:?}", self)
+		format!("{self:?}")
 	}
 
 	/// Instantiates `Self` from bytes.
@@ -154,7 +153,7 @@ impl<Pub> TreeHash for GenericPublicKeyBytes<Pub> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub> fmt::Display for GenericPublicKeyBytes<Pub> {
+impl<Pub> std::fmt::Display for GenericPublicKeyBytes<Pub> {
 	impl_display!();
 }
 
@@ -173,7 +172,7 @@ impl<'de, Pub> Deserialize<'de> for GenericPublicKeyBytes<Pub> {
 }
 
 #[cfg(feature = "std")]
-impl<Pub> fmt::Debug for GenericPublicKeyBytes<Pub> {
+impl<Pub> std::fmt::Debug for GenericPublicKeyBytes<Pub> {
 	impl_debug!();
 }
 

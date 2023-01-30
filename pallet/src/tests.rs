@@ -1,23 +1,22 @@
-use super::consensus::*;
 use crate::{
-	mock::{Eth2Client, Origin},
+	mock::{Eth2Client, RuntimeOrigin},
 	test_utils::*,
-	types::InitInput,
 };
+
 use bitvec::{bitarr, order::Lsb0};
-use eth_types::{eth2::LightClientUpdate, BlockHeader, H256, U256};
+use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, H256, U256};
 use frame_support::{assert_err, assert_ok};
 use hex::FromHex;
 use sp_runtime::AccountId32;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
-const MAINNET_CHAIN: TypedChainId = TypedChainId::Evm(1);
-const KILN_CHAIN: TypedChainId = TypedChainId::Evm(1337802);
-const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
+pub const MAINNET_CHAIN: TypedChainId = TypedChainId::Evm(1);
+pub const KILN_CHAIN: TypedChainId = TypedChainId::Evm(1337802);
+pub const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
 
 pub fn submit_and_check_execution_headers(
-	origin: Origin,
+	origin: RuntimeOrigin,
 	typed_chain_id: TypedChainId,
 	headers: Vec<&BlockHeader>,
 ) {
@@ -33,18 +32,22 @@ pub fn submit_and_check_execution_headers(
 }
 
 pub fn get_test_context(
-	init_options: Option<InitOptions<AccountId32>>,
-) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<AccountId32>) {
-	let (headers, updates, init_input) = get_test_data(init_options);
+	init_options: Option<InitOptions<[u8; 32]>>,
+) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<[u8; 32]>) {
+	let (headers, updates, init_input_0) = get_test_data(init_options);
+	let init_input = init_input_0.clone().map_into();
+
 	assert_ok!(Eth2Client::init(
-		Origin::signed(ALICE.clone()),
+		RuntimeOrigin::signed(ALICE.clone()),
 		KILN_CHAIN,
-		Box::new(init_input.clone())
+		Box::new(init_input)
 	));
-	(headers, updates, init_input)
+	(headers, updates, init_input_0)
 }
 
 mod kiln_tests {
+	use crate::consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
+
 	use super::*;
 	use crate::{
 		mock::{new_test_ext, Eth2Client, Test},
@@ -76,17 +79,17 @@ mod kiln_tests {
 	pub fn test_submit_update_two_periods() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).collect(),
 			);
 
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				updates[1].clone()
 			));
@@ -102,8 +105,7 @@ mod kiln_tests {
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
-					"Execution block hash is not finalized: {:?}",
-					header_hash
+					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
 
@@ -115,7 +117,7 @@ mod kiln_tests {
 					.execution_block_hash
 			));
 
-			assert_ok!(Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::unregister_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 		})
 	}
 
@@ -123,11 +125,11 @@ mod kiln_tests {
 	pub fn test_submit_execution_block_from_fork_chain() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).collect(),
 			);
@@ -137,12 +139,12 @@ mod kiln_tests {
 			// would be suitable too
 			fork_header.difficulty = U256::from(ethereum_types::U256::from(99));
 			assert_ok!(Eth2Client::submit_execution_header(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				fork_header.clone()
 			));
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				updates[1].clone()
 			));
@@ -153,8 +155,7 @@ mod kiln_tests {
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
-					"Execution block hash is not finalized: {:?}",
-					header_hash
+					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
 
@@ -184,17 +185,17 @@ mod kiln_tests {
 				max_submitted_blocks_by_account: 7000,
 				trusted_signer: None,
 			}));
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).collect(),
 			);
 
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				updates[1].clone()
 			));
@@ -241,17 +242,17 @@ mod kiln_tests {
 				max_submitted_blocks_by_account: 100,
 				trusted_signer: None,
 			}));
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).take(100).collect(),
 			);
 			assert_err!(
 				Eth2Client::submit_execution_header(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					headers[101].clone()
 				),
@@ -270,9 +271,9 @@ mod kiln_tests {
 				max_submitted_blocks_by_account: 100,
 				trusted_signer: None,
 			}));
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).take(100).collect(),
 			);
@@ -287,11 +288,11 @@ mod kiln_tests {
 				verify_bls_signatures: true,
 				hashes_gc_threshold: 7100,
 				max_submitted_blocks_by_account: 100,
-				trusted_signer: Some(AccountId32::from([2u8; 32])),
+				trusted_signer: Some([2u8; 32]),
 			}));
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					updates[1].clone()
 				),
@@ -311,7 +312,7 @@ mod kiln_tests {
 			);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -328,7 +329,7 @@ mod kiln_tests {
 			update.finality_update.finality_branch = vec![];
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -348,7 +349,7 @@ mod kiln_tests {
 			);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -365,7 +366,7 @@ mod kiln_tests {
 			update.finality_update.header_update.execution_hash_branch = vec![];
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -383,7 +384,7 @@ mod kiln_tests {
 				update.signature_slot + EPOCHS_PER_SYNC_COMMITTEE_PERIOD * SLOTS_PER_EPOCH * 10;
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -396,15 +397,15 @@ mod kiln_tests {
 	pub fn test_panic_on_submit_update_with_missing_execution_blocks() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).take(5).collect(),
 			);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					updates[1].clone()
 				),
@@ -417,15 +418,15 @@ mod kiln_tests {
 	pub fn test_panic_on_submit_same_execution_blocks() {
 		new_test_ext().execute_with(|| {
 			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			assert_ok!(Eth2Client::submit_execution_header(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers[1].clone()
 			));
 			assert_err!(
 				Eth2Client::submit_execution_header(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					headers[1].clone()
 				),
@@ -438,11 +439,11 @@ mod kiln_tests {
 	pub fn test_panic_on_submit_execution_block_after_submitter_unregistered() {
 		new_test_ext().execute_with(|| {
 			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
-			assert_ok!(Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::unregister_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			assert_err!(
 				Eth2Client::submit_execution_header(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					headers[1].clone()
 				),
@@ -458,7 +459,7 @@ mod kiln_tests {
 			Paused::<Test>::insert(KILN_CHAIN, true);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					updates[1].clone()
 				),
@@ -473,7 +474,7 @@ mod kiln_tests {
 			let (_headers, updates, _init_input) = get_test_context(None);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					updates[0].clone()
 				),
@@ -487,16 +488,16 @@ mod kiln_tests {
 		new_test_ext().execute_with(|| {
 			let (headers, _updates, _init_input) = get_test_context(None);
 			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			assert_ok!(Eth2Client::submit_execution_header(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers[1].clone()
 			));
 			// Skip 2th block
 			assert_err!(
 				Eth2Client::submit_execution_header(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					headers[3].clone()
 				),
@@ -510,15 +511,15 @@ mod kiln_tests {
 		new_test_ext().execute_with(|| {
 			let (headers, _updates, _init_input) = get_test_context(None);
 			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
-			assert_ok!(Eth2Client::register_submitter(Origin::signed(ALICE), KILN_CHAIN));
+			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			submit_and_check_execution_headers(
-				Origin::signed(ALICE),
+				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
 				headers.iter().skip(1).take(5).collect(),
 			);
 
 			assert_err!(
-				Eth2Client::unregister_submitter(Origin::signed(ALICE), KILN_CHAIN),
+				Eth2Client::unregister_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN),
 				Error::<Test>::SubmitterHasUsedStorage,
 			);
 		});
@@ -531,7 +532,7 @@ mod kiln_tests {
 			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
 			assert_err!(
 				Eth2Client::submit_execution_header(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					headers[1].clone()
 				),
@@ -560,7 +561,7 @@ mod kiln_tests {
 				sync_committee_bits.as_raw_mut_slice().to_vec().into();
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -578,7 +579,7 @@ mod kiln_tests {
 
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
-					Origin::signed(ALICE),
+					RuntimeOrigin::signed(ALICE),
 					KILN_CHAIN,
 					update
 				),
@@ -608,7 +609,11 @@ mod mainnet_tests {
 			}));
 
 			assert_err!(
-				Eth2Client::init(Origin::signed(ALICE), MAINNET_CHAIN, Box::new(init_input)),
+				Eth2Client::init(
+					RuntimeOrigin::signed(ALICE),
+					MAINNET_CHAIN,
+					Box::new(init_input.map_into())
+				),
 				Error::<Test>::TrustlessModeError,
 			);
 		})
