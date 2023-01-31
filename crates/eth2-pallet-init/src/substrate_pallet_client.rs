@@ -176,9 +176,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		Ok(())
 	}
 
-	async fn get_finalized_beacon_block_hash(
-		&self,
-	) -> Result<eth_types::H256, crate::Error> {
+	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, crate::Error> {
 		let extended_beacon_header = self
 			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
 				"FinalizedBeaconHeader",
@@ -294,9 +292,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		}
 	}
 
-	async fn get_num_of_submitted_blocks_by_account(
-		&self,
-	) -> Result<u32, crate::Error> {
+	async fn get_num_of_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let account_id = self.signer.account_id();
 		let count = self
 			.get_value_with_keys::<Option<u32>>(

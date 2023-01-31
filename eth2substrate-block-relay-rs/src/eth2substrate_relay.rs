@@ -194,7 +194,8 @@ impl Eth2SubstrateRelay {
 		let last_eth2_slot_on_substrate = self
 			.last_slot_searcher
 			.get_last_slot(max_slot, &self.beacon_rpc_client, &self.eth_client_pallet)
-			.await?;
+			.await
+			.map_err(to_error)?;
 
 		LAST_ETH_SLOT_ON_NEAR
 			.inc_by(cmp::max(0, last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_NEAR.get()));
@@ -212,8 +213,11 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn get_last_finalized_slot_on_substrate(&self) -> Result<u64, Box<dyn Error>> {
-		let last_finalized_slot_on_substrate =
-			self.eth_client_pallet.get_finalized_beacon_block_slot().await.map_err(to_error)?;
+		let last_finalized_slot_on_substrate = self
+			.eth_client_pallet
+			.get_finalized_beacon_block_slot()
+			.await
+			.map_err(to_error)?;
 		LAST_FINALIZED_ETH_SLOT_ON_NEAR.inc_by(cmp::max(
 			0,
 			last_finalized_slot_on_substrate as i64 - LAST_FINALIZED_ETH_SLOT_ON_NEAR.get(),
@@ -367,8 +371,10 @@ impl Eth2SubstrateRelay {
 		let mut current_slot = start_slot;
 
 		let remaining_headers = (self.max_submitted_blocks_by_account -
-			self.eth_client_pallet.get_num_of_submitted_blocks_by_account().await.map_err(to_error)?)
-			as u64;
+			self.eth_client_pallet
+				.get_num_of_submitted_blocks_by_account()
+				.await
+				.map_err(to_error)?) as u64;
 
 		trace!(target: "relay", "remaining headers number {}", remaining_headers);
 
@@ -424,10 +430,14 @@ impl Eth2SubstrateRelay {
 		let signature_slot_period =
 			BeaconRPCClient::get_period_for_slot(light_client_update.signature_slot);
 		let finalized_slot_period = BeaconRPCClient::get_period_for_slot(
-			self.eth_client_pallet.get_finalized_beacon_block_slot().await.map_err(to_error)?,
+			self.eth_client_pallet
+				.get_finalized_beacon_block_slot()
+				.await
+				.map_err(to_error)?,
 		);
 
-		let light_client_state = self.eth_client_pallet.get_light_client_state().await.map_err(to_error)?;
+		let light_client_state =
+			self.eth_client_pallet.get_light_client_state().await.map_err(to_error)?;
 
 		let sync_committee = if signature_slot_period == finalized_slot_period {
 			light_client_state.current_sync_committee

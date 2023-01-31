@@ -531,9 +531,8 @@ impl<T: Config> Pallet<T> {
 	) -> BalanceOf<T> {
 		const STORAGE_BYTES_PER_BLOCK: u32 = 105; // prefix: 3B + key: 32B + HeaderInfo 70B
 		const STORAGE_BYTES_PER_ACCOUNT: u32 = 39; // prefix: 3B + account_id: 32B + counter 4B
-		let storage_bytes_per_account = (STORAGE_BYTES_PER_BLOCK *
-			max_submitted_blocks_by_account) +
-			STORAGE_BYTES_PER_ACCOUNT;
+		let storage_bytes_per_account =
+			(STORAGE_BYTES_PER_BLOCK * max_submitted_blocks_by_account) + STORAGE_BYTES_PER_ACCOUNT;
 		T::StoragePricePerByte::get().saturating_mul(storage_bytes_per_account.into())
 	}
 

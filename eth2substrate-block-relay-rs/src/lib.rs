@@ -6,3 +6,5 @@ pub mod prometheus_metrics;
 
 pub mod config_for_tests;
 pub mod test_utils;
+
+pub use eth2_pallet_init::Error;

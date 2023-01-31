@@ -45,7 +45,7 @@ impl EthClientPalletTrait for MockEthClientPallet {
 
 	async fn get_last_submitted_slot(&self) -> u64 {
 		let header = self.get_header().unwrap();
-		
+
 		header.header.slot
 	}
 
