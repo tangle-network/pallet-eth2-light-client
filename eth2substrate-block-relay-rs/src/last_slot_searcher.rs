@@ -451,7 +451,7 @@ impl LastSlotSearcher {
 				}
 			},
 			Err(err) => {
-				trace!(target: "relay", "Error \"{}\" in getting beacon block body for slot={}", err, slot);
+				trace!(target: "relay", "Error \"{:?}\" in getting beacon block body for slot={}", err, slot);
 				Err(err)?
 			},
 		}
