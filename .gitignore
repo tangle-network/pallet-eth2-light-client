@@ -1,0 +1,8 @@
+/target
+/Cargo.lock
+
+target
+.env
+**/*.idea
+.DS_Store
+**/*.xml

@@ -1,0 +1,16 @@
+[package]
+name = "finality-update-verify"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
+consensus_types = { path = "../consensus_types" }
+bls = { path = "../bls" }
+tree_hash = { path = "../tree_hash" }
+bitvec = "1.0.0"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0.74"
+toml = "0.5.9"
