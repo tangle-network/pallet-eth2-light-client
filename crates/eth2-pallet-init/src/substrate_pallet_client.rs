@@ -139,7 +139,6 @@ impl EthClientPallet {
 
 #[async_trait]
 impl EthClientPalletTrait for EthClientPallet {
-	type Error = Box<dyn std::error::Error>;
 	async fn get_last_submitted_slot(&self) -> u64 {
 		self.get_finalized_beacon_block_slot()
 			.await
@@ -149,7 +148,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn is_known_block(
 		&self,
 		execution_block_hash: &eth_types::H256,
-	) -> Result<bool, Box<dyn std::error::Error>> {
+	) -> Result<bool, crate::Error> {
 		let exists = self
 			.get_value_with_keys::<Option<ExecutionHeaderInfo<AccountId32>>>(
 				"UnfinalizedHeaders",
@@ -164,7 +163,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn send_light_client_update(
 		&mut self,
 		light_client_update: LightClientUpdate,
-	) -> Result<(), Box<dyn std::error::Error>> {
+	) -> Result<(), crate::Error> {
 		let tx = subxt::dynamic::tx(
 			"Eth2Client",
 			// Name of the transaction in the pallet/src/lib.rs
@@ -179,7 +178,7 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_finalized_beacon_block_hash(
 		&self,
-	) -> Result<eth_types::H256, Box<dyn std::error::Error>> {
+	) -> Result<eth_types::H256, crate::Error> {
 		let extended_beacon_header = self
 			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
 				"FinalizedBeaconHeader",
@@ -189,11 +188,11 @@ impl EthClientPalletTrait for EthClientPallet {
 		if let Some(extended_beacon_header) = extended_beacon_header {
 			Ok(extended_beacon_header.beacon_block_root)
 		} else {
-			Err(Box::new(Error::Generic("Unable to obtain ExtendedBeaconBlockHeader")))
+			Err(Error::Generic("Unable to obtain ExtendedBeaconBlockHeader").into())
 		}
 	}
 
-	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn std::error::Error>> {
+	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
 		let finalized_beacon_header_value = self
 			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
 				"FinalizedBeaconHeader",
@@ -203,7 +202,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		if let Some(finalized_beacon_header_value) = finalized_beacon_header_value {
 			Ok(finalized_beacon_header_value.header.slot)
 		} else {
-			Err(Box::new(Error::Generic("Unable to obtain FinalizedBeaconHeader")))
+			Err(Error::Generic("Unable to obtain FinalizedBeaconHeader").into())
 		}
 	}
 
@@ -211,7 +210,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		&mut self,
 		headers: &[BlockHeader],
 		_end_slot: u64,
-	) -> Result<(), Box<dyn std::error::Error>> {
+	) -> Result<(), crate::Error> {
 		let mut txes = vec![];
 		for header in headers {
 			let tx = subxt::dynamic::tx(
@@ -234,7 +233,7 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_min_deposit(
 		&self,
-	) -> Result<crate::eth_client_pallet_trait::Balance, Box<dyn std::error::Error>> {
+	) -> Result<crate::eth_client_pallet_trait::Balance, crate::Error> {
 		let ret = self
 			.get_value_with_simple_type_chain_argument::<Balance>("MinSubmitterBalance")
 			.await?;
@@ -242,7 +241,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		Ok(ret)
 	}
 
-	async fn register_submitter(&self) -> Result<(), Box<dyn std::error::Error>> {
+	async fn register_submitter(&self) -> Result<(), crate::Error> {
 		// Create a transaction to submit:
 		let tx =
 			subxt::dynamic::tx("Eth2Client", "register_submitter", vec![Value::from_bytes(&[])]);
@@ -255,7 +254,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn is_submitter_registered(
 		&self,
 		account_id: Option<AccountId32>,
-	) -> Result<bool, Box<dyn std::error::Error>> {
+	) -> Result<bool, crate::Error> {
 		let exists = self
 			.get_value_with_keys::<Option<u32>>(
 				"Submitters",
@@ -269,7 +268,7 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_light_client_state(
 		&self,
-	) -> Result<eth_types::eth2::LightClientState, Box<dyn std::error::Error>> {
+	) -> Result<eth_types::eth2::LightClientState, crate::Error> {
 		let task0 =
 			self.get_value_with_simple_type_chain_argument::<Option<_>>("FinalizedBeaconHeader");
 		let task1 =
@@ -291,13 +290,13 @@ impl EthClientPalletTrait for EthClientPallet {
 				next_sync_committee,
 			}),
 
-			_ => Err(Box::new(Error::Generic("Unable to obtain all values"))),
+			_ => Err(Error::Generic("Unable to obtain all values").into()),
 		}
 	}
 
 	async fn get_num_of_submitted_blocks_by_account(
 		&self,
-	) -> Result<u32, Box<dyn std::error::Error>> {
+	) -> Result<u32, crate::Error> {
 		let account_id = self.signer.account_id();
 		let count = self
 			.get_value_with_keys::<Option<u32>>(
@@ -310,7 +309,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		Ok(count)
 	}
 
-	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, Box<dyn std::error::Error>> {
+	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let ret = self
 			.get_value_with_simple_type_chain_argument::<u32>("MaxUnfinalizedBlocksPerSubmitter")
 			.await?;

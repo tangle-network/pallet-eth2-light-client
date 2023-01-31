@@ -11,7 +11,7 @@ pub struct LastSlotSearcher {
 	enable_binsearch: bool,
 }
 
-type EthClientContract = Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>;
+type EthClientContract = Box<dyn EthClientPalletTrait>;
 
 // Implementation of functions for searching last slot on NEAR contract
 impl LastSlotSearcher {
@@ -27,7 +27,7 @@ impl LastSlotSearcher {
 	) -> Result<u64, Box<dyn Error>> {
 		info!(target: "relay", "= Search for last slot on near =");
 
-		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await?;
+		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await.map_err(to_error)?;
 		let finalized_number = beacon_rpc_client.get_block_number_for_slot(finalized_slot)?;
 		info!(target: "relay", "Finalized slot/block_number on near={}/{}", finalized_slot, finalized_number);
 
@@ -444,7 +444,7 @@ impl LastSlotSearcher {
 						.as_bytes(),
 				);
 
-				if eth_client_contract.is_known_block(&hash).await? {
+				if eth_client_contract.is_known_block(&hash).await.map_err(to_error)? {
 					trace!(target: "relay", "Block with slot={} was found on NEAR", slot);
 					Ok(true)
 				} else {
@@ -1349,4 +1349,8 @@ mod tests {
 			panic!("binarysearch returns result in unworking network");
 		}
 	}
+}
+
+fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
+	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{:?}", t)))
 }

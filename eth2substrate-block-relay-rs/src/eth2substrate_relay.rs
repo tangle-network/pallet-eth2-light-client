@@ -45,7 +45,7 @@ macro_rules! return_on_fail {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                warn!(target: "relay", "{}. Error: {}", $msg, e);
+                warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 return;
             }
         }
@@ -69,7 +69,7 @@ macro_rules! return_on_fail_and_sleep {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                warn!(target: "relay", "{}. Error: {}", $msg, e);
+                warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 trace!(target: "relay", "Sleep {} secs before next loop", $sleep_time);
                 thread::sleep(Duration::from_secs($sleep_time));
                 return;
@@ -81,7 +81,7 @@ macro_rules! return_on_fail_and_sleep {
 pub struct Eth2SubstrateRelay {
 	beacon_rpc_client: BeaconRPCClient,
 	eth1_rpc_client: Eth1RPCClient,
-	eth_client_pallet: Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>,
+	eth_client_pallet: Box<dyn EthClientPalletTrait>,
 	headers_batch_size: u64,
 	bellatrix_fork_epoch: Epoch,
 	bellatrix_fork_version: ForkVersion,
@@ -102,7 +102,7 @@ pub struct Eth2SubstrateRelay {
 impl Eth2SubstrateRelay {
 	pub async fn init(
 		config: &Config,
-		eth_pallet: Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>,
+		eth_pallet: Box<dyn EthClientPalletTrait>,
 		enable_binsearch: bool,
 		submit_only_finalized_blocks: bool,
 	) -> Self {
@@ -150,7 +150,7 @@ impl Eth2SubstrateRelay {
 			.eth_client_pallet
 			.is_submitter_registered(None)
 			.await
-			.unwrap_or_else(|e| panic!("Failed to check if the submitter registered. Err {}", e))
+			.unwrap_or_else(|e| panic!("Failed to check if the submitter registered. Err {:?}", e))
 		{
 			eth2substrate_relay
 				.eth_client_pallet
@@ -213,7 +213,7 @@ impl Eth2SubstrateRelay {
 
 	async fn get_last_finalized_slot_on_substrate(&self) -> Result<u64, Box<dyn Error>> {
 		let last_finalized_slot_on_substrate =
-			self.eth_client_pallet.get_finalized_beacon_block_slot().await?;
+			self.eth_client_pallet.get_finalized_beacon_block_slot().await.map_err(to_error)?;
 		LAST_FINALIZED_ETH_SLOT_ON_NEAR.inc_by(cmp::max(
 			0,
 			last_finalized_slot_on_substrate as i64 - LAST_FINALIZED_ETH_SLOT_ON_NEAR.get(),
@@ -367,7 +367,7 @@ impl Eth2SubstrateRelay {
 		let mut current_slot = start_slot;
 
 		let remaining_headers = (self.max_submitted_blocks_by_account -
-			self.eth_client_pallet.get_num_of_submitted_blocks_by_account().await?)
+			self.eth_client_pallet.get_num_of_submitted_blocks_by_account().await.map_err(to_error)?)
 			as u64;
 
 		trace!(target: "relay", "remaining headers number {}", remaining_headers);
@@ -424,10 +424,10 @@ impl Eth2SubstrateRelay {
 		let signature_slot_period =
 			BeaconRPCClient::get_period_for_slot(light_client_update.signature_slot);
 		let finalized_slot_period = BeaconRPCClient::get_period_for_slot(
-			self.eth_client_pallet.get_finalized_beacon_block_slot().await?,
+			self.eth_client_pallet.get_finalized_beacon_block_slot().await.map_err(to_error)?,
 		);
 
-		let light_client_state = self.eth_client_pallet.get_light_client_state().await?;
+		let light_client_state = self.eth_client_pallet.get_light_client_state().await.map_err(to_error)?;
 
 		let sync_committee = if signature_slot_period == finalized_slot_period {
 			light_client_state.current_sync_committee
@@ -450,6 +450,10 @@ impl Eth2SubstrateRelay {
 			Err(err) => Err(err),
 		}
 	}
+}
+
+fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
+	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{:?}", t)))
 }
 
 // Implementation of functions for submitting light client updates
