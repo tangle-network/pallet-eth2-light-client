@@ -13,7 +13,7 @@ pub struct Eth2LightClientError {
 
 /// Interface for using Ethereum Light Client
 #[async_trait]
-pub trait EthClientPalletTrait {
+pub trait EthClientPalletTrait: Send + Sync + 'static {
 	/// Returns the last submitted slot by this relay
 	async fn get_last_submitted_slot(&self) -> u64;
 
