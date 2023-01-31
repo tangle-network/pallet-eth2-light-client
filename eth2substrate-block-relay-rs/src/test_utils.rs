@@ -232,7 +232,7 @@ fn get_init_config(
 pub async fn get_client_pallet(
 	from_file: bool,
 	config_for_test: &ConfigForTests,
-) -> Box<dyn EthClientPalletTrait<Error=Box<dyn std::error::Error>>> {
+) -> Box<dyn EthClientPalletTrait> {
 	let api = setup_api().await.unwrap();
 	let mut eth_client_pallet = EthClientPallet::new(api);
 
