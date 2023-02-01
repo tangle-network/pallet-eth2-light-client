@@ -17,12 +17,12 @@ use eth_types::{
 use funty::Fundamental;
 use log::trace;
 use reqwest::blocking::Client;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use serde_json::{json, Value};
 use std::{string::String, time::Duration};
 use types::{BeaconBlockBody, BeaconState, MainnetEthSpec};
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BeaconRPCVersion {
 	V1_1,
 	V1_2,

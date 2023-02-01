@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::{
 	error::Error,
 	fmt,
@@ -6,7 +6,7 @@ use std::{
 	str::FromStr,
 };
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SubstrateNetwork {
 	Mainnet,
 	Testnet,
