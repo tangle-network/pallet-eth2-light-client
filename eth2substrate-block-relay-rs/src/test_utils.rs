@@ -212,6 +212,9 @@ fn get_init_config(
 	eth_client_pallet: &EthClientPallet,
 ) -> eth2_pallet_init::config::Config {
 	eth2_pallet_init::config::Config {
+		enabled: true,
+		chain_id: 123,
+		name: "test config".into(),
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		signer_account_id: "alice".to_string(),

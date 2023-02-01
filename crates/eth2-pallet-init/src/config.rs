@@ -7,6 +7,9 @@ use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
+	pub enabled: bool,
+	pub name: String,
+	pub chain_id: u32,
 	// endpoint to a full node of Eth2 Beacon chain with Light Client API
 	pub beacon_endpoint: String,
 
