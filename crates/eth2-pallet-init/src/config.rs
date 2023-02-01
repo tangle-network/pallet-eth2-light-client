@@ -1,11 +1,11 @@
 use eth_rpc_client::beacon_rpc_client;
 use reqwest::Url;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::{io::Read, path::PathBuf};
 
 use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
 	pub enabled: bool,
 	pub name: String,
