@@ -12,8 +12,7 @@ use crate::{
 use bitvec::macros::internal::funty::Fundamental;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
-	beacon_rpc_client::BeaconRPCClient,
-	eth1_rpc_client::Eth1RPCClient,
+	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
 	hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 };
 use eth_types::{
@@ -451,7 +450,8 @@ impl Eth2SubstrateRelay {
 			self.genesis_validators_root,
 			light_client_update,
 			sync_committee,
-		).map_err(Into::into)
+		)
+		.map_err(Into::into)
 	}
 
 	async fn get_execution_block_by_slot(&self, slot: u64) -> Result<BlockHeader, crate::Error> {

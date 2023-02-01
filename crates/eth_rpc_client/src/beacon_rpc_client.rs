@@ -17,7 +17,7 @@ use eth_types::{
 use funty::Fundamental;
 use log::trace;
 use reqwest::blocking::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{string::String, time::Duration};
 use types::{BeaconBlockBody, BeaconState, MainnetEthSpec};
@@ -143,10 +143,7 @@ impl BeaconRPCClient {
 	///
 	/// * `period` - period id for which `LightClientUpdate` is fetched.
 	/// On Mainnet, one period consists of 256 epochs, and one epoch consists of 32 slots
-	pub fn get_light_client_update(
-		&self,
-		period: u64,
-	) -> Result<LightClientUpdate, crate::Error> {
+	pub fn get_light_client_update(&self, period: u64) -> Result<LightClientUpdate, crate::Error> {
 		let url = format!(
 			"{}/{}?start_period={}&count=1",
 			self.endpoint_url, self.routes.get_light_client_update, period
@@ -296,7 +293,7 @@ impl BeaconRPCClient {
 		let json_str = self.get_json_from_raw_request(&url_request)?;
 
 		let v: Value = serde_json::from_str(&json_str)?;
-		v["data"]["is_syncing"].as_bool().ok_or_else(||ErrorOnJsonParse.into())
+		v["data"]["is_syncing"].as_bool().ok_or_else(|| ErrorOnJsonParse.into())
 	}
 
 	fn get_json_from_client(client: &Client, url: &str) -> Result<String, crate::Error> {
@@ -352,10 +349,7 @@ impl BeaconRPCClient {
 	// `signature_slot` is not provided in the current API. The slot is brute-forced
 	// until `SyncAggregate` in `BeconBlockBody` in the current slot is equal
 	// to `SyncAggregate` in `LightClientUpdate`
-	fn get_signature_slot(
-		&self,
-		light_client_update_json_str: &str,
-	) -> Result<Slot, crate::Error> {
+	fn get_signature_slot(&self, light_client_update_json_str: &str) -> Result<Slot, crate::Error> {
 		const CHECK_SLOTS_FORWARD_LIMIT: u64 = 10;
 
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;

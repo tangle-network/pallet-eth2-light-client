@@ -1,9 +1,7 @@
 use crate::{
 	beacon_block_body_merkle_tree::BeaconStateMerkleTree,
 	beacon_rpc_client::BeaconRPCClient,
-	errors::{
-		ErrorOnUnwrapSignatureBit, MissNextSyncCommittee, MissSyncAggregationError,
-	},
+	errors::{ErrorOnUnwrapSignatureBit, MissNextSyncCommittee, MissSyncAggregationError},
 	execution_block_proof::ExecutionBlockProof,
 };
 use eth_types::{

@@ -1,5 +1,5 @@
 use eth2_pallet_init::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{env, io::Read, path::PathBuf};
 use webb_proposals::TypedChainId;
 

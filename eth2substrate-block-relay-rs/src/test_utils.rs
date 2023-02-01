@@ -179,6 +179,9 @@ pub async fn init_pallet_from_specific_slot(
 
 fn get_config(config_for_test: &ConfigForTests) -> Config {
 	Config {
+		enabled: true,
+		chain_id: 123,
+		name: "test config".into(),
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,

@@ -1,10 +1,13 @@
 use eth_rpc_client::beacon_rpc_client::BeaconRPCVersion;
 use reqwest::Url;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
+	pub enabled: bool,
+	pub name: String,
+	pub chain_id: u32,
 	// endpoint to a full node of Eth2 Beacon chain with Light Client API
 	pub beacon_endpoint: String,
 
