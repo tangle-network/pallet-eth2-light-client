@@ -53,6 +53,7 @@ pub async fn init_pallet(
 		);
 		assert!(config.verify_bls_signature.unwrap_or(false) || config.trusted_signer_account_id.is_some(), "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet");
 	}
+	info!(target: "relay", "=== Contract initialization RB0 ===");
 
 	let beacon_rpc_client = BeaconRPCClient::new(
 		&config.beacon_endpoint,
@@ -60,25 +61,33 @@ pub async fn init_pallet(
 		config.eth_requests_timeout_seconds.unwrap_or(10),
 		Some(config.beacon_rpc_version.clone()),
 	);
+	info!(target: "relay", "=== Contract initialization RB1 ===");
 	let eth1_rpc_client = Eth1RPCClient::new(&config.eth1_endpoint);
 
+	info!(target: "relay", "=== Contract initialization RB2 ===");
 	let light_client_update_with_next_sync_committee = beacon_rpc_client
 		.get_light_client_update_for_last_period()
 		.expect("Error on fetching finality light client update with sync committee update");
+		info!(target: "relay", "=== Contract initialization RB3 ===");
 	let finality_light_client_update = beacon_rpc_client
 		.get_finality_light_client_update()
 		.expect("Error on fetching finality light client update");
+		info!(target: "relay", "=== Contract initialization RB4 ===");
 
 	let finality_slot =
 		finality_light_client_update.finality_update.header_update.beacon_header.slot;
+
+		info!(target: "relay", "=== Contract initialization RB5 ===");
 
 	let block_id = format!("{}", finality_slot);
 
 	let finalized_header: ExtendedBeaconBlockHeader =
 		ExtendedBeaconBlockHeader::from(finality_light_client_update.finality_update.header_update);
+		info!(target: "relay", "=== Contract initialization RB6 ===");
 	let finalized_body = beacon_rpc_client
 		.get_beacon_block_body_for_block_id(&block_id)
 		.expect("Error on fetching finalized body");
+		info!(target: "relay", "=== Contract initialization RB7 ===");
 
 	let finalized_execution_header: BlockHeader = eth1_rpc_client
 		.get_block_header_by_number(
@@ -90,19 +99,27 @@ pub async fn init_pallet(
 		)
 		.expect("Error on fetching finalized execution header");
 
+		info!(target: "relay", "=== Contract initialization RB8 ===");
+
 	let next_sync_committee = light_client_update_with_next_sync_committee
 		.sync_committee_update
 		.expect("No sync_committee update in light client update")
 		.next_sync_committee;
+
+		info!(target: "relay", "=== Contract initialization RB9 ===");
 
 	let init_block_root = match config.init_block_root.clone() {
 		None => beacon_rpc_client.get_checkpoint_root().expect("Fail to get last checkpoint"),
 		Some(init_block_str) => init_block_str,
 	};
 
+	info!(target: "relay", "=== Contract initialization RB10 ===");
+
 	let light_client_snapshot = beacon_rpc_client
 		.get_bootstrap(init_block_root.clone())
 		.expect("Unable to fetch bootstrap state");
+
+		info!(target: "relay", "=== Contract initialization RB11 ===");
 
 	info!(target: "relay", "init_block_root: {}", init_block_root);
 
@@ -125,12 +142,16 @@ pub async fn init_pallet(
 		);
 	}
 
+	info!(target: "relay", "=== Contract initialization RB12 ===");
+
 	let typed_chain_id = match config.ethereum_network {
 		crate::eth_network::EthNetwork::Mainnet => TypedChainId::Evm(1),
 		crate::eth_network::EthNetwork::Kiln => TypedChainId::Evm(1337802),
 		crate::eth_network::EthNetwork::Ropsten => TypedChainId::Evm(3),
 		crate::eth_network::EthNetwork::Goerli => TypedChainId::Evm(5),
 	};
+
+	info!(target: "relay", "=== Contract initialization RB13 ===");
 
 	eth_client_pallet
 		.init(
@@ -147,6 +168,8 @@ pub async fn init_pallet(
 		)
 		.await
 		.unwrap();
+
+		info!(target: "relay", "=== Contract initialization RB14 ===");
 
 	tokio::time::sleep(time::Duration::from_secs(30)).await;
 	Ok(())
