@@ -319,7 +319,7 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn wait_for_synchronization(&self) -> Result<(), crate::Error> {
-		while self.beacon_rpc_client.is_syncing().await? || self.eth1_rpc_client.is_syncing()? {
+		while self.beacon_rpc_client.is_syncing().await? || self.eth1_rpc_client.is_syncing().await? {
 			info!(target: "relay", "Waiting for sync...");
 			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 		}
@@ -457,7 +457,7 @@ impl Eth2SubstrateRelay {
 
 	async fn get_execution_block_by_slot(&self, slot: u64) -> Result<BlockHeader, crate::Error> {
 		match self.beacon_rpc_client.get_block_number_for_slot(slot).await {
-			Ok(block_number) => self.eth1_rpc_client.get_block_header_by_number(block_number),
+			Ok(block_number) => self.eth1_rpc_client.get_block_header_by_number(block_number).await,
 			Err(err) => Err(err),
 		}
 	}

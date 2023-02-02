@@ -158,6 +158,7 @@ pub async fn init_pallet_from_specific_slot(
 		.get_block_header_by_number(
 			finalized_body.execution_payload().unwrap().execution_payload.block_number,
 		)
+		.await
 		.unwrap();
 
 	eth_client_pallet

@@ -1,5 +1,5 @@
 use eth_types::BlockHeader;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use serde_json::{json, Value};
 
 pub struct Eth1RPCClient {
@@ -9,10 +9,10 @@ pub struct Eth1RPCClient {
 
 impl Eth1RPCClient {
 	pub fn new(endpoint_url: &str) -> Self {
-		Self { endpoint_url: endpoint_url.to_string(), client: reqwest::blocking::Client::new() }
+		Self { endpoint_url: endpoint_url.to_string(), client: reqwest::Client::new() }
 	}
 
-	pub fn get_block_header_by_number(&self, number: u64) -> Result<BlockHeader, crate::Error> {
+	pub async fn get_block_header_by_number(&self, number: u64) -> Result<BlockHeader, crate::Error> {
 		let hex_str_number = format!("0x{:x}", number);
 		let json_value = json!({
 			"id": 0,
@@ -21,7 +21,7 @@ impl Eth1RPCClient {
 			"params": [hex_str_number, false]
 		});
 
-		let res = self.client.post(&self.endpoint_url).json(&json_value).send()?.text()?;
+		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
 
 		let val: Value = serde_json::from_str(&res)?;
 		let mut block_json = serde_json::to_string(&val["result"])?;
@@ -45,14 +45,14 @@ impl Eth1RPCClient {
 		Ok(block_header)
 	}
 
-	pub fn is_syncing(&self) -> Result<bool, crate::Error> {
+	pub async fn is_syncing(&self) -> Result<bool, crate::Error> {
 		let json_value = json!({
             "jsonrpc":"2.0",
             "method":"eth_syncing",
             "params":[],
             "id":1});
 
-		let res = self.client.post(&self.endpoint_url).json(&json_value).send()?.text()?;
+		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
 
 		let val: Value = serde_json::from_str(&res)?;
 		let is_sync = val["result"].as_bool();

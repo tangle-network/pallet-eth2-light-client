@@ -100,6 +100,7 @@ pub async fn init_pallet(
 				.execution_payload
 				.block_number,
 		)
+		.await
 		.expect("Error on fetching finalized execution header");
 
 		info!(target: "relay", "=== Contract initialization RB8 ===");
