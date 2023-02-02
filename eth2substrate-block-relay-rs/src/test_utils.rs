@@ -17,7 +17,7 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientUpdate, SyncCommittee},
 	BlockHeader,
 };
-use std::{thread, time};
+use std::time;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
@@ -97,7 +97,7 @@ pub async fn init_pallet_from_files(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 pub async fn init_pallet_from_specific_slot(
@@ -174,7 +174,7 @@ pub async fn init_pallet_from_specific_slot(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
+		tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 fn get_config(config_for_test: &ConfigForTests) -> Config {

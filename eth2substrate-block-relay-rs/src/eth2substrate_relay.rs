@@ -12,7 +12,8 @@ use crate::{
 use bitvec::macros::internal::funty::Fundamental;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
-	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
+	beacon_rpc_client::BeaconRPCClient,
+	eth1_rpc_client::Eth1RPCClient,
 	hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 };
 use eth_types::{
@@ -21,7 +22,7 @@ use eth_types::{
 };
 use finality_update_verify::network_config::{Network, NetworkConfig};
 use log::{debug, info, trace, warn};
-use std::{cmp, str::FromStr, thread, thread::sleep, time::Duration, vec::Vec};
+use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
 
 const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
@@ -32,7 +33,7 @@ macro_rules! skip_fail {
             Err(e) => {
                 warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 trace!(target: "relay", "Sleep {} secs before next loop", $sleep_time);
-                thread::sleep(Duration::from_secs($sleep_time));
+                tokio::time::sleep(Duration::from_secs($sleep_time)).await;
                 continue;
             }
         }
@@ -70,7 +71,7 @@ macro_rules! return_on_fail_and_sleep {
             Err(e) => {
                 warn!(target: "relay", "{}. Error: {:?}", $msg, e);
                 trace!(target: "relay", "Sleep {} secs before next loop", $sleep_time);
-                thread::sleep(Duration::from_secs($sleep_time));
+                tokio::time::sleep(Duration::from_secs($sleep_time)).await;
                 return;
             }
         }
@@ -268,7 +269,7 @@ impl Eth2SubstrateRelay {
 			);
 
 			info!(target: "relay", "== New relay loop ==");
-			sleep(Duration::from_secs(12));
+			tokio::time::sleep(Duration::from_secs(12)).await;
 
 			let max_slot_for_submission: u64 = skip_fail!(
 				self.get_max_slot_for_submission().await,
@@ -311,7 +312,7 @@ impl Eth2SubstrateRelay {
 
 			if !were_submission_on_iter {
 				info!(target: "relay", "Sync with ETH network. Sleep {} secs", self.sleep_time_on_sync_secs);
-				thread::sleep(Duration::from_secs(self.sleep_time_on_sync_secs));
+				tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 			}
 		}
 	}
@@ -319,7 +320,7 @@ impl Eth2SubstrateRelay {
 	async fn wait_for_synchronization(&self) -> Result<(), crate::Error> {
 		while self.beacon_rpc_client.is_syncing()? || self.eth1_rpc_client.is_syncing()? {
 			info!(target: "relay", "Waiting for sync...");
-			thread::sleep(Duration::from_secs(self.sleep_time_on_sync_secs));
+			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 		}
 		Ok(())
 	}
@@ -419,7 +420,7 @@ impl Eth2SubstrateRelay {
 		*last_eth2_slot_on_substrate = current_slot - 1;
 		// info!(target: "relay", "Successful headers submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",
 		//                           self.near_network_name, execution_outcome.transaction.hash);
-		thread::sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
+		tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 	}
 
 	async fn verify_bls_signature_for_finality_update(
@@ -450,8 +451,7 @@ impl Eth2SubstrateRelay {
 			self.genesis_validators_root,
 			light_client_update,
 			sync_committee,
-		)
-		.map_err(Into::into)
+		).map_err(Into::into)
 	}
 
 	async fn get_execution_block_by_slot(&self, slot: u64) -> Result<BlockHeader, crate::Error> {
@@ -710,7 +710,7 @@ impl Eth2SubstrateRelay {
 			);
 
 			info!(target: "relay", "Finalized block number from light client update = {}", finalized_block_number);
-			sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
+			tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 		} else {
 			debug!(target: "relay", "Finalized block for light client update is not found on NEAR. Skipping send light client update");
 		}
@@ -730,7 +730,7 @@ mod tests {
 		hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 	};
 	use eth_types::{eth2::LightClientUpdate, BlockHeader};
-	use std::{thread::sleep, time::Duration};
+	use std::time::Duration;
 	use tree_hash::TreeHash;
 
 	const TIMEOUT_SECONDS: u64 = 30;

@@ -8,7 +8,7 @@ use eth_rpc_client::{
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
 use sp_core::crypto::AccountId32;
-use std::{thread, time};
+use std::time;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
@@ -148,7 +148,7 @@ pub async fn init_pallet(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 	Ok(())
 }
 
