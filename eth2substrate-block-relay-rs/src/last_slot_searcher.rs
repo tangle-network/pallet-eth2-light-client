@@ -26,7 +26,7 @@ impl LastSlotSearcher {
 
 		let finalized_slot =
 			eth_client_contract.get_finalized_beacon_block_slot().await.map_err(to_error)?;
-		let finalized_number = beacon_rpc_client.get_block_number_for_slot(finalized_slot)?;
+		let finalized_number = beacon_rpc_client.get_block_number_for_slot(finalized_slot).await?;
 		info!(target: "relay", "Finalized slot/block_number on near={}/{}", finalized_slot, finalized_number);
 
 		let last_submitted_slot = eth_client_contract.get_last_submitted_slot().await;
@@ -430,7 +430,7 @@ impl LastSlotSearcher {
 		eth_client_contract: &EthClientContract,
 	) -> Result<bool, crate::Error> {
 		trace!(target: "relay", "Check if block with slot={} on NEAR", slot);
-		match beacon_rpc_client.get_beacon_block_body_for_block_id(&format!("{}", slot)) {
+		match beacon_rpc_client.get_beacon_block_body_for_block_id(&format!("{}", slot)).await {
 			Ok(beacon_block_body) => {
 				let hash: H256 = H256::from(
 					beacon_block_body
@@ -481,7 +481,7 @@ mod tests {
 		beacon_rpc_client: &BeaconRPCClient,
 		eth1_rpc_client: &Eth1RPCClient,
 	) -> Result<BlockHeader, crate::Error> {
-		match beacon_rpc_client.get_block_number_for_slot(slot) {
+		match beacon_rpc_client.get_block_number_for_slot(slot).await {
 			Ok(block_number) => eth1_rpc_client.get_block_header_by_number(block_number),
 			Err(err) => Err(err),
 		}

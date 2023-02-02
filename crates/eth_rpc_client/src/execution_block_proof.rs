@@ -214,6 +214,7 @@ mod tests {
 			.unwrap();
 		let beacon_block_header = beacon_rpc_client
 			.get_beacon_block_header_for_block_id(&format!("{}", config.first_slot))
+			.await
 			.unwrap();
 
 		let beacon_block_body_merkle_tree =

@@ -67,10 +67,12 @@ pub async fn init_pallet(
 	info!(target: "relay", "=== Contract initialization RB2 ===");
 	let light_client_update_with_next_sync_committee = beacon_rpc_client
 		.get_light_client_update_for_last_period()
+		.await
 		.expect("Error on fetching finality light client update with sync committee update");
 		info!(target: "relay", "=== Contract initialization RB3 ===");
 	let finality_light_client_update = beacon_rpc_client
 		.get_finality_light_client_update()
+		.await
 		.expect("Error on fetching finality light client update");
 		info!(target: "relay", "=== Contract initialization RB4 ===");
 
@@ -86,6 +88,7 @@ pub async fn init_pallet(
 		info!(target: "relay", "=== Contract initialization RB6 ===");
 	let finalized_body = beacon_rpc_client
 		.get_beacon_block_body_for_block_id(&block_id)
+		.await
 		.expect("Error on fetching finalized body");
 		info!(target: "relay", "=== Contract initialization RB7 ===");
 
@@ -109,7 +112,7 @@ pub async fn init_pallet(
 		info!(target: "relay", "=== Contract initialization RB9 ===");
 
 	let init_block_root = match config.init_block_root.clone() {
-		None => beacon_rpc_client.get_checkpoint_root().expect("Fail to get last checkpoint"),
+		None => beacon_rpc_client.get_checkpoint_root().await.expect("Fail to get last checkpoint"),
 		Some(init_block_str) => init_block_str,
 	};
 
@@ -117,6 +120,7 @@ pub async fn init_pallet(
 
 	let light_client_snapshot = beacon_rpc_client
 		.get_bootstrap(init_block_root.clone())
+		.await
 		.expect("Unable to fetch bootstrap state");
 
 		info!(target: "relay", "=== Contract initialization RB11 ===");
