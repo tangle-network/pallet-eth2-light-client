@@ -272,6 +272,7 @@ impl BeaconRPCClient {
 		&self,
 	) -> Result<LightClientUpdate, crate::Error> {
 		let last_period = Self::get_period_for_slot(self.get_last_slot_number().await?.as_u64());
+		log::info!(target: "relay", "=== Contract initialization RB2.1 ===");
 		self.get_light_client_update(last_period).await
 	}
 
@@ -330,7 +331,7 @@ impl BeaconRPCClient {
 		light_client_update_json_str: &str,
 	) -> Result<BeaconBlockHeader, crate::Error> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
-		let attested_header_json_str = serde_json::to_string(&v["data"][0]["attested_header"])?;
+		let attested_header_json_str = serde_json::to_string(&v["data"]["attested_header"])?;
 		let attested_header: BeaconBlockHeader = serde_json::from_str(&attested_header_json_str)?;
 
 		Ok(attested_header)
