@@ -191,6 +191,9 @@ impl BeaconRPCClient {
 
 		let light_client_snapshot_json_str = self.get_json_from_raw_request(&url).await?;
 		let parsed_json: Value = serde_json::from_str(&light_client_snapshot_json_str)?;
+
+		println!("PARSED STR: {light_client_snapshot_json_str}");
+
 		let beacon_header: BeaconBlockHeader =
 			serde_json::from_value(parsed_json[0]["data"]["header"].clone())?;
 		let current_sync_committee: SyncCommittee =
