@@ -347,7 +347,7 @@ impl BeaconRPCClient {
 		light_client_update_json_str: &str,
 	) -> Result<SyncAggregate, crate::Error> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
-		let sync_aggregate_json_str = serde_json::to_string(&v["data"][0]["sync_aggregate"])?;
+		let sync_aggregate_json_str = serde_json::to_string(&v[0]["data"]["sync_aggregate"])?;
 		let sync_aggregate: SyncAggregate = serde_json::from_str(&sync_aggregate_json_str)?;
 
 		Ok(sync_aggregate)
