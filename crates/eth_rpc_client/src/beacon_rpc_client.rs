@@ -420,7 +420,7 @@ impl BeaconRPCClient {
 	) -> Result<FinalizedHeaderUpdate, crate::Error> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 
-		let finalized_header_json_str = serde_json::to_string(&v[0]["data"]["finalized_header"])?;
+		let finalized_header_json_str = serde_json::to_string(&v[0]["data"]["finalized_header"]["beacon"])?;
 		let finalized_header: BeaconBlockHeader = serde_json::from_str(&finalized_header_json_str)?;
 
 		let finalized_branch_json_str = serde_json::to_string(&v[0]["data"]["finality_branch"])?;
