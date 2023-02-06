@@ -151,22 +151,41 @@ impl BeaconRPCClient {
 		println!("url: {}", url);
 		let light_client_update_json_str = self.get_json_from_raw_request(&url).await?;
 		println!("light_client_update_json_str: {}", light_client_update_json_str);
+		let attested_beacon_header = Self::get_attested_header_from_light_client_update_json_str(
+			&light_client_update_json_str,
+		)?;
+
+		println!("CFX");
+
+		let sync_aggregate =  Self::get_sync_aggregate_from_light_client_update_json_str(
+			&light_client_update_json_str,
+		)?;
+
+		println!("CFX-1");
+
+		let signature_slot = self.get_signature_slot(&light_client_update_json_str).await?;
+
+		println!("CFX-2");
+		let finality_update = self.get_finality_update_from_light_client_update_json_str(
+			&light_client_update_json_str,
+		).await?;
+
+		println!("CFX-3");
+
+		let sync_committee_update = Some(
+			Self::get_sync_committee_update_from_light_client_update_json_str(
+				&light_client_update_json_str,
+			)?,
+		);
+
+		println!("CFX-4");
+
 		Ok(LightClientUpdate {
-			attested_beacon_header: Self::get_attested_header_from_light_client_update_json_str(
-				&light_client_update_json_str,
-			)?,
-			sync_aggregate: Self::get_sync_aggregate_from_light_client_update_json_str(
-				&light_client_update_json_str,
-			)?,
-			signature_slot: self.get_signature_slot(&light_client_update_json_str).await?,
-			finality_update: self.get_finality_update_from_light_client_update_json_str(
-				&light_client_update_json_str,
-			).await?,
-			sync_committee_update: Some(
-				Self::get_sync_committee_update_from_light_client_update_json_str(
-					&light_client_update_json_str,
-				)?,
-			),
+			attested_beacon_header,
+			sync_aggregate,
+			signature_slot,
+			finality_update,
+			sync_committee_update,
 		})
 	}
 
