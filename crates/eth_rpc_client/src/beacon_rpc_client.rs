@@ -271,7 +271,9 @@ impl BeaconRPCClient {
 	pub async fn get_light_client_update_for_last_period(
 		&self,
 	) -> Result<LightClientUpdate, crate::Error> {
-		let last_period = Self::get_period_for_slot(self.get_last_slot_number().await?.as_u64());
+		let last_slot = self.get_last_slot_number().await?.as_u64();
+		log::info!(target: "relay", "=== Contract initialization RB2.0.1 ===");
+		let last_period = Self::get_period_for_slot();
 		log::info!(target: "relay", "=== Contract initialization RB2.1 ===");
 		self.get_light_client_update(last_period).await
 	}
