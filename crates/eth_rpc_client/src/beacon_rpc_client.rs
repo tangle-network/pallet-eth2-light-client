@@ -337,7 +337,7 @@ impl BeaconRPCClient {
 		println!("v['data'][0] = {}\n\n", serde_json::to_string(&v[0]["data"])?);
 		println!("v['data'][0]['attested_header'] = {}\n\n", serde_json::to_string(&v[0]["data"]["attested_header"])?);
 		println!("v['data'][0]['attested_header']['beacon'] = {}\n\n", serde_json::to_string(&v[0]["data"]["attested_header"]["beacon"])?);
-		let attested_header_json_str = serde_json::to_string(&v["data"][0]["attested_header"]["beacon"])?;
+		let attested_header_json_str = serde_json::to_string(&v[0]["data"]["attested_header"]["beacon"])?;
 		let attested_header: BeaconBlockHeader = serde_json::from_str(&attested_header_json_str)?;
 
 		Ok(attested_header)
