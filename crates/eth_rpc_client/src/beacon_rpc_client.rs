@@ -155,30 +155,21 @@ impl BeaconRPCClient {
 			&light_client_update_json_str,
 		)?;
 
-		println!("CFX");
-
 		let sync_aggregate =  Self::get_sync_aggregate_from_light_client_update_json_str(
 			&light_client_update_json_str,
 		)?;
 
-		println!("CFX-1");
-
 		let signature_slot = self.get_signature_slot(&light_client_update_json_str).await?;
 
-		println!("CFX-2");
 		let finality_update = self.get_finality_update_from_light_client_update_json_str(
 			&light_client_update_json_str,
 		).await?;
-
-		println!("CFX-3");
 
 		let sync_committee_update = Some(
 			Self::get_sync_committee_update_from_light_client_update_json_str(
 				&light_client_update_json_str,
 			)?,
 		);
-
-		println!("CFX-4");
 
 		Ok(LightClientUpdate {
 			attested_beacon_header,
@@ -264,7 +255,9 @@ impl BeaconRPCClient {
 
 		let light_client_update_json_str = self.get_json_from_raw_request(&url).await?;
 		let v: Value = serde_json::from_str(&light_client_update_json_str)?;
-		let light_client_update_json_str = serde_json::to_string(&json!({"data": [v["data"]]}))?;
+		let light_client_update_json_str = serde_json::to_string(&json!({["data": [v[0]["data"]]]}))?;
+
+		println!("LC str: {light_client_update_json_str}");
 
 		Ok(LightClientUpdate {
 			attested_beacon_header: Self::get_attested_header_from_light_client_update_json_str(
