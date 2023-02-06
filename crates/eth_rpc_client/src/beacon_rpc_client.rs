@@ -334,7 +334,7 @@ impl BeaconRPCClient {
 	) -> Result<BeaconBlockHeader, crate::Error> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 		println!("v = {}\n\n", serde_json::to_string(&v)?);
-		println!("v['data'] = {}\n\n", serde_json::to_string(&v["data"])?);
+		println!("v['data'] = {}\n\n", serde_json::to_string(&v[0]["data"])?);
 		println!("v['data'][0] = {}\n\n", serde_json::to_string(&v["data"][0])?);
 		println!("v['data'][0]['attested_header'] = {}\n\n", serde_json::to_string(&v["data"][0]["attested_header"])?);
 		println!("v['data'][0]['attested_header']['beacon'] = {}\n\n", serde_json::to_string(&v["data"][0]["attested_header"]["beacon"])?);
