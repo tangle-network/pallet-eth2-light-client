@@ -81,7 +81,7 @@ impl EthClientPallet {
 			.tx()
 			.sign_and_submit_default(&tx, &self.signer)
 			.await
-			.map_err(|_| Error::Generic("Failed to get hash storage value"))?;
+			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))))?;
 
 		Ok(())
 	}
