@@ -13,6 +13,7 @@ impl Eth1RPCClient {
 	}
 
 	pub async fn get_block_header_by_number(&self, number: u64) -> Result<BlockHeader, crate::Error> {
+		println!("KB0");
 		let hex_str_number = format!("0x{:x}", number);
 		let json_value = json!({
 			"id": 0,
@@ -23,8 +24,9 @@ impl Eth1RPCClient {
 
 		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
 
+		println!("KB1 {res}");
 		let val: Value = serde_json::from_str(&res)?;
-		println!("RES: {}",serde_json::to_string(&val)?);
+		println!("KB2: {}",serde_json::to_string(&val)?);
 		let mut block_json = serde_json::to_string(&val["result"])?;
 
 		block_json = block_json.replace("baseFeePerGas", "base_fee_per_gas");
