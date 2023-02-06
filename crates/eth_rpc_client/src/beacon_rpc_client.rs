@@ -192,11 +192,11 @@ impl BeaconRPCClient {
 		let light_client_snapshot_json_str = self.get_json_from_raw_request(&url).await?;
 		let parsed_json: Value = serde_json::from_str(&light_client_snapshot_json_str)?;
 		let beacon_header: BeaconBlockHeader =
-			serde_json::from_value(parsed_json["data"]["header"].clone())?;
+			serde_json::from_value(parsed_json[0]["data"]["header"].clone())?;
 		let current_sync_committee: SyncCommittee =
-			serde_json::from_value(parsed_json["data"]["current_sync_committee"].clone())?;
+			serde_json::from_value(parsed_json[0]["data"]["current_sync_committee"].clone())?;
 		let current_sync_committee_branch: Vec<H256> =
-			serde_json::from_value(parsed_json["data"]["current_sync_committee_branch"].clone())?;
+			serde_json::from_value(parsed_json[0]["data"]["current_sync_committee_branch"].clone())?;
 
 		Ok(LightClientSnapshotWithProof {
 			beacon_header,
