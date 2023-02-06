@@ -24,6 +24,7 @@ impl Eth1RPCClient {
 		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
 
 		let val: Value = serde_json::from_str(&res)?;
+		println!("RES: {}",serde_json::to_string(&val)?);
 		let mut block_json = serde_json::to_string(&val["result"])?;
 
 		block_json = block_json.replace("baseFeePerGas", "base_fee_per_gas");
