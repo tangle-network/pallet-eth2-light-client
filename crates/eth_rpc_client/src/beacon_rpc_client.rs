@@ -190,6 +190,7 @@ impl BeaconRPCClient {
 		let url = format!("{}/{}/{}", self.endpoint_url, self.routes.get_bootstrap, block_root);
 
 		let light_client_snapshot_json_str = self.get_json_from_raw_request(&url).await?;
+		println!("LCU: {light_client_snapshot_json_str}");
 		let parsed_json: Value = serde_json::from_str(&light_client_snapshot_json_str)?;
 
 		let beacon_header: BeaconBlockHeader =
