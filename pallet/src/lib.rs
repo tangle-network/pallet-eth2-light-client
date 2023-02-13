@@ -348,10 +348,11 @@ pub mod pallet {
 		#[pallet::call_index(0)]
 		pub fn init(
 			origin: OriginFor<T>,
-			typed_chain_id: TypedChainId,
+			typed_chain_id: u64,
 			args: Box<InitInput<T::AccountId>>,
 		) -> DispatchResultWithPostInfo {
 			let signer = ensure_signed(origin)?;
+			let typed_chain_id = TypedChainId::from(typed_chain_id);
 			let min_storage_balance_for_submitter =
 				Self::calculate_min_storage_balance_for_submitter(
 					args.max_submitted_blocks_by_account,
