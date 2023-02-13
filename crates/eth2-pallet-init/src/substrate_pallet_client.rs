@@ -71,9 +71,14 @@ impl EthClientPallet {
 			max_submitted_blocks_by_account: max_submitted_blocks_by_account.unwrap_or(10),
 			trusted_signer,
 		};
+
+		let fields = vec![
+			("typedChainId", Value::unnamed_variant("Evm", [Value::from_bytes(typed_chain_id.underlying_chain_id().encode())])),
+			("args", Value::from_bytes(init_input.encode()))
+		];
 		// Create a transaction to submit:
 		let tx =
-			subxt::dynamic::tx("Eth2Client", "init", vec![Value::from_bytes(typed_chain_id.encode()), Value::from_bytes(init_input.encode())]);
+			subxt::dynamic::tx("Eth2Client", "init", fields);
 
 		// submit the transaction with default params:
 		let _hash = self
