@@ -73,7 +73,7 @@ impl EthClientPallet {
 		};
 
 		let fields = vec![
-			("typed_chain_id", Value::unnamed_composite([Value::u128(typed_chain_id.underlying_chain_id() as u128)])),
+			("typed_chain_id", Value::from_bytes(typed_chain_id.underlying_chain_id().encode())),
 			("args", Value::from_bytes(init_input.encode()))
 		];
 		// Create a transaction to submit:
