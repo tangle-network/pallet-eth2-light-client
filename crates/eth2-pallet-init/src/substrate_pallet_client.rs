@@ -49,7 +49,7 @@ impl EthClientPallet {
 
 	pub async fn init(
 		&self,
-		_typed_chain_id: TypedChainId,
+		typed_chain_id: TypedChainId,
 		finalized_execution_header: BlockHeader,
 		finalized_beacon_header: ExtendedBeaconBlockHeader,
 		current_sync_committee: SyncCommittee,
@@ -73,7 +73,7 @@ impl EthClientPallet {
 		};
 		// Create a transaction to submit:
 		let tx =
-			subxt::dynamic::tx("Eth2Client", "init", vec![Value::from_bytes(init_input.encode())]);
+			subxt::dynamic::tx("Eth2Client", "init", vec![Value::from_bytes(typed_chain_id.encode()), Value::from_bytes(init_input.encode())]);
 
 		// submit the transaction with default params:
 		let _hash = self
