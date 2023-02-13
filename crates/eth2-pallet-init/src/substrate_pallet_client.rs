@@ -74,8 +74,8 @@ impl EthClientPallet {
 
 		let fields = vec![
 			//("typed_chain_id", Value::u128(typed_chain_id.underlying_chain_id() as u128)),
-			Value::u128(typed_chain_id.chain_id() as u128),
-			Value::from_bytes(init_input.encode())
+			("typed_chain_id", Value::u128(typed_chain_id.chain_id() as u128)),
+			("args", Value::from_bytes(init_input.encode()))
 		];
 		// Create a transaction to submit:
 		let tx =
