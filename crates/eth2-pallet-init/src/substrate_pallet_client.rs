@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
-	pallet::{ExecutionHeaderInfo, InitInput},
+	pallet::ExecutionHeaderInfo,
 	BlockHeader,
 };
 use sp_core::crypto::AccountId32;
@@ -60,11 +60,18 @@ impl EthClientPallet {
 		max_submitted_blocks_by_account: Option<u32>,
 		trusted_signer: Option<AccountId32>,
 	) -> Result<(), Error> {
-		let init_input: InitInput<AccountId32> = InitInput {
-			finalized_execution_header,
-			finalized_beacon_header,
-			current_sync_committee,
-			next_sync_committee,
+		let trusted_signer = if let Some(trusted_signer) = trusted_signer {
+			let bytes: [u8;32] = *trusted_signer.as_ref();
+			Some(subxt::ext::sp_runtime::AccountId32::from(bytes))
+		} else {
+			None
+		};
+
+		let init_input: tangle::runtime_types::eth_types::pallet::InitInput<subxt::ext::sp_runtime::AccountId32> = tangle::runtime_types::eth_types::pallet::InitInput {
+			finalized_execution_header: Decode::decode(&mut finalized_execution_header.encode().as_slice())?,
+			finalized_beacon_header: Decode::decode(&mut finalized_beacon_header.encode().as_slice())?,
+			current_sync_committee: Decode::decode(&mut current_sync_committee.encode().as_slice())?,
+			next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice())?,
 			validate_updates: validate_updates.unwrap_or(true),
 			verify_bls_signatures: verify_bls_signatures.unwrap_or(true),
 			hashes_gc_threshold: hashes_gc_threshold.unwrap_or(100),
@@ -72,14 +79,7 @@ impl EthClientPallet {
 			trusted_signer,
 		};
 
-		let fields = vec![
-			//("typed_chain_id", Value::u128(typed_chain_id.underlying_chain_id() as u128)),
-			("typed_chain_id", Value::u128(typed_chain_id.chain_id() as u128)),
-			("args", Value::from_bytes(init_input.encode()))
-		];
-		// Create a transaction to submit:
-		let tx =
-			subxt::dynamic::tx("Eth2Client", "init", fields);
+		let tx = tangle::tx().eth2_client().init(typed_chain_id.chain_id(), init_input);
 
 		// submit the transaction with default params:
 		let _hash = self
@@ -319,3 +319,6 @@ impl EthClientPalletTrait for EthClientPallet {
 		Ok(ret)
 	}
 }
+
+#[subxt::subxt(runtime_metadata_path = "../../metadata/eth_light_client_runtime.scale")]
+pub mod tangle {}
