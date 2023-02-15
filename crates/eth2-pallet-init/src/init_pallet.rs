@@ -45,7 +45,6 @@ pub async fn init_pallet(
 	eth_client_pallet: &mut EthClientPallet,
 ) -> Result<(), Box<dyn std::error::Error>> {
 	info!(target: "relay", "=== Contract initialization ===");
-
 	if let SubstrateNetwork::Mainnet = config.substrate_network_id {
 		assert!(
 			config.validate_updates.unwrap_or(true),

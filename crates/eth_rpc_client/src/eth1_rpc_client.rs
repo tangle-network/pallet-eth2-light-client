@@ -29,6 +29,7 @@ impl Eth1RPCClient {
 		println!("KB2: {}",serde_json::to_string(&val)?);
 		let mut block_json = serde_json::to_string(&val["result"])?;
 
+		// TODO: use aliases instead for deserialization
 		block_json = block_json.replace("baseFeePerGas", "base_fee_per_gas");
 		block_json = block_json.replace("extraData", "extra_data");
 		block_json = block_json.replace("gasLimit", "gas_limit");

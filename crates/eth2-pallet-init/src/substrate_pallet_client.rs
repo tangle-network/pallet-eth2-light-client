@@ -18,6 +18,7 @@ use webb::substrate::{
 };
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
+use subxt::ext::sp_core::Pair as PairT;
 
 use crate::{
 	eth_client_pallet_trait::{Balance, EthClientPalletTrait},
@@ -39,8 +40,17 @@ pub struct EthClientPallet {
 
 impl EthClientPallet {
 	pub fn new(api: OnlineClient<PolkadotConfig>) -> Self {
-		let signer = PairSigner::new(sp_keyring::AccountKeyring::Alice.pair());
+		Self::new_with_pair(api, sp_keyring::AccountKeyring::Alice.pair())
+	}
+
+	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
+		let signer = PairSigner::new(pair);
 		Self { api, signer, chain: TypedChainId::Evm(5) }
+	}
+
+	pub fn new_with_suri_key<T: AsRef<str>>(api: OnlineClient<PolkadotConfig>, suri_key: T) -> Result<Self, crate::Error> {
+		let pair = get_sr25519_keys_from_suri(suri_key)?;
+		Ok(Self::new_with_pair(api, pair))
 	}
 
 	pub fn get_signer_account_id(&self) -> AccountId32 {
@@ -317,6 +327,39 @@ impl EthClientPalletTrait for EthClientPallet {
 			.await?;
 
 		Ok(ret)
+	}
+}
+
+fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Error> {
+	let value = suri.as_ref();
+	if value.starts_with('$') {
+		// env
+		let var = value.strip_prefix('$').unwrap_or(value);
+		log::trace!("Reading {} from env", var);
+		let val = std::env::var(var).map_err(|e| {
+			crate::Error::from(format!(
+				"error while loading this env {var}: {e}",
+			))
+		})?;
+		let maybe_pair =
+			Pair::from_string_with_seed(&val, None);
+		match maybe_pair {
+			Ok((pair, _)) => Ok(pair),
+			Err(e) => {
+				Err(format!("{e:?}").into())
+			}
+		}
+	} else if value.starts_with('>') {
+		todo!("Implement command execution to extract the private key")
+	} else {
+		let maybe_pair =
+			Pair::from_string_with_seed(value, None);
+		match maybe_pair {
+			Ok((pair, _)) => Ok(pair),
+			Err(e) => {
+				Err(format!("{e:?}").into())
+			}
+		}
 	}
 }
 
