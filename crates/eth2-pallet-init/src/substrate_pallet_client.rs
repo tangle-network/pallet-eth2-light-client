@@ -344,7 +344,7 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 		let maybe_pair =
 			Pair::from_string(&val, None);
 		match maybe_pair {
-			Ok((pair, _)) => Ok(pair),
+			Ok(pair) => Ok(pair),
 			Err(e) => {
 				Err(format!("{e:?}").into())
 			}
@@ -355,7 +355,7 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 		let maybe_pair =
 			Pair::from_string(value, None);
 		match maybe_pair {
-			Ok((pair, _)) => Ok(pair),
+			Ok(pair) => Ok(pair),
 			Err(e) => {
 				Err(format!("{e:?}").into())
 			}
