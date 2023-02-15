@@ -342,7 +342,7 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 			))
 		})?;
 		let maybe_pair =
-			Pair::from_string_with_seed(&val, None);
+			Pair::from_string(&val, None);
 		match maybe_pair {
 			Ok((pair, _)) => Ok(pair),
 			Err(e) => {
@@ -353,7 +353,7 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 		todo!("Implement command execution to extract the private key")
 	} else {
 		let maybe_pair =
-			Pair::from_string_with_seed(value, None);
+			Pair::from_string(value, None);
 		match maybe_pair {
 			Ok((pair, _)) => Ok(pair),
 			Err(e) => {
