@@ -7,7 +7,7 @@ use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 	eth_network::EthNetwork,
 	init_pallet::init_pallet,
-	substrate_pallet_client::{setup_api, EthClientPallet},
+	substrate_pallet_client::{setup_api, EthClientPallet}, substrate_network::SubstrateNetwork,
 };
 use eth_rpc_client::{
 	beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion},
@@ -207,6 +207,11 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
 		substrate_network_name: config_for_test.substrate_network_id.to_string(),
+		init_block_root: None,
+		substrate_network_id: SubstrateNetwork::Testnet,
+		trusted_signer_account_id: None,
+		validate_bls_signature: None,
+		validate_updates: None
 	}
 }
 
