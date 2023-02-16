@@ -467,7 +467,6 @@ mod tests {
 	use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 	use eth_rpc_client::{beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient};
 	use eth_types::BlockHeader;
-	use std::error::Error;
 
 	const TIMEOUT_SECONDS: u64 = 30;
 	const TIMEOUT_STATE_SECONDS: u64 = 1000;
@@ -482,14 +481,14 @@ mod tests {
 		eth1_rpc_client: &Eth1RPCClient,
 	) -> Result<BlockHeader, crate::Error> {
 		match beacon_rpc_client.get_block_number_for_slot(slot).await {
-			Ok(block_number) => eth1_rpc_client.get_block_header_by_number(block_number),
+			Ok(block_number) => eth1_rpc_client.get_block_header_by_number(block_number).await,
 			Err(err) => Err(err),
 		}
 	}
 
 	async fn send_execution_blocks(
 		beacon_rpc_client: &BeaconRPCClient,
-		eth_client_contract: &mut Box<dyn EthClientPalletTrait<Error = Box<dyn std::error::Error>>>,
+		eth_client_contract: &mut Box<dyn EthClientPalletTrait>,
 		eth1_rpc_client: &Eth1RPCClient,
 		start_slot: u64,
 		end_slot: u64,

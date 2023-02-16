@@ -727,7 +727,7 @@ mod tests {
 		test_utils::{get_relay, get_relay_from_slot, get_relay_with_update_from_file},
 	};
 	use eth_rpc_client::{
-		beacon_rpc_client::BeaconRPCClient, errors::NoBlockForSlotError,
+		beacon_rpc_client::BeaconRPCClient,
 		hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 	};
 	use eth_types::{eth2::LightClientUpdate, BlockHeader};
@@ -755,9 +755,9 @@ mod tests {
 					blocks.push(block);
 					slot += 1;
 				},
-				Err(err) => match err.downcast_ref::<NoBlockForSlotError>() {
+				Err(err) => match err.is_no_block_for_slot_error.as_ref() {
 					Some(_) => slot += 1,
-					None => sleep(Duration::from_secs(10)),
+					None => tokio::time::sleep(Duration::from_secs(10)).await,
 				},
 			}
 		}
@@ -772,7 +772,7 @@ mod tests {
 		let mut slot = finality_slot + 1;
 
 		let mut finality_slot_on_eth =
-			relay.beacon_rpc_client.get_last_finalized_slot_number().unwrap().as_u64();
+			relay.beacon_rpc_client.get_last_finalized_slot_number().await.unwrap().as_u64();
 
 		let mut blocks: Vec<BlockHeader> = vec![];
 		while finality_slot == finality_slot_on_eth || slot <= finality_slot_on_eth {
@@ -782,7 +782,7 @@ mod tests {
 			slot += 1;
 
 			finality_slot_on_eth = loop {
-				if let Ok(last_slot) = relay.beacon_rpc_client.get_last_finalized_slot_number() {
+				if let Ok(last_slot) = relay.beacon_rpc_client.get_last_finalized_slot_number().await {
 					break last_slot.as_u64()
 				}
 			}
@@ -992,7 +992,7 @@ mod tests {
 		if let Err(err) =
 			relay.get_execution_block_by_slot(config_for_test.slot_without_block).await
 		{
-			if err.downcast_ref::<NoBlockForSlotError>().is_none() {
+			if err.is_no_block_for_slot_error.is_none() {
 				panic!("Wrong error type for slot without block");
 			}
 		} else {
@@ -1008,7 +1008,7 @@ mod tests {
 		if let Err(err) =
 			relay.get_execution_block_by_slot(config_for_test.slot_without_block).await
 		{
-			if err.downcast_ref::<NoBlockForSlotError>().is_some() {
+			if err.is_no_block_for_slot_error.is_some() {
 				panic!("Wrong error type for unworking network");
 			}
 		} else {
