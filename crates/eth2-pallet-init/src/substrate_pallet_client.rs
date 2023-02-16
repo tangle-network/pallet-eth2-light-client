@@ -352,13 +352,8 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 	} else if value.starts_with('>') {
 		todo!("Implement command execution to extract the private key")
 	} else {
-		let input = if value.contains('/') {
-			value.split('/').next().unwrap()
-		} else {
-			value
-		};
 		let maybe_pair =
-			Pair::from_string(input, None);
+			Pair::from_string(value, None);
 		match maybe_pair {
 			Ok(pair) => Ok(pair),
 			Err(e) => {
