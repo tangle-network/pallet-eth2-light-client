@@ -175,7 +175,6 @@ pub async fn init_pallet(
 
 		info!(target: "relay", "=== Contract initialization RB14 ===");
 
-	tokio::time::sleep(time::Duration::from_secs(30)).await;
 	Ok(())
 }
 
