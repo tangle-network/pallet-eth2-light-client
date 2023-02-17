@@ -2,18 +2,19 @@ use async_trait::async_trait;
 
 use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
-	pallet::ExecutionHeaderInfo,
-	BlockHeader,
+	BlockHeader, H256,
 };
 use sp_core::crypto::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
 		self,
+		storage::address::Yes,
+		metadata::DecodeWithMetadata,
 		dynamic::{DecodedValueThunk, Value},
 		ext::sp_core::sr25519::Pair,
-		tx::PairSigner,
-		OnlineClient, PolkadotConfig,
+		tx::{PairSigner, TxPayload},
+		OnlineClient, PolkadotConfig, storage::StorageAddress,
 	},
 };
 use webb_proposals::TypedChainId;
@@ -21,7 +22,7 @@ use webb_relayer_utils::Error;
 use subxt::ext::sp_core::Pair as PairT;
 
 use crate::{
-	eth_client_pallet_trait::{Balance, EthClientPalletTrait},
+	eth_client_pallet_trait::EthClientPalletTrait,
 	misc::AsValue,
 };
 
@@ -97,12 +98,7 @@ impl EthClientPallet {
 		let tx = tangle::tx().eth2_client().init(typed_chain_id.chain_id(), init_input);
 
 		// submit the transaction with default params:
-		let _hash = self
-			.api
-			.tx()
-			.sign_and_submit_default(&tx, &self.signer)
-			.await
-			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))))?;
+		let _hash = self.submit(&tx).await.map_err(|err|Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("{err:?}"))))?;
 
 		Ok(())
 	}
@@ -111,6 +107,7 @@ impl EthClientPallet {
 		&self,
 		typed_chain_id: TypedChainId,
 	) -> Result<u64, Error> {
+		//let addr = tangle::storage().eth2_client().finalized_beacon_header(0);
 		let storage_address = subxt::dynamic::storage(
 			"Eth2Client",
 			"FinalizedHeaderUpdate",
@@ -124,33 +121,35 @@ impl EthClientPallet {
 		Ok(0)
 	}
 
-	// Gets a value from subxt storage with multiple arguments
-	async fn get_value_with_keys<T: Decode>(
-		&self,
-		entry_name: &str,
-		keys: impl Into<Vec<Value>>,
-	) -> Result<T, Error> {
-		let storage_address = subxt::dynamic::storage("Eth2Client", entry_name, keys.into());
+	async fn get_value_or_default<'a, Address: StorageAddress>(&self, key_addr: &Address) -> Result<<Address::Target as DecodeWithMetadata>::Target, crate::Error> 
+		where
+		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a {
+		let value = self.api.storage().fetch_or_default(key_addr, None)
+			.await
+			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
+	
+		Ok(value)
+	}
 
-		let maybe_existant_value: DecodedValueThunk = self
-			.api
-			.storage()
-			.fetch_or_default(&storage_address, None)
+	async fn get_value<'a, Address: StorageAddress>(&self, key_addr: &Address) -> Result<Option<<Address::Target as DecodeWithMetadata>::Target>, crate::Error> 
+		where
+		Address: StorageAddress<IsFetchable = Yes> + 'a {
+		let value = self.api.storage().fetch(key_addr, None)
 			.await
 			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
 
-		let finalized_value: T = T::decode(&mut maybe_existant_value.encoded())?;
-
-		Ok(finalized_value)
+		Ok(value)
 	}
 
-	// Gets a value from subxt storage where the only input argument is the type chain id
-	async fn get_value_with_simple_type_chain_argument<T: Decode>(
-		&self,
-		entry_name: &str,
-	) -> Result<T, Error> {
-		self.get_value_with_keys::<T>(entry_name, [self.get_type_chain_argument()])
+	async fn submit<Call: TxPayload>(&self, call: &Call) -> Result<H256, crate::Error> {
+		let hash = self
+			.api
+			.tx()
+			.sign_and_submit_default(call, &self.signer)
 			.await
+			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))))?;
+		
+		Ok(hash.0.into())
 	}
 
 	fn get_type_chain_argument(&self) -> Value {
@@ -170,59 +169,31 @@ impl EthClientPalletTrait for EthClientPallet {
 		&self,
 		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, crate::Error> {
-		let exists = self
-			.get_value_with_keys::<Option<ExecutionHeaderInfo<AccountId32>>>(
-				"UnfinalizedHeaders",
-				vec![self.get_type_chain_argument(), execution_block_hash.as_value()],
-			)
-			.await
-			.map(|r| r.is_some())?;
-
-		Ok(exists)
+		let decoded: tangle::runtime_types::eth_types::H256 = Decode::decode(&mut execution_block_hash.encode().as_slice()).unwrap();
+		let addr = tangle::storage().eth2_client().unfinalized_headers(self.chain, decoded);
+		self.get_value(&addr)
+		.await.map(|r| r.is_some())
 	}
 
 	async fn send_light_client_update(
 		&mut self,
 		light_client_update: LightClientUpdate,
 	) -> Result<(), crate::Error> {
-		let tx = subxt::dynamic::tx(
-			"Eth2Client",
-			// Name of the transaction in the pallet/src/lib.rs
-			"submit_beacon_chain_light_client_update",
-			vec![self.get_type_chain_argument(), light_client_update.as_value()],
-		);
-
-		let tx_hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
-		println!("Submitted tx with hash {tx_hash}");
-		Ok(())
+		let decoded_lcu = Decode::decode(&mut light_client_update.encode().as_slice()).unwrap();
+		let call = tangle::tx().eth2_client().submit_beacon_chain_light_client_update(self.chain, decoded_lcu);
+		self.submit(&call).await.map(|_|())
 	}
 
 	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, crate::Error> {
-		let extended_beacon_header = self
-			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
-				"FinalizedBeaconHeader",
-			)
-			.await?;
-
-		if let Some(extended_beacon_header) = extended_beacon_header {
-			Ok(extended_beacon_header.beacon_block_root)
-		} else {
-			Err(Error::Generic("Unable to obtain ExtendedBeaconBlockHeader").into())
-		}
+		let addr = tangle::storage().eth2_client().finalized_beacon_header(self.chain);
+		self.get_value(&addr).await
+			.map(|r| eth_types::H256::from(r.unwrap().beacon_block_root.0))
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
-		let finalized_beacon_header_value = self
-			.get_value_with_simple_type_chain_argument::<Option<ExtendedBeaconBlockHeader>>(
-				"FinalizedBeaconHeader",
-			)
-			.await?;
-
-		if let Some(finalized_beacon_header_value) = finalized_beacon_header_value {
-			Ok(finalized_beacon_header_value.header.slot)
-		} else {
-			Err(Error::Generic("Unable to obtain FinalizedBeaconHeader").into())
-		}
+		let addr = tangle::storage().eth2_client().finalized_beacon_header(self.chain);
+		self.get_value(&addr).await
+			.map(|r| r.unwrap().header.slot)
 	}
 
 	async fn send_headers(
@@ -232,106 +203,93 @@ impl EthClientPalletTrait for EthClientPallet {
 	) -> Result<(), crate::Error> {
 		let mut txes = vec![];
 		for header in headers {
-			let tx = subxt::dynamic::tx(
-				"Eth2Client",
-				"submit_execution_header",
-				vec![self.get_type_chain_argument(), header.as_value()],
-			);
+			let decoded_header = Decode::decode(&mut header.encode().as_slice()).unwrap();
+			let tx = tangle::tx().eth2_client().submit_execution_header(self.chain, decoded_header);
 			txes.push(tx);
 		}
 
-		let batch_tx = subxt::dynamic::tx(
+		/*let batch_tx = subxt::dynamic::tx(
 			"Utility",
 			"batch",
 			txes.into_iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
-		);
+		);*/
+		let batch_call = tangle::utility::calls::Batch { calls: txes };
 
-		let _tx_hash = self.api.tx().sign_and_submit_default(&batch_tx, &self.signer).await?;
-		Ok(())
+		self.submit(&batch_call).await
+			.map(|_| ())
 	}
 
 	async fn get_min_deposit(
 		&self,
 	) -> Result<crate::eth_client_pallet_trait::Balance, crate::Error> {
-		let ret = self
-			.get_value_with_simple_type_chain_argument::<Balance>("MinSubmitterBalance")
-			.await?;
-
-		Ok(ret)
+		let addr = tangle::storage().eth2_client().min_submitter_balance(self.chain);
+		self.get_value_or_default(&addr).await
 	}
 
 	async fn register_submitter(&self) -> Result<(), crate::Error> {
-		// Create a transaction to submit:
-		let tx =
-			subxt::dynamic::tx("Eth2Client", "register_submitter", vec![Value::from_bytes(&[])]);
-
-		// submit the transaction with default params:
-		let _hash = self.api.tx().sign_and_submit_default(&tx, &self.signer).await?;
-		Ok(())
+		let tx = tangle::tx().eth2_client().register_submitter(self.chain);
+		self.submit(&tx).await
+			.map(|_| ())
 	}
 
 	async fn is_submitter_registered(
 		&self,
 		account_id: Option<AccountId32>,
 	) -> Result<bool, crate::Error> {
-		let exists = self
-			.get_value_with_keys::<Option<u32>>(
-				"Submitters",
-				vec![self.get_type_chain_argument(), account_id.as_value()],
-			)
-			.await
-			.map(|r| r.is_some())?;
-
-		Ok(exists)
+		if let Some(account_id) = account_id {
+			let bytes: [u8; 32] = *account_id.as_ref();
+			let addr = tangle::storage().eth2_client().submitters(self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
+			self.get_value(&addr).await
+				.map(|r| r.is_some())
+		} else {
+			// TODO: determine what to do if none specified
+			// for now, don't error
+			Ok(false)
+		}
 	}
 
 	async fn get_light_client_state(
 		&self,
 	) -> Result<eth_types::eth2::LightClientState, crate::Error> {
-		let task0 =
-			self.get_value_with_simple_type_chain_argument::<Option<_>>("FinalizedBeaconHeader");
-		let task1 =
-			self.get_value_with_simple_type_chain_argument::<Option<_>>("CurrentSyncCommittee");
-		let task2 =
-			self.get_value_with_simple_type_chain_argument::<Option<_>>("NextSyncCommittee");
+		let addr0 = tangle::storage().eth2_client().finalized_beacon_header(self.chain);
+		let task0 = self.get_value(&addr0);
+
+		let addr1 = tangle::storage().eth2_client().current_sync_committee(self.chain);
+		let task1 = self.get_value(&addr1);
+
+		let addr2 = tangle::storage().eth2_client().next_sync_committee(self.chain);
+		let task2 = self.get_value(&addr2);
 
 		let (finalized_beacon_header, current_sync_committee, next_sync_committee) =
 			tokio::try_join!(task0, task1, task2)?;
 
 		match (finalized_beacon_header, current_sync_committee, next_sync_committee) {
-			(
-				Some(finalized_beacon_header),
-				Some(current_sync_committee),
-				Some(next_sync_committee),
-			) => Ok(LightClientState {
-				finalized_beacon_header,
-				current_sync_committee,
-				next_sync_committee,
-			}),
+			(Some(finalized_beacon_header), Some(current_sync_committee), Some(next_sync_committee)) => {
+				Ok(LightClientState {
+					finalized_beacon_header: Decode::decode(&mut finalized_beacon_header.encode().as_slice()).unwrap(),
+					current_sync_committee: Decode::decode(&mut current_sync_committee.encode().as_slice()).unwrap(),
+					next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice()).unwrap(),
+				})
+			}
 
-			_ => Err(Error::Generic("Unable to obtain all values").into()),
+			_ => {
+				Err(crate::Error::from("Unable to obtain all three values"))
+			}
 		}
 	}
 
 	async fn get_num_of_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let account_id = self.signer.account_id();
-		let count = self
-			.get_value_with_keys::<Option<u32>>(
-				"Submitters",
-				vec![self.get_type_chain_argument(), account_id.as_value()],
-			)
-			.await?
-			.ok_or(Error::Generic("Value not found for Submitters"))?;
-
-		Ok(count)
+		let addr = tangle::storage().eth2_client().submitters(self.chain, account_id);
+		self.get_value(&addr).await.map(|r| r.unwrap())
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
-		let key_addr = tangle::storage().eth2_client().max_unfinalized_blocks_per_submitter(&self.chain);
+		let key_addr = tangle::storage().eth2_client().max_unfinalized_blocks_per_submitter(self.chain);
 		
 		let value: u32 = self.api.storage().fetch_or_default(&key_addr, None)
-		.await
-		.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
+			.await
+			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
 
 		Ok(value)
 	}
