@@ -137,7 +137,7 @@ impl EthClientPallet {
 			.storage()
 			.fetch_or_default(&storage_address, None)
 			.await
-			.map_err(|_| Error::Generic("Failed to get api storage value"))?;
+			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
 
 		let finalized_value: T = T::decode(&mut maybe_existant_value.encoded())?;
 
@@ -149,7 +149,7 @@ impl EthClientPallet {
 		&self,
 		entry_name: &str,
 	) -> Result<T, Error> {
-		self.get_value_with_keys::<T>(entry_name, vec![self.get_type_chain_argument()])
+		self.get_value_with_keys::<T>(entry_name, [self.get_type_chain_argument()])
 			.await
 	}
 
@@ -328,7 +328,7 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let ret = self
-			.get_value_with_keys::<u32>("MaxUnfinalizedBlocksPerSubmitter", vec![self.get_type_chain_argument(), self.max_submitted_blocks_by_account.unwrap().as_value()])
+			.get_value_with_simple_type_chain_argument::<u32>("MaxUnfinalizedBlocksPerSubmitter")
 			.await?;
 
 		Ok(ret)
