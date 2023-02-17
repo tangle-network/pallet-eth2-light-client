@@ -213,7 +213,7 @@ impl EthClientPalletTrait for EthClientPallet {
 			"batch",
 			txes.into_iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
 		);*/
-		let batch_call = tangle::utility::calls::Batch { calls: txes };
+		let batch_call = tangle::tx().utility().batch_all(txes);
 
 		self.submit(&batch_call).await
 			.map(|_| ())
