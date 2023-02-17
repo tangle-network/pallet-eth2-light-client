@@ -35,7 +35,7 @@ pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
 	signer: PairSigner<PolkadotConfig, Pair>,
-	chain: TypedChainId,
+	chain: tangle::runtime_types::webb_proposals::header::TypedChainId,
 	max_submitted_blocks_by_account: Option<u32>
 }
 
@@ -46,7 +46,7 @@ impl EthClientPallet {
 
 	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
 		let signer = PairSigner::new(pair);
-		Self { api, signer, chain: TypedChainId::Evm(5), max_submitted_blocks_by_account: None }
+		Self { api, signer, chain: tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(5), max_submitted_blocks_by_account: None }
 	}
 
 	pub fn new_with_suri_key<T: AsRef<str>>(api: OnlineClient<PolkadotConfig>, suri_key: T) -> Result<Self, crate::Error> {
@@ -154,7 +154,7 @@ impl EthClientPallet {
 	}
 
 	fn get_type_chain_argument(&self) -> Value {
-		self.chain.chain_id().as_value()
+		self.chain.as_value()
 	}
 }
 
@@ -327,11 +327,13 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
-		let ret = self
-			.get_value_with_simple_type_chain_argument::<u32>("MaxUnfinalizedBlocksPerSubmitter")
-			.await?;
+		let key_addr = tangle::storage().eth2_client().max_unfinalized_blocks_per_submitter(&self.chain);
+		
+		let value: u32 = self.api.storage().fetch_or_default(&key_addr, None)
+		.await
+		.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
 
-		Ok(ret)
+		Ok(value)
 	}
 }
 

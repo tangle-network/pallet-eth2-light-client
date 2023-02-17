@@ -8,3 +8,4 @@ pub mod substrate_network;
 pub mod substrate_pallet_client;
 
 pub use eth_rpc_client::Error;
+pub use substrate_pallet_client::tangle;
