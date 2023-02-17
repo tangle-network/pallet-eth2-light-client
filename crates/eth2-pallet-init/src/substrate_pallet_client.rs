@@ -36,6 +36,7 @@ pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
 	signer: PairSigner<PolkadotConfig, Pair>,
 	chain: TypedChainId,
+	max_submitted_blocks_by_account: Option<u32>
 }
 
 impl EthClientPallet {
@@ -45,7 +46,7 @@ impl EthClientPallet {
 
 	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
 		let signer = PairSigner::new(pair);
-		Self { api, signer, chain: TypedChainId::Evm(5) }
+		Self { api, signer, chain: TypedChainId::Evm(5), max_submitted_blocks_by_account: None }
 	}
 
 	pub fn new_with_suri_key<T: AsRef<str>>(api: OnlineClient<PolkadotConfig>, suri_key: T) -> Result<Self, crate::Error> {
@@ -58,7 +59,7 @@ impl EthClientPallet {
 	}
 
 	pub async fn init(
-		&self,
+		&mut self,
 		typed_chain_id: TypedChainId,
 		finalized_execution_header: BlockHeader,
 		finalized_beacon_header: ExtendedBeaconBlockHeader,
@@ -70,6 +71,10 @@ impl EthClientPallet {
 		max_submitted_blocks_by_account: Option<u32>,
 		trusted_signer: Option<AccountId32>,
 	) -> Result<(), Error> {
+
+		let max_submitted_blocks_by_account = max_submitted_blocks_by_account.unwrap_or(10);
+		self.max_submitted_blocks_by_account = Some(max_submitted_blocks_by_account);
+
 		let trusted_signer = if let Some(trusted_signer) = trusted_signer {
 			let bytes: [u8;32] = *trusted_signer.as_ref();
 			Some(subxt::ext::sp_runtime::AccountId32::from(bytes))
@@ -85,7 +90,7 @@ impl EthClientPallet {
 			validate_updates: validate_updates.unwrap_or(true),
 			verify_bls_signatures: verify_bls_signatures.unwrap_or(true),
 			hashes_gc_threshold: hashes_gc_threshold.unwrap_or(100),
-			max_submitted_blocks_by_account: max_submitted_blocks_by_account.unwrap_or(10),
+			max_submitted_blocks_by_account: max_submitted_blocks_by_account,
 			trusted_signer,
 		};
 
@@ -323,7 +328,7 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let ret = self
-			.get_value_with_simple_type_chain_argument::<u32>("MaxUnfinalizedBlocksPerSubmitter")
+			.get_value_with_keys::<u32>("MaxUnfinalizedBlocksPerSubmitter", vec![self.get_type_chain_argument(), self.max_submitted_blocks_by_account.unwrap().as_value()])
 			.await?;
 
 		Ok(ret)

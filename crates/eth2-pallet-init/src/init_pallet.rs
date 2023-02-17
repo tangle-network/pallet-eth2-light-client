@@ -8,7 +8,6 @@ use eth_rpc_client::{
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
 use sp_core::crypto::AccountId32;
-use std::time;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
