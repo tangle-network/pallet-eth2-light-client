@@ -304,7 +304,7 @@ impl BeaconRPCClient {
 	pub async fn is_syncing(&self) -> Result<bool, crate::Error> {
 		let url_request = format!("{}/eth/v1/node/syncing", self.endpoint_url);
 		let json_str = self.get_json_from_raw_request(&url_request).await?;
-
+		log::info!(target: "relay", "Beacon RPC client syncing status: {json_str}");
 		let v: Value = serde_json::from_str(&json_str)?;
 		v["data"]["is_syncing"].as_bool().ok_or_else(|| ErrorOnJsonParse.into())
 	}

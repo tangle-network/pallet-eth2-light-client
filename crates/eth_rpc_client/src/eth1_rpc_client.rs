@@ -57,7 +57,7 @@ impl Eth1RPCClient {
             "id":1});
 
 		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
-
+		log::info!(target: "relay", "Eth RPC client syncing status: {res}");
 		let val: Value = serde_json::from_str(&res)?;
 		let is_sync = val["result"].as_bool();
 		if let Some(is_sync_val) = is_sync {
