@@ -23,7 +23,6 @@ use subxt::ext::sp_core::Pair as PairT;
 
 use crate::{
 	eth_client_pallet_trait::EthClientPalletTrait,
-	misc::AsValue,
 };
 
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
@@ -151,10 +150,6 @@ impl EthClientPallet {
 		
 		Ok(hash.0.into())
 	}
-
-	fn get_type_chain_argument(&self) -> Value {
-		self.chain.as_value()
-	}
 }
 
 #[async_trait]
@@ -170,7 +165,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, crate::Error> {
 		let decoded: tangle::runtime_types::eth_types::H256 = Decode::decode(&mut execution_block_hash.encode().as_slice()).unwrap();
-		let addr = tangle::storage().eth2_client().unfinalized_headers(self.chain, decoded);
+		let addr = tangle::storage().eth2_client().unfinalized_headers(&self.chain, decoded);
 		self.get_value(&addr)
 		.await.map(|r| r.is_some())
 	}
@@ -180,54 +175,57 @@ impl EthClientPalletTrait for EthClientPallet {
 		light_client_update: LightClientUpdate,
 	) -> Result<(), crate::Error> {
 		let decoded_lcu = Decode::decode(&mut light_client_update.encode().as_slice()).unwrap();
-		let call = tangle::tx().eth2_client().submit_beacon_chain_light_client_update(self.chain, decoded_lcu);
+		let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
+		let call = tangle::tx().eth2_client().submit_beacon_chain_light_client_update(decoded_tcid, decoded_lcu);
 		self.submit(&call).await.map(|_|())
 	}
 
 	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, crate::Error> {
-		let addr = tangle::storage().eth2_client().finalized_beacon_header(self.chain);
+		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
 		self.get_value(&addr).await
 			.map(|r| eth_types::H256::from(r.unwrap().beacon_block_root.0))
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
-		let addr = tangle::storage().eth2_client().finalized_beacon_header(self.chain);
+		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
 		self.get_value(&addr).await
 			.map(|r| r.unwrap().header.slot)
 	}
 
 	async fn send_headers(
 		&mut self,
-		headers: &[BlockHeader],
+		_headers: &[BlockHeader],
 		_end_slot: u64,
 	) -> Result<(), crate::Error> {
+		/*
 		let mut txes = vec![];
 		for header in headers {
 			let decoded_header = Decode::decode(&mut header.encode().as_slice()).unwrap();
 			let tx = tangle::tx().eth2_client().submit_execution_header(self.chain, decoded_header);
+			let encoded_tx: Vec<u8> = tx.encode();
+			let call = Call::Evm(encoded_tx);
+			tangle::runtime_types::frame_system::pallet::Call::
+			let tx = tangle::runtime_types::tangle_standalone_runtime::RuntimeCall::Eth2Client(call);
 			txes.push(tx);
 		}
 
-		/*let batch_tx = subxt::dynamic::tx(
-			"Utility",
-			"batch",
-			txes.into_iter().map(|tx| tx.into_value()).collect::<Vec<Value<_>>>(),
-		);*/
 		let batch_call = tangle::tx().utility().batch_all(txes);
 
 		self.submit(&batch_call).await
-			.map(|_| ())
+			.map(|_| ())*/
+		Err(crate::Error::from("send_headers is not implemented"))
 	}
 
 	async fn get_min_deposit(
 		&self,
 	) -> Result<crate::eth_client_pallet_trait::Balance, crate::Error> {
-		let addr = tangle::storage().eth2_client().min_submitter_balance(self.chain);
+		let addr = tangle::storage().eth2_client().min_submitter_balance(&self.chain);
 		self.get_value_or_default(&addr).await
 	}
 
 	async fn register_submitter(&self) -> Result<(), crate::Error> {
-		let tx = tangle::tx().eth2_client().register_submitter(self.chain);
+		let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
+		let tx = tangle::tx().eth2_client().register_submitter(decoded_tcid);
 		self.submit(&tx).await
 			.map(|_| ())
 	}
@@ -238,7 +236,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	) -> Result<bool, crate::Error> {
 		if let Some(account_id) = account_id {
 			let bytes: [u8; 32] = *account_id.as_ref();
-			let addr = tangle::storage().eth2_client().submitters(self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
+			let addr = tangle::storage().eth2_client().submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
 			self.get_value(&addr).await
 				.map(|r| r.is_some())
 		} else {
@@ -251,13 +249,13 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn get_light_client_state(
 		&self,
 	) -> Result<eth_types::eth2::LightClientState, crate::Error> {
-		let addr0 = tangle::storage().eth2_client().finalized_beacon_header(self.chain);
+		let addr0 = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
 		let task0 = self.get_value(&addr0);
 
-		let addr1 = tangle::storage().eth2_client().current_sync_committee(self.chain);
+		let addr1 = tangle::storage().eth2_client().current_sync_committee(&self.chain);
 		let task1 = self.get_value(&addr1);
 
-		let addr2 = tangle::storage().eth2_client().next_sync_committee(self.chain);
+		let addr2 = tangle::storage().eth2_client().next_sync_committee(&self.chain);
 		let task2 = self.get_value(&addr2);
 
 		let (finalized_beacon_header, current_sync_committee, next_sync_committee) =
@@ -280,12 +278,12 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_num_of_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let account_id = self.signer.account_id();
-		let addr = tangle::storage().eth2_client().submitters(self.chain, account_id);
+		let addr = tangle::storage().eth2_client().submitters(&self.chain, account_id);
 		self.get_value(&addr).await.map(|r| r.unwrap())
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
-		let key_addr = tangle::storage().eth2_client().max_unfinalized_blocks_per_submitter(self.chain);
+		let key_addr = tangle::storage().eth2_client().max_unfinalized_blocks_per_submitter(&self.chain);
 		
 		let value: u32 = self.api.storage().fetch_or_default(&key_addr, None)
 			.await
