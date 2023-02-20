@@ -279,7 +279,11 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn get_num_of_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
 		let account_id = self.signer.account_id();
 		let addr = tangle::storage().eth2_client().submitters(&self.chain, account_id);
-		self.get_value(&addr).await.map(|r| r.unwrap())
+		if let Some(val) = self.get_value(&addr).await? {
+			Ok(val)
+		} else {
+			Err(crate::Error::from("Failed to get value for get_num_of_submitted_blocks_by_account"))
+		}
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
