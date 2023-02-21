@@ -282,7 +282,8 @@ impl EthClientPalletTrait for EthClientPallet {
 		if let Some(val) = self.get_value(&addr).await? {
 			Ok(val)
 		} else {
-			Err(crate::Error::from("Failed to get value for get_num_of_submitted_blocks_by_account"))
+			log::warn!("Failed to get value for get_num_of_submitted_blocks_by_account (no blocks submitted yet?)");
+			Ok(0)
 		}
 	}
 
