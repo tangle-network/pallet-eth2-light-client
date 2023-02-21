@@ -38,7 +38,8 @@ pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
 	signer: PairSigner<PolkadotConfig, Pair>,
 	chain: tangle::runtime_types::webb_proposals::header::TypedChainId,
-	max_submitted_blocks_by_account: Option<u32>
+	max_submitted_blocks_by_account: Option<u32>,
+	end_slot: u64
 }
 
 impl EthClientPallet {
@@ -48,7 +49,7 @@ impl EthClientPallet {
 
 	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
 		let signer = PairSigner::new(pair);
-		Self { api, signer, chain: tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(5), max_submitted_blocks_by_account: None }
+		Self { end_slot: 0, api, signer, chain: tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(5), max_submitted_blocks_by_account: None }
 	}
 
 	pub fn new_with_suri_key<T: AsRef<str>>(api: OnlineClient<PolkadotConfig>, suri_key: T) -> Result<Self, crate::Error> {
@@ -102,24 +103,6 @@ impl EthClientPallet {
 		let _hash = self.submit(&tx).await.map_err(|err|Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("{err:?}"))))?;
 
 		Ok(())
-	}
-
-	pub async fn get_last_eth2_slot_on_tangle(
-		&self,
-		typed_chain_id: TypedChainId,
-	) -> Result<u64, Error> {
-		//let addr = tangle::storage().eth2_client().finalized_beacon_header(0);
-		let storage_address = subxt::dynamic::storage(
-			"Eth2Client",
-			"FinalizedHeaderUpdate",
-			vec![Value::from_bytes(&typed_chain_id.chain_id().to_be_bytes())],
-		);
-		let _finalized_header_update: DecodedValueThunk =
-			self.api.storage().fetch_or_default(&storage_address, None).await.map_err(|_| {
-				Error::Generic("Failed to get finalized header update storage value")
-			})?;
-
-		Ok(0)
 	}
 
 	async fn get_value_or_default<'a, Address: StorageAddress>(&self, key_addr: &Address) -> Result<<Address::Target as DecodeWithMetadata>::Target, crate::Error> 
@@ -197,8 +180,13 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn send_headers(
 		&mut self,
 		headers: &[BlockHeader],
-		_end_slot: u64,
+		end_slot: u64,
 	) -> Result<(), crate::Error> {
+		self.end_slot = end_slot;
+		if headers.is_empty() {
+			return Err(crate::Error::from("Tried to submit zero headers"))
+		}
+
 		let mut txes = vec![];
 		for header in headers {
 			let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
@@ -233,17 +221,13 @@ impl EthClientPalletTrait for EthClientPallet {
 		&self,
 		account_id: Option<AccountId32>,
 	) -> Result<bool, crate::Error> {
+		let account_id = account_id.unwrap_or(self.get_signer_account_id());
 		log::info!(target: "relay", "Attempting to see if {account_id:?} is registered ...");
-		if let Some(account_id) = account_id {
-			let bytes: [u8; 32] = *account_id.as_ref();
-			let addr = tangle::storage().eth2_client().submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
-			self.get_value(&addr).await
-				.map(|r| r.is_some())
-		} else {
-			// TODO: determine what to do if none specified
-			// for now, don't error
-			Ok(false)
-		}
+		
+		let bytes: [u8; 32] = *account_id.as_ref();
+		let addr = tangle::storage().eth2_client().submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
+		self.get_value(&addr).await
+			.map(|r| r.is_some())
 	}
 
 	async fn get_light_client_state(
