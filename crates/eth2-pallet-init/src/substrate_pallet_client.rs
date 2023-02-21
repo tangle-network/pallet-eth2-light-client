@@ -11,7 +11,6 @@ use webb::substrate::{
 		self,
 		storage::address::Yes,
 		metadata::DecodeWithMetadata,
-		dynamic::{DecodedValueThunk, Value},
 		ext::sp_core::sr25519::Pair,
 		tx::{PairSigner, TxPayload},
 		OnlineClient, PolkadotConfig, storage::StorageAddress,
@@ -196,7 +195,7 @@ impl EthClientPalletTrait for EthClientPallet {
 			txes.push(tx);
 		}
 
-		let batch_call = tangle::tx().utility().batch_all(txes);
+		let batch_call = tangle::tx().utility().force_batch(txes);
 
 		self.submit(&batch_call).await
 			.map(|_| ())
