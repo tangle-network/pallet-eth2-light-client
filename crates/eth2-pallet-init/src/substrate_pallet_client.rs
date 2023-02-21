@@ -222,6 +222,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn register_submitter(&self) -> Result<(), crate::Error> {
+		log::info!("About to register the submitter ...");
 		let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
 		let tx = tangle::tx().eth2_client().register_submitter(decoded_tcid);
 		self.submit(&tx).await
@@ -232,6 +233,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		&self,
 		account_id: Option<AccountId32>,
 	) -> Result<bool, crate::Error> {
+		log::info!("Attempting to see if {account_id:?} is registered ...");
 		if let Some(account_id) = account_id {
 			let bytes: [u8; 32] = *account_id.as_ref();
 			let addr = tangle::storage().eth2_client().submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
