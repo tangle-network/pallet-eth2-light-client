@@ -158,6 +158,8 @@ impl Eth2SubstrateRelay {
 				.register_submitter()
 				.await
 				.expect("Error on registering the submitter");
+
+			log::info!(target: "relay", "Successfully registered submitter");
 		}
 
 		if let Some(port) = config.prometheus_metrics_port {
