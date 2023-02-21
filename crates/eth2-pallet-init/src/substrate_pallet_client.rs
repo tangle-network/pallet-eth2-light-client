@@ -25,6 +25,8 @@ use crate::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 };
 
+use self::tangle::runtime_types::pallet_eth2_light_client;
+
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new()
 		.await
@@ -194,17 +196,14 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn send_headers(
 		&mut self,
-		_headers: &[BlockHeader],
+		headers: &[BlockHeader],
 		_end_slot: u64,
 	) -> Result<(), crate::Error> {
-		/*
 		let mut txes = vec![];
 		for header in headers {
+			let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
 			let decoded_header = Decode::decode(&mut header.encode().as_slice()).unwrap();
-			let tx = tangle::tx().eth2_client().submit_execution_header(self.chain, decoded_header);
-			let encoded_tx: Vec<u8> = tx.encode();
-			let call = Call::Evm(encoded_tx);
-			tangle::runtime_types::frame_system::pallet::Call::
+			let call = pallet_eth2_light_client::pallet::Call::submit_execution_header { typed_chain_id: decoded_tcid, block_header:decoded_header };
 			let tx = tangle::runtime_types::tangle_standalone_runtime::RuntimeCall::Eth2Client(call);
 			txes.push(tx);
 		}
@@ -212,8 +211,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		let batch_call = tangle::tx().utility().batch_all(txes);
 
 		self.submit(&batch_call).await
-			.map(|_| ())*/
-		Err(crate::Error::from("send_headers is not implemented"))
+			.map(|_| ())
 	}
 
 	async fn get_min_deposit(
