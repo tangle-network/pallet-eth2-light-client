@@ -441,6 +441,11 @@ pub mod pallet {
 				Submitters::<T>::contains_key(typed_chain_id, &submitter),
 				Error::<T>::SubmitterNotRegistered
 			);
+			ensure!(
+				Self::submitters(typed_chain_id, submitter).is_some(),
+				// The submitter should be present
+				Error::<T>::SubmitterNotRegistered
+			);
 			Ok(().into())
 		}
 
