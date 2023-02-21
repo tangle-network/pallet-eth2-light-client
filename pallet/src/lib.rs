@@ -446,6 +446,7 @@ pub mod pallet {
 				// The submitter should be present
 				Error::<T>::SubmitterNotRegistered
 			);
+			ensure!(0 == 1, Error::<T>::InvalidExecutionBlock);
 			Ok(().into())
 		}
 
