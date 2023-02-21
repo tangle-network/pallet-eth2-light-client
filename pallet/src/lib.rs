@@ -291,7 +291,15 @@ pub mod pallet {
 	/************* STORAGE ************ */
 
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		Init { typed_chain_id: TypedChainId, who: Option<T::AccountId> },
+		RegisterSubmitter { typed_chain_id: TypedChainId, origin: T::AccountId },
+		UnregisterSubmitter { typed_chain_id: TypedChainId, origin: T::AccountId },
+		SubmitBeaconChainLightClientUpdate { typed_chain_id: TypedChainId, origin: T::AccountId },
+		SubmitExecutionHeader { typed_chain_id: TypedChainId, origin: T::AccountId },
+		UpdateTrustedSigner { trusted_signer: T::AccountId, origin: T::AccountId },
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -401,6 +409,9 @@ pub mod pallet {
 			FinalizedExecutionHeader::<T>::insert(typed_chain_id, finalized_execution_header_info);
 			CurrentSyncCommittee::<T>::insert(typed_chain_id, args.current_sync_committee);
 			NextSyncCommittee::<T>::insert(typed_chain_id, args.next_sync_committee);
+
+			Self::deposit_event(Event::Init { typed_chain_id, who: args.trusted_signer.clone() });
+
 			Ok(().into())
 		}
 
@@ -424,7 +435,8 @@ pub mod pallet {
 				ExistenceRequirement::AllowDeath,
 			)?;
 			// Register the submitter
-			Submitters::<T>::insert(typed_chain_id, submitter, 0);
+			Submitters::<T>::insert(typed_chain_id, submitter.clone(), 0);
+			Self::deposit_event(Event::RegisterSubmitter { typed_chain_id, origin: submitter });
 			Ok(().into())
 		}
 
@@ -450,6 +462,9 @@ pub mod pallet {
 				deposit,
 				ExistenceRequirement::AllowDeath,
 			)?;
+
+			Self::deposit_event(Event::UnregisterSubmitter { typed_chain_id, origin: submitter });
+
 			Ok(().into())
 		}
 
@@ -470,6 +485,7 @@ pub mod pallet {
 			}
 
 			Self::commit_light_client_update(typed_chain_id, light_client_update)?;
+			Self::deposit_event(Event::SubmitBeaconChainLightClientUpdate { typed_chain_id, origin: submitter });
 			Ok(().into())
 		}
 
@@ -500,7 +516,7 @@ pub mod pallet {
 			let block_info = ExecutionHeaderInfo {
 				parent_hash: block_header.parent_hash.0,
 				block_number: block_header.number,
-				submitter,
+				submitter: submitter.clone(),
 			};
 			ensure!(
 				UnfinalizedHeaders::<T>::get(typed_chain_id, block_hash).is_none(),
@@ -509,6 +525,9 @@ pub mod pallet {
 				Error::<T>::BlockAlreadySubmitted,
 			);
 			UnfinalizedHeaders::<T>::insert(typed_chain_id, block_hash, &block_info);
+
+			Self::deposit_event(Event::SubmitExecutionHeader { typed_chain_id, origin: submitter });
+
 			Ok(().into())
 		}
 
@@ -519,8 +538,11 @@ pub mod pallet {
 			trusted_signer: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
-			ensure!(TrustedSigner::<T>::get() == Some(origin), Error::<T>::NotTrustedSigner);
-			TrustedSigner::<T>::put(trusted_signer);
+			ensure!(TrustedSigner::<T>::get() == Some(origin.clone()), Error::<T>::NotTrustedSigner);
+			TrustedSigner::<T>::put(trusted_signer.clone());
+
+			Self::deposit_event(Event::UpdateTrustedSigner { trusted_signer, origin });
+
 			Ok(().into())
 		}
 	}
