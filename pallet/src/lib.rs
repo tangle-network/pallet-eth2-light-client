@@ -436,7 +436,11 @@ pub mod pallet {
 			)?;
 			// Register the submitter
 			Submitters::<T>::insert(typed_chain_id, submitter.clone(), 0);
-			Self::deposit_event(Event::RegisterSubmitter { typed_chain_id, origin: submitter });
+			Self::deposit_event(Event::RegisterSubmitter { typed_chain_id, origin: submitter.clone() });
+			ensure!(
+				Submitters::<T>::contains_key(typed_chain_id, &submitter),
+				Error::<T>::SubmitterNotRegistered
+			);
 			Ok(().into())
 		}
 
