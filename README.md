@@ -9,7 +9,8 @@ A Substrate pallet implementing an ETH2 Beacon Chain light client
 4. Checkout the relayer repo (working branch: `thomas/eth_light_client`)
 5. Edit the file in ./services/light-client-relayer/config_relayer.toml:
 
-point `path_to_signer_secret_key` to the copied private key in `/tmp/empty`
+point `path_to_signer_secret_key` to the copied private key in `/tmp/empty`.
+
 Edit the corresponding `signer_account_id`
 
 6. run `cp ./services/light-client-relayer/relayer_config.toml /tmp/empty/`
