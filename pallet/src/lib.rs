@@ -299,6 +299,7 @@ pub mod pallet {
 		SubmitBeaconChainLightClientUpdate { typed_chain_id: TypedChainId, origin: T::AccountId },
 		SubmitExecutionHeader { typed_chain_id: TypedChainId, origin: T::AccountId },
 		UpdateTrustedSigner { trusted_signer: T::AccountId, origin: T::AccountId },
+		RegisterSubmitterDebug { typed_chain_id: TypedChainId, min_balance: <<T as Config>::Currency as Currency<T::AccountId>>::Balance }
 	}
 
 	#[pallet::error]
@@ -428,6 +429,7 @@ pub mod pallet {
 			);
 			// Transfer the deposit amount to the pallet
 			let deposit = MinSubmitterBalance::<T>::get(typed_chain_id);
+			Self::deposit_event(Event::RegisterSubmitterDebug { typed_chain_id: typed_chain_id.clone(), min_balance: deposit.clone() });
 			T::Currency::transfer(
 				&submitter,
 				&Self::account_id(),
@@ -446,7 +448,6 @@ pub mod pallet {
 				// The submitter should be present
 				Error::<T>::SubmitterNotRegistered
 			);
-			ensure!(0 == 1, Error::<T>::InvalidExecutionBlock);
 			Ok(().into())
 		}
 
