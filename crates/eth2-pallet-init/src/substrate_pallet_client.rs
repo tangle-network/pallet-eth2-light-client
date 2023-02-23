@@ -12,7 +12,7 @@ use webb::substrate::{
 		storage::address::Yes,
 		metadata::DecodeWithMetadata,
 		ext::sp_core::sr25519::Pair,
-		tx::{PairSigner, TxPayload},
+		tx::{PairSigner, TxPayload, TxStatus},
 		OnlineClient, PolkadotConfig, storage::StorageAddress,
 	},
 };
@@ -125,14 +125,62 @@ impl EthClientPallet {
 	}
 
 	async fn submit<Call: TxPayload>(&self, call: &Call) -> Result<H256, crate::Error> {
-		let hash = self
+		let mut progress = self
 			.api
 			.tx()
-			.sign_and_submit_default(call, &self.signer)
+			.sign_and_submit_then_watch_default(call, &self.signer)
 			.await
 			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))))?;
 		
-		Ok(hash.0.into())
+			while let Some(event) = progress.next_item().await {
+				let e = match event {
+					Ok(e) => e,
+					Err(err) => {
+						log::error!("failed to watch for tx events {err:?}");
+						return Err(crate::Error::from(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))));
+					}
+				};
+	
+				match e {
+					TxStatus::Future => {}
+					TxStatus::Ready => {
+						log::trace!("tx ready");
+					}
+					TxStatus::Broadcast(_) => {}
+					TxStatus::InBlock(_) => {
+						log::trace!("tx in block");
+					}
+					TxStatus::Retracted(_) => {
+						log::warn!("tx retracted");
+					}
+					TxStatus::FinalityTimeout(_) => {
+						log::warn!("tx timeout");
+					}
+					TxStatus::Finalized(v) => {
+						let maybe_success = v.wait_for_success().await;
+						match maybe_success {
+							Ok(events) => {
+								log::debug!("tx finalized");
+								let hash = events.extrinsic_hash();
+								return Ok(hash.0.into())
+							}
+							Err(err) => {
+								log::error!("tx failed {err:?}");
+								return Err(crate::Error::from(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))));
+							}
+						}
+					}
+					TxStatus::Usurped(_) => {}
+					TxStatus::Dropped => {
+						log::warn!("tx dropped");
+					}
+					TxStatus::Invalid => {
+						log::warn!("tx invalid");
+					}
+				}
+			}
+
+			Err(crate::Error::from(std::io::Error::new(std::io::ErrorKind::Other, format!("Transaction stream ended"))))
 	}
 }
 
