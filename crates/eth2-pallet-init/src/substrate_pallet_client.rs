@@ -48,7 +48,8 @@ impl EthClientPallet {
 
 	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
 		let signer = PairSigner::new(pair);
-		Self { end_slot: 0, api, signer, chain: tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(5), max_submitted_blocks_by_account: None }
+		// set to defaults. These values will change later in init
+		Self { end_slot: 0, api, signer, chain: tangle::runtime_types::webb_proposals::header::TypedChainId::None, max_submitted_blocks_by_account: None }
 	}
 
 	pub fn new_with_suri_key<T: AsRef<str>>(api: OnlineClient<PolkadotConfig>, suri_key: T) -> Result<Self, crate::Error> {
@@ -76,6 +77,7 @@ impl EthClientPallet {
 
 		let max_submitted_blocks_by_account = max_submitted_blocks_by_account.unwrap_or(10);
 		self.max_submitted_blocks_by_account = Some(max_submitted_blocks_by_account);
+		self.chain = Decode::decode(&mut typed_chain_id.clone().encode().as_slice()).unwrap();
 
 		let trusted_signer = if let Some(trusted_signer) = trusted_signer {
 			let bytes: [u8;32] = *trusted_signer.as_ref();
