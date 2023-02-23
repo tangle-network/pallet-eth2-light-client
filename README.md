@@ -3,7 +3,7 @@ A Substrate pallet implementing an ETH2 Beacon Chain light client
 
 ## Running the eth2-subtrate-relay on tangle
 
-1. Run the tangle network via `./scripts/run_arana_local.sh` (branch: `group/light-client-pallet2`)
+1. Run the tangle network via `./scripts/run_arana_local.sh` (branch: `thomas/eth-light-client`)
 2. The previous command will create private keys. Copy any one of the private keys in `./tmp/standalone1/chains/arana-local/keystore/` to `/tmp/empty`
 3. Open the copied private key in `/tmp/empty/` and remove the quotation marks on both ends
 4. Checkout the relayer repo (working branch: `thomas/eth_light_client`)
