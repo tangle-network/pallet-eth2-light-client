@@ -422,6 +422,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
 		) -> DispatchResultWithPostInfo {
+			ensure!(0 == 1, Error::<T>::SubmitterNotRegistered);
 			let submitter = ensure_signed(origin)?;
 			ensure!(
 				!Submitters::<T>::contains_key(typed_chain_id, &submitter),
