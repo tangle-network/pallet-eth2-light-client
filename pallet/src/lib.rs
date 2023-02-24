@@ -434,7 +434,7 @@ pub mod pallet {
 				&submitter,
 				&Self::account_id(),
 				deposit,
-				ExistenceRequirement::AllowDeath,
+				ExistenceRequirement::KeepAlive,
 			)?;
 			// Register the submitter
 			Submitters::<T>::insert(typed_chain_id, submitter.clone(), 0);
