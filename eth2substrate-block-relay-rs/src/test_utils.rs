@@ -7,7 +7,8 @@ use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 	eth_network::EthNetwork,
 	init_pallet::init_pallet,
-	substrate_pallet_client::{setup_api, EthClientPallet}, substrate_network::SubstrateNetwork,
+	substrate_network::SubstrateNetwork,
+	substrate_pallet_client::{setup_api, EthClientPallet},
 };
 use eth_rpc_client::{
 	beacon_rpc_client::{BeaconRPCClient, BeaconRPCVersion},
@@ -177,7 +178,7 @@ pub async fn init_pallet_from_specific_slot(
 		.await
 		.unwrap();
 
-		tokio::time::sleep(time::Duration::from_secs(30)).await;
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 fn get_config(config_for_test: &ConfigForTests) -> Config {
@@ -211,7 +212,7 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		substrate_network_id: SubstrateNetwork::Testnet,
 		trusted_signer_account_id: None,
 		validate_bls_signature: None,
-		validate_updates: None
+		validate_updates: None,
 	}
 }
 

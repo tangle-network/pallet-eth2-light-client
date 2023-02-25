@@ -12,7 +12,10 @@ impl Eth1RPCClient {
 		Self { endpoint_url: endpoint_url.to_string(), client: reqwest::Client::new() }
 	}
 
-	pub async fn get_block_header_by_number(&self, number: u64) -> Result<BlockHeader, crate::Error> {
+	pub async fn get_block_header_by_number(
+		&self,
+		number: u64,
+	) -> Result<BlockHeader, crate::Error> {
 		println!("KB0");
 		let hex_str_number = format!("0x{:x}", number);
 		let json_value = json!({
@@ -22,11 +25,18 @@ impl Eth1RPCClient {
 			"params": [hex_str_number, false]
 		});
 
-		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
+		let res = self
+			.client
+			.post(&self.endpoint_url)
+			.json(&json_value)
+			.send()
+			.await?
+			.text()
+			.await?;
 
 		println!("KB1 {res}");
 		let val: Value = serde_json::from_str(&res)?;
-		println!("KB2: {}",serde_json::to_string(&val)?);
+		println!("KB2: {}", serde_json::to_string(&val)?);
 		let mut block_json = serde_json::to_string(&val["result"])?;
 
 		// TODO: use aliases instead for deserialization
@@ -56,7 +66,14 @@ impl Eth1RPCClient {
             "params":[],
             "id":1});
 
-		let res = self.client.post(&self.endpoint_url).json(&json_value).send().await?.text().await?;
+		let res = self
+			.client
+			.post(&self.endpoint_url)
+			.json(&json_value)
+			.send()
+			.await?
+			.text()
+			.await?;
 		log::info!(target: "relay", "Eth RPC client syncing status: {res}");
 		let val: Value = serde_json::from_str(&res)?;
 		let is_sync = val["result"].as_bool();

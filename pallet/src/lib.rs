@@ -293,17 +293,18 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		Init { typed_chain_id: TypedChainId, who: Option<T::AccountId> },
+		Init { typed_chain_id: TypedChainId, header_info: ExecutionHeaderInfo<T::AccountId> },
 		RegisterSubmitter { typed_chain_id: TypedChainId, origin: T::AccountId },
 		UnregisterSubmitter { typed_chain_id: TypedChainId, origin: T::AccountId },
 		SubmitBeaconChainLightClientUpdate { typed_chain_id: TypedChainId, origin: T::AccountId },
 		SubmitExecutionHeader { typed_chain_id: TypedChainId, origin: T::AccountId },
 		UpdateTrustedSigner { trusted_signer: T::AccountId, origin: T::AccountId },
-		RegisterSubmitterDebug { typed_chain_id: TypedChainId, min_balance: <<T as Config>::Currency as Currency<T::AccountId>>::Balance }
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// The light client is already initialized for the typed chain ID
+		AlreadyInitialized,
 		/// For attempting to register
 		SubmitterAlreadyRegistered,
 		/// For attempting to unregister
@@ -357,11 +358,15 @@ pub mod pallet {
 		#[pallet::call_index(0)]
 		pub fn init(
 			origin: OriginFor<T>,
-			typed_chain_id: u64,
+			typed_chain_id: TypedChainId,
 			args: Box<InitInput<T::AccountId>>,
 		) -> DispatchResultWithPostInfo {
 			let signer = ensure_signed(origin)?;
-			let typed_chain_id = TypedChainId::from(typed_chain_id);
+			ensure!(
+				!<FinalizedBeaconHeader<T>>::contains_key(typed_chain_id),
+				Error::<T>::AlreadyInitialized
+			);
+
 			let min_storage_balance_for_submitter =
 				Self::calculate_min_storage_balance_for_submitter(
 					args.max_submitted_blocks_by_account,
@@ -390,7 +395,7 @@ pub mod pallet {
 			let finalized_execution_header_info = ExecutionHeaderInfo {
 				parent_hash: args.finalized_execution_header.parent_hash.0,
 				block_number: args.finalized_execution_header.number,
-				submitter: signer,
+				submitter: signer.clone(),
 			};
 
 			if let Some(account) = args.trusted_signer.clone() {
@@ -407,11 +412,17 @@ pub mod pallet {
 			);
 			MinSubmitterBalance::<T>::insert(typed_chain_id, min_storage_balance_for_submitter);
 			FinalizedBeaconHeader::<T>::insert(typed_chain_id, args.finalized_beacon_header);
-			FinalizedExecutionHeader::<T>::insert(typed_chain_id, finalized_execution_header_info);
+			FinalizedExecutionHeader::<T>::insert(
+				typed_chain_id,
+				finalized_execution_header_info.clone(),
+			);
 			CurrentSyncCommittee::<T>::insert(typed_chain_id, args.current_sync_committee);
 			NextSyncCommittee::<T>::insert(typed_chain_id, args.next_sync_committee);
 
-			Self::deposit_event(Event::Init { typed_chain_id, who: args.trusted_signer.clone() });
+			Self::deposit_event(Event::Init {
+				typed_chain_id,
+				header_info: finalized_execution_header_info,
+			});
 
 			Ok(().into())
 		}
@@ -422,7 +433,6 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
 		) -> DispatchResultWithPostInfo {
-			ensure!(0 == 1, Error::<T>::SubmitterNotRegistered);
 			let submitter = ensure_signed(origin)?;
 			ensure!(
 				!Submitters::<T>::contains_key(typed_chain_id, &submitter),
@@ -430,16 +440,18 @@ pub mod pallet {
 			);
 			// Transfer the deposit amount to the pallet
 			let deposit = MinSubmitterBalance::<T>::get(typed_chain_id);
-			Self::deposit_event(Event::RegisterSubmitterDebug { typed_chain_id: typed_chain_id.clone(), min_balance: deposit.clone() });
 			T::Currency::transfer(
 				&submitter,
 				&Self::account_id(),
 				deposit,
-				ExistenceRequirement::KeepAlive,
+				ExistenceRequirement::AllowDeath,
 			)?;
 			// Register the submitter
 			Submitters::<T>::insert(typed_chain_id, submitter.clone(), 0);
-			Self::deposit_event(Event::RegisterSubmitter { typed_chain_id, origin: submitter.clone() });
+			Self::deposit_event(Event::RegisterSubmitter {
+				typed_chain_id,
+				origin: submitter.clone(),
+			});
 			ensure!(
 				Submitters::<T>::contains_key(typed_chain_id, &submitter),
 				Error::<T>::SubmitterNotRegistered
@@ -497,7 +509,10 @@ pub mod pallet {
 			}
 
 			Self::commit_light_client_update(typed_chain_id, light_client_update)?;
-			Self::deposit_event(Event::SubmitBeaconChainLightClientUpdate { typed_chain_id, origin: submitter });
+			Self::deposit_event(Event::SubmitBeaconChainLightClientUpdate {
+				typed_chain_id,
+				origin: submitter,
+			});
 			Ok(().into())
 		}
 
@@ -550,7 +565,10 @@ pub mod pallet {
 			trusted_signer: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
-			ensure!(TrustedSigner::<T>::get() == Some(origin.clone()), Error::<T>::NotTrustedSigner);
+			ensure!(
+				TrustedSigner::<T>::get() == Some(origin.clone()),
+				Error::<T>::NotTrustedSigner
+			);
 			TrustedSigner::<T>::put(trusted_signer.clone());
 
 			Self::deposit_event(Event::UpdateTrustedSigner { trusted_signer, origin });

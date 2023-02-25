@@ -143,7 +143,10 @@ impl BeaconRPCClient {
 	///
 	/// * `period` - period id for which `LightClientUpdate` is fetched.
 	/// On Mainnet, one period consists of 256 epochs, and one epoch consists of 32 slots
-	pub async fn get_light_client_update(&self, period: u64) -> Result<LightClientUpdate, crate::Error> {
+	pub async fn get_light_client_update(
+		&self,
+		period: u64,
+	) -> Result<LightClientUpdate, crate::Error> {
 		let url = format!(
 			"{}/{}?start_period={}&count=1",
 			self.endpoint_url, self.routes.get_light_client_update, period
@@ -155,21 +158,20 @@ impl BeaconRPCClient {
 			&light_client_update_json_str,
 		)?;
 
-		let sync_aggregate =  Self::get_sync_aggregate_from_light_client_update_json_str(
+		let sync_aggregate = Self::get_sync_aggregate_from_light_client_update_json_str(
 			&light_client_update_json_str,
 		)?;
 
 		let signature_slot = self.get_signature_slot(&light_client_update_json_str).await?;
 
-		let finality_update = self.get_finality_update_from_light_client_update_json_str(
-			&light_client_update_json_str,
-		).await?;
+		let finality_update = self
+			.get_finality_update_from_light_client_update_json_str(&light_client_update_json_str)
+			.await?;
 
-		let sync_committee_update = Some(
-			Self::get_sync_committee_update_from_light_client_update_json_str(
+		let sync_committee_update =
+			Some(Self::get_sync_committee_update_from_light_client_update_json_str(
 				&light_client_update_json_str,
-			)?,
-		);
+			)?);
 
 		Ok(LightClientUpdate {
 			attested_beacon_header,
@@ -251,7 +253,9 @@ impl BeaconRPCClient {
 			.block_number)
 	}
 
-	pub async fn get_finality_light_client_update(&self) -> Result<LightClientUpdate, crate::Error> {
+	pub async fn get_finality_light_client_update(
+		&self,
+	) -> Result<LightClientUpdate, crate::Error> {
 		let url =
 			format!("{}/{}", self.endpoint_url, self.routes.get_light_client_finality_update,);
 
@@ -267,9 +271,11 @@ impl BeaconRPCClient {
 				&light_client_update_json_str,
 			)?,
 			signature_slot: self.get_signature_slot(&light_client_update_json_str).await?,
-			finality_update: self.get_finality_update_from_light_client_update_json_str(
-				&light_client_update_json_str,
-			).await?,
+			finality_update: self
+				.get_finality_update_from_light_client_update_json_str(
+					&light_client_update_json_str,
+				)
+				.await?,
 			sync_committee_update: None::<SyncCommitteeUpdate>,
 		})
 	}
@@ -343,7 +349,8 @@ impl BeaconRPCClient {
 		light_client_update_json_str: &str,
 	) -> Result<BeaconBlockHeader, crate::Error> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
-		let attested_header_json_str = serde_json::to_string(&v[0]["data"]["attested_header"]["beacon"])?;
+		let attested_header_json_str =
+			serde_json::to_string(&v[0]["data"]["attested_header"]["beacon"])?;
 		let attested_header: BeaconBlockHeader = serde_json::from_str(&attested_header_json_str)?;
 
 		Ok(attested_header)
@@ -362,12 +369,16 @@ impl BeaconRPCClient {
 	// `signature_slot` is not provided in the current API. The slot is brute-forced
 	// until `SyncAggregate` in `BeconBlockBody` in the current slot is equal
 	// to `SyncAggregate` in `LightClientUpdate`
-	async fn get_signature_slot(&self, light_client_update_json_str: &str) -> Result<Slot, crate::Error> {
+	async fn get_signature_slot(
+		&self,
+		light_client_update_json_str: &str,
+	) -> Result<Slot, crate::Error> {
 		const CHECK_SLOTS_FORWARD_LIMIT: u64 = 10;
 
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 
-		let attested_header_json_str = serde_json::to_string(&v[0]["data"]["attested_header"]["beacon"])?;
+		let attested_header_json_str =
+			serde_json::to_string(&v[0]["data"]["attested_header"]["beacon"])?;
 		let attested_header: BeaconBlockHeader = serde_json::from_str(&attested_header_json_str)?;
 
 		let mut signature_slot = attested_header.slot + 1;
@@ -407,7 +418,8 @@ impl BeaconRPCClient {
 	) -> Result<FinalizedHeaderUpdate, crate::Error> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 
-		let finalized_header_json_str = serde_json::to_string(&v[0]["data"]["finalized_header"]["beacon"])?;
+		let finalized_header_json_str =
+			serde_json::to_string(&v[0]["data"]["finalized_header"]["beacon"])?;
 		let finalized_header: BeaconBlockHeader = serde_json::from_str(&finalized_header_json_str)?;
 
 		let finalized_branch_json_str = serde_json::to_string(&v[0]["data"]["finality_branch"])?;
@@ -416,8 +428,9 @@ impl BeaconRPCClient {
 
 		let finalized_block_slot = finalized_header.slot;
 
-		let finalized_block_body =
-			self.get_beacon_block_body_for_block_id(&format!("{}", finalized_block_slot)).await?;
+		let finalized_block_body = self
+			.get_beacon_block_body_for_block_id(&format!("{}", finalized_block_slot))
+			.await?;
 		let finalized_block_eth1data_proof =
 			ExecutionBlockProof::construct_from_beacon_block_body(&finalized_block_body)?;
 

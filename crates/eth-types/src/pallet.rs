@@ -7,7 +7,7 @@ use ethereum_types::H256;
 use scale_info::TypeInfo;
 
 /// Minimal information about a header.
-#[derive(Clone, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Eq, PartialEq, Encode, Decode, TypeInfo)]
 pub struct ExecutionHeaderInfo<AccountId> {
 	pub parent_hash: H256,
 	pub block_number: u64,

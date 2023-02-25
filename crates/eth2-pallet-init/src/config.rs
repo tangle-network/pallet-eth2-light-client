@@ -1,6 +1,6 @@
 use eth_rpc_client::beacon_rpc_client;
 use reqwest::Url;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
 use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};

@@ -1,8 +1,8 @@
+use eth2_pallet_init::substrate_network::SubstrateNetwork;
 use eth_rpc_client::beacon_rpc_client::BeaconRPCVersion;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
-use eth2_pallet_init::substrate_network::SubstrateNetwork;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -89,7 +89,7 @@ pub struct Config {
 
 	pub trusted_signer_account_id: Option<String>,
 
-	pub init_block_root: Option<String>
+	pub init_block_root: Option<String>,
 }
 
 impl Config {

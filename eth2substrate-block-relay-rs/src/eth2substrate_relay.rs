@@ -12,8 +12,7 @@ use crate::{
 use bitvec::macros::internal::funty::Fundamental;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
-	beacon_rpc_client::BeaconRPCClient,
-	eth1_rpc_client::Eth1RPCClient,
+	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
 	hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 };
 use eth_types::{
@@ -116,7 +115,7 @@ impl Eth2SubstrateRelay {
 		);
 		let next_light_client_update =
 			Self::get_light_client_update_from_file(config, &beacon_rpc_client)
-			.await
+				.await
 				.expect("Error on parsing light client update");
 
 		let max_submitted_blocks_by_account = eth_pallet
@@ -203,8 +202,10 @@ impl Eth2SubstrateRelay {
 		LAST_ETH_SLOT_ON_NEAR
 			.inc_by(cmp::max(0, last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_NEAR.get()));
 
-		if let Ok(last_block_number) =
-			self.beacon_rpc_client.get_block_number_for_slot(last_eth2_slot_on_substrate).await
+		if let Ok(last_block_number) = self
+			.beacon_rpc_client
+			.get_block_number_for_slot(last_eth2_slot_on_substrate)
+			.await
 		{
 			CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR.inc_by(cmp::max(
 				0,
@@ -228,7 +229,8 @@ impl Eth2SubstrateRelay {
 
 		if let Ok(last_block_number) = self
 			.beacon_rpc_client
-			.get_block_number_for_slot(last_finalized_slot_on_substrate).await
+			.get_block_number_for_slot(last_finalized_slot_on_substrate)
+			.await
 		{
 			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR.inc_by(cmp::max(
 				0,
@@ -246,8 +248,10 @@ impl Eth2SubstrateRelay {
 		LAST_FINALIZED_ETH_SLOT
 			.inc_by(cmp::max(0, last_finalized_slot_on_eth as i64 - LAST_FINALIZED_ETH_SLOT.get()));
 
-		if let Ok(last_block_number) =
-			self.beacon_rpc_client.get_block_number_for_slot(last_finalized_slot_on_eth).await
+		if let Ok(last_block_number) = self
+			.beacon_rpc_client
+			.get_block_number_for_slot(last_finalized_slot_on_eth)
+			.await
 		{
 			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH.inc_by(cmp::max(
 				0,
@@ -321,7 +325,9 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn wait_for_synchronization(&self) -> Result<(), crate::Error> {
-		while self.beacon_rpc_client.is_syncing().await? || self.eth1_rpc_client.is_syncing().await? {
+		while self.beacon_rpc_client.is_syncing().await? ||
+			self.eth1_rpc_client.is_syncing().await?
+		{
 			info!(target: "relay", "Waiting for sync...");
 			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 		}
@@ -454,7 +460,8 @@ impl Eth2SubstrateRelay {
 			self.genesis_validators_root,
 			light_client_update,
 			sync_committee,
-		).map_err(Into::into)
+		)
+		.map_err(Into::into)
 	}
 
 	async fn get_execution_block_by_slot(&self, slot: u64) -> Result<BlockHeader, crate::Error> {
@@ -612,7 +619,8 @@ impl Eth2SubstrateRelay {
 
 		let attested_slot: u64 = self
 			.beacon_rpc_client
-			.get_non_empty_beacon_block_header(attested_slot).await?
+			.get_non_empty_beacon_block_header(attested_slot)
+			.await?
 			.slot
 			.into();
 		trace!(target: "relay", "Chosen attested slot {}", attested_slot);
@@ -636,7 +644,8 @@ impl Eth2SubstrateRelay {
 					&self.beacon_rpc_client,
 					attested_slot,
 					include_next_sync_committee,
-				).await,
+				)
+				.await,
 				format!(
 					"Error on getting hand made light client update for attested slot={}.",
 					attested_slot
@@ -706,9 +715,16 @@ impl Eth2SubstrateRelay {
 			// execution_outcome.transaction.hash);
 
 			let finalized_block_number = return_on_fail!(
-				self.beacon_rpc_client.get_block_number_for_slot(
-					light_client_update.finality_update.header_update.beacon_header.slot.as_u64()
-				).await,
+				self.beacon_rpc_client
+					.get_block_number_for_slot(
+						light_client_update
+							.finality_update
+							.header_update
+							.beacon_header
+							.slot
+							.as_u64()
+					)
+					.await,
 				"Fail on getting finalized block number"
 			);
 
@@ -784,7 +800,9 @@ mod tests {
 			slot += 1;
 
 			finality_slot_on_eth = loop {
-				if let Ok(last_slot) = relay.beacon_rpc_client.get_last_finalized_slot_number().await {
+				if let Ok(last_slot) =
+					relay.beacon_rpc_client.get_last_finalized_slot_number().await
+				{
 					break last_slot.as_u64()
 				}
 			}
@@ -1062,7 +1080,9 @@ mod tests {
 			&relay.beacon_rpc_client,
 			attested_slot,
 			false,
-		).await {
+		)
+		.await
+		{
 			Ok(light_client_update) => {
 				let finality_update_slot =
 					light_client_update.finality_update.header_update.beacon_header.slot;

@@ -5,26 +5,48 @@ use eth_types::{
 	BlockHeader, H256,
 };
 use sp_core::crypto::AccountId32;
+use subxt::ext::sp_core::Pair as PairT;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
 		self,
-		storage::address::Yes,
-		metadata::DecodeWithMetadata,
 		ext::sp_core::sr25519::Pair,
+		metadata::DecodeWithMetadata,
+		storage::{address::Yes, StorageAddress},
 		tx::{PairSigner, TxPayload, TxStatus},
-		OnlineClient, PolkadotConfig, storage::StorageAddress,
+		OnlineClient, PolkadotConfig,
 	},
 };
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
-use subxt::ext::sp_core::Pair as PairT;
 
-use crate::{
-	eth_client_pallet_trait::EthClientPalletTrait,
-};
+use crate::eth_client_pallet_trait::EthClientPalletTrait;
 
 use self::tangle::runtime_types::pallet_eth2_light_client;
+
+pub fn convert_typed_chain_ids(
+	t: TypedChainId,
+) -> tangle::runtime_types::webb_proposals::header::TypedChainId {
+	match t {
+		TypedChainId::None => tangle::runtime_types::webb_proposals::header::TypedChainId::None,
+		TypedChainId::Evm(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(id),
+		TypedChainId::Substrate(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Substrate(id),
+		TypedChainId::PolkadotParachain(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::PolkadotParachain(id),
+		TypedChainId::KusamaParachain(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::KusamaParachain(id),
+		TypedChainId::RococoParachain(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::RococoParachain(id),
+		TypedChainId::Cosmos(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Cosmos(id),
+		TypedChainId::Solana(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Solana(id),
+		TypedChainId::Ink(id) =>
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Ink(id),
+	}
+}
 
 pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Error> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new()
@@ -38,7 +60,7 @@ pub struct EthClientPallet {
 	signer: PairSigner<PolkadotConfig, Pair>,
 	chain: tangle::runtime_types::webb_proposals::header::TypedChainId,
 	max_submitted_blocks_by_account: Option<u32>,
-	end_slot: u64
+	end_slot: u64,
 }
 
 impl EthClientPallet {
@@ -49,16 +71,34 @@ impl EthClientPallet {
 	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
 		let signer = PairSigner::new(pair);
 		// set to defaults. These values will change later in init
-		Self { end_slot: 0, api, signer, chain: tangle::runtime_types::webb_proposals::header::TypedChainId::None, max_submitted_blocks_by_account: None }
+		Self {
+			end_slot: 0,
+			api,
+			signer,
+			chain: tangle::runtime_types::webb_proposals::header::TypedChainId::None,
+			max_submitted_blocks_by_account: None,
+		}
 	}
 
-	pub fn new_with_suri_key<T: AsRef<str>>(api: OnlineClient<PolkadotConfig>, suri_key: T) -> Result<Self, crate::Error> {
+	pub fn new_with_suri_key<T: AsRef<str>>(
+		api: OnlineClient<PolkadotConfig>,
+		suri_key: T,
+	) -> Result<Self, crate::Error> {
 		let pair = get_sr25519_keys_from_suri(suri_key)?;
 		Ok(Self::new_with_pair(api, pair))
 	}
 
 	pub fn get_signer_account_id(&self) -> AccountId32 {
 		(*AsRef::<[u8; 32]>::as_ref(&self.signer.account_id())).into()
+	}
+
+	pub async fn is_initialized(&self, typed_chain_id: TypedChainId) -> Result<bool, Error> {
+		let address = tangle::storage()
+			.eth2_client()
+			.finalized_beacon_header(convert_typed_chain_ids(typed_chain_id));
+		self.get_value(&address).await.map(|x| x.is_some()).map_err(|err| {
+			Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("{err:?}")))
+		})
 	}
 
 	pub async fn init(
@@ -74,54 +114,79 @@ impl EthClientPallet {
 		max_submitted_blocks_by_account: Option<u32>,
 		trusted_signer: Option<AccountId32>,
 	) -> Result<(), Error> {
-
 		let max_submitted_blocks_by_account = max_submitted_blocks_by_account.unwrap_or(10);
 		self.max_submitted_blocks_by_account = Some(max_submitted_blocks_by_account);
 		self.chain = Decode::decode(&mut typed_chain_id.clone().encode().as_slice()).unwrap();
 
 		let trusted_signer = if let Some(trusted_signer) = trusted_signer {
-			let bytes: [u8;32] = *trusted_signer.as_ref();
+			let bytes: [u8; 32] = *trusted_signer.as_ref();
 			Some(subxt::ext::sp_runtime::AccountId32::from(bytes))
 		} else {
 			None
 		};
 
-		let init_input: tangle::runtime_types::eth_types::pallet::InitInput<subxt::ext::sp_runtime::AccountId32> = tangle::runtime_types::eth_types::pallet::InitInput {
-			finalized_execution_header: Decode::decode(&mut finalized_execution_header.encode().as_slice())?,
-			finalized_beacon_header: Decode::decode(&mut finalized_beacon_header.encode().as_slice())?,
-			current_sync_committee: Decode::decode(&mut current_sync_committee.encode().as_slice())?,
+		let init_input: tangle::runtime_types::eth_types::pallet::InitInput<
+			subxt::ext::sp_runtime::AccountId32,
+		> = tangle::runtime_types::eth_types::pallet::InitInput {
+			finalized_execution_header: Decode::decode(
+				&mut finalized_execution_header.encode().as_slice(),
+			)?,
+			finalized_beacon_header: Decode::decode(
+				&mut finalized_beacon_header.encode().as_slice(),
+			)?,
+			current_sync_committee: Decode::decode(
+				&mut current_sync_committee.encode().as_slice(),
+			)?,
 			next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice())?,
 			validate_updates: validate_updates.unwrap_or(true),
 			verify_bls_signatures: verify_bls_signatures.unwrap_or(true),
 			hashes_gc_threshold: hashes_gc_threshold.unwrap_or(100),
-			max_submitted_blocks_by_account: max_submitted_blocks_by_account,
+			max_submitted_blocks_by_account,
 			trusted_signer,
 		};
 
-		let tx = tangle::tx().eth2_client().init(typed_chain_id.chain_id(), init_input);
+		let tx = tangle::tx()
+			.eth2_client()
+			.init(convert_typed_chain_ids(typed_chain_id), init_input);
 
 		// submit the transaction with default params:
-		let _hash = self.submit(&tx).await.map_err(|err|Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("{err:?}"))))?;
+		let _hash = self.submit(&tx).await.map_err(|err| {
+			Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("{err:?}")))
+		})?;
 
 		Ok(())
 	}
 
-	async fn get_value_or_default<'a, Address: StorageAddress>(&self, key_addr: &Address) -> Result<<Address::Target as DecodeWithMetadata>::Target, crate::Error> 
-		where
-		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a {
-		let value = self.api.storage().fetch_or_default(key_addr, None)
-			.await
-			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
-	
+	async fn get_value_or_default<'a, Address: StorageAddress>(
+		&self,
+		key_addr: &Address,
+	) -> Result<<Address::Target as DecodeWithMetadata>::Target, crate::Error>
+	where
+		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a,
+	{
+		let value = self.api.storage().fetch_or_default(key_addr, None).await.map_err(|err| {
+			Error::Io(std::io::Error::new(
+				std::io::ErrorKind::Other,
+				format!("Failed to get api storage value: {err:?}"),
+			))
+		})?;
+
 		Ok(value)
 	}
 
-	async fn get_value<'a, Address: StorageAddress>(&self, key_addr: &Address) -> Result<Option<<Address::Target as DecodeWithMetadata>::Target>, crate::Error> 
-		where
-		Address: StorageAddress<IsFetchable = Yes> + 'a {
-		let value = self.api.storage().fetch(key_addr, None)
-			.await
-			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
+	async fn get_value<'a, Address: StorageAddress>(
+		&self,
+		key_addr: &Address,
+	) -> Result<Option<<Address::Target as DecodeWithMetadata>::Target>, crate::Error>
+	where
+		Address: StorageAddress<IsFetchable = Yes> + 'a,
+	{
+		let value = self.api.storage().fetch(key_addr, None).await.map_err(|err| {
+			Error::Io(std::io::Error::new(
+				std::io::ErrorKind::Other,
+				format!("Failed to get api storage value: {err:?}"),
+			))
+		})?;
 
 		Ok(value)
 	}
@@ -132,57 +197,71 @@ impl EthClientPallet {
 			.tx()
 			.sign_and_submit_then_watch_default(call, &self.signer)
 			.await
-			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))))?;
-		
-			while let Some(event) = progress.next_item().await {
-				let e = match event {
-					Ok(e) => e,
-					Err(err) => {
-						log::error!("failed to watch for tx events {err:?}");
-						return Err(crate::Error::from(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))));
-					}
-				};
-	
-				match e {
-					TxStatus::Future => {}
-					TxStatus::Ready => {
-						log::trace!("tx ready");
-					}
-					TxStatus::Broadcast(_) => {}
-					TxStatus::InBlock(_) => {
-						log::trace!("tx in block");
-					}
-					TxStatus::Retracted(_) => {
-						log::warn!("tx retracted");
-					}
-					TxStatus::FinalityTimeout(_) => {
-						log::warn!("tx timeout");
-					}
-					TxStatus::Finalized(v) => {
-						let maybe_success = v.wait_for_success().await;
-						match maybe_success {
-							Ok(events) => {
-								log::debug!("tx finalized");
-								let hash = events.extrinsic_hash();
-								return Ok(hash.0.into())
-							}
-							Err(err) => {
-								log::error!("tx failed {err:?}");
-								return Err(crate::Error::from(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get hash storage value: {err:?}"))));
-							}
-						}
-					}
-					TxStatus::Usurped(_) => {}
-					TxStatus::Dropped => {
-						log::warn!("tx dropped");
-					}
-					TxStatus::Invalid => {
-						log::warn!("tx invalid");
-					}
-				}
-			}
+			.map_err(|err| {
+				Error::Io(std::io::Error::new(
+					std::io::ErrorKind::Other,
+					format!("Failed to get hash storage value: {err:?}"),
+				))
+			})?;
 
-			Err(crate::Error::from(std::io::Error::new(std::io::ErrorKind::Other, format!("Transaction stream ended"))))
+		while let Some(event) = progress.next_item().await {
+			let e = match event {
+				Ok(e) => e,
+				Err(err) => {
+					log::error!("failed to watch for tx events {err:?}");
+					return Err(crate::Error::from(std::io::Error::new(
+						std::io::ErrorKind::Other,
+						format!("Failed to get hash storage value: {err:?}"),
+					)))
+				},
+			};
+
+			match e {
+				TxStatus::Future => {},
+				TxStatus::Ready => {
+					log::trace!("tx ready");
+				},
+				TxStatus::Broadcast(_) => {},
+				TxStatus::InBlock(_) => {
+					log::trace!("tx in block");
+				},
+				TxStatus::Retracted(_) => {
+					log::warn!("tx retracted");
+				},
+				TxStatus::FinalityTimeout(_) => {
+					log::warn!("tx timeout");
+				},
+				TxStatus::Finalized(v) => {
+					let maybe_success = v.wait_for_success().await;
+					match maybe_success {
+						Ok(events) => {
+							log::debug!("tx finalized");
+							let hash = events.extrinsic_hash();
+							return Ok(hash.0.into())
+						},
+						Err(err) => {
+							log::error!("tx failed {err:?}");
+							return Err(crate::Error::from(std::io::Error::new(
+								std::io::ErrorKind::Other,
+								format!("Failed to get hash storage value: {err:?}"),
+							)))
+						},
+					}
+				},
+				TxStatus::Usurped(_) => {},
+				TxStatus::Dropped => {
+					log::warn!("tx dropped");
+				},
+				TxStatus::Invalid => {
+					log::warn!("tx invalid");
+				},
+			}
+		}
+
+		Err(crate::Error::from(std::io::Error::new(
+			std::io::ErrorKind::Other,
+			format!("Transaction stream ended"),
+		)))
 	}
 }
 
@@ -198,10 +277,10 @@ impl EthClientPalletTrait for EthClientPallet {
 		&self,
 		execution_block_hash: &eth_types::H256,
 	) -> Result<bool, crate::Error> {
-		let decoded: tangle::runtime_types::eth_types::H256 = Decode::decode(&mut execution_block_hash.encode().as_slice()).unwrap();
+		let decoded: tangle::runtime_types::eth_types::H256 =
+			Decode::decode(&mut execution_block_hash.encode().as_slice()).unwrap();
 		let addr = tangle::storage().eth2_client().unfinalized_headers(&self.chain, decoded);
-		self.get_value(&addr)
-		.await.map(|r| r.is_some())
+		self.get_value(&addr).await.map(|r| r.is_some())
 	}
 
 	async fn send_light_client_update(
@@ -210,20 +289,22 @@ impl EthClientPalletTrait for EthClientPallet {
 	) -> Result<(), crate::Error> {
 		let decoded_lcu = Decode::decode(&mut light_client_update.encode().as_slice()).unwrap();
 		let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
-		let call = tangle::tx().eth2_client().submit_beacon_chain_light_client_update(decoded_tcid, decoded_lcu);
-		self.submit(&call).await.map(|_|())
+		let call = tangle::tx()
+			.eth2_client()
+			.submit_beacon_chain_light_client_update(decoded_tcid, decoded_lcu);
+		self.submit(&call).await.map(|_| ())
 	}
 
 	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, crate::Error> {
 		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
-		self.get_value(&addr).await
+		self.get_value(&addr)
+			.await
 			.map(|r| eth_types::H256::from(r.unwrap().beacon_block_root.0))
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
 		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
-		self.get_value(&addr).await
-			.map(|r| r.unwrap().header.slot)
+		self.get_value(&addr).await.map(|r| r.unwrap().header.slot)
 	}
 
 	async fn send_headers(
@@ -240,15 +321,18 @@ impl EthClientPalletTrait for EthClientPallet {
 		for header in headers {
 			let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
 			let decoded_header = Decode::decode(&mut header.encode().as_slice()).unwrap();
-			let call = pallet_eth2_light_client::pallet::Call::submit_execution_header { typed_chain_id: decoded_tcid, block_header:decoded_header };
-			let tx = tangle::runtime_types::tangle_standalone_runtime::RuntimeCall::Eth2Client(call);
+			let call = pallet_eth2_light_client::pallet::Call::submit_execution_header {
+				typed_chain_id: decoded_tcid,
+				block_header: decoded_header,
+			};
+			let tx =
+				tangle::runtime_types::tangle_standalone_runtime::RuntimeCall::Eth2Client(call);
 			txes.push(tx);
 		}
 
 		let batch_call = tangle::tx().utility().force_batch(txes);
 
-		self.submit(&batch_call).await
-			.map(|_| ())
+		self.submit(&batch_call).await.map(|_| ())
 	}
 
 	async fn get_min_deposit(
@@ -262,8 +346,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		log::info!(target: "relay", "About to register the submitter ...");
 		let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
 		let tx = tangle::tx().eth2_client().register_submitter(decoded_tcid);
-		self.submit(&tx).await
-			.map(|_| ())
+		self.submit(&tx).await.map(|_| ())
 	}
 
 	async fn is_submitter_registered(
@@ -272,11 +355,12 @@ impl EthClientPalletTrait for EthClientPallet {
 	) -> Result<bool, crate::Error> {
 		let account_id = account_id.unwrap_or(self.get_signer_account_id());
 		log::info!(target: "relay", "Attempting to see if {account_id:?} is registered ...");
-		
+
 		let bytes: [u8; 32] = *account_id.as_ref();
-		let addr = tangle::storage().eth2_client().submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
-		self.get_value(&addr).await
-			.map(|r| r.is_some())
+		let addr = tangle::storage()
+			.eth2_client()
+			.submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
+		self.get_value(&addr).await.map(|r| r.is_some())
 	}
 
 	async fn get_light_client_state(
@@ -295,17 +379,24 @@ impl EthClientPalletTrait for EthClientPallet {
 			tokio::try_join!(task0, task1, task2)?;
 
 		match (finalized_beacon_header, current_sync_committee, next_sync_committee) {
-			(Some(finalized_beacon_header), Some(current_sync_committee), Some(next_sync_committee)) => {
-				Ok(LightClientState {
-					finalized_beacon_header: Decode::decode(&mut finalized_beacon_header.encode().as_slice()).unwrap(),
-					current_sync_committee: Decode::decode(&mut current_sync_committee.encode().as_slice()).unwrap(),
-					next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice()).unwrap(),
-				})
-			}
+			(
+				Some(finalized_beacon_header),
+				Some(current_sync_committee),
+				Some(next_sync_committee),
+			) => Ok(LightClientState {
+				finalized_beacon_header: Decode::decode(
+					&mut finalized_beacon_header.encode().as_slice(),
+				)
+				.unwrap(),
+				current_sync_committee: Decode::decode(
+					&mut current_sync_committee.encode().as_slice(),
+				)
+				.unwrap(),
+				next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice())
+					.unwrap(),
+			}),
 
-			_ => {
-				Err(crate::Error::from("Unable to obtain all three values"))
-			}
+			_ => Err(crate::Error::from("Unable to obtain all three values")),
 		}
 	}
 
@@ -321,11 +412,17 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_max_submitted_blocks_by_account(&self) -> Result<u32, crate::Error> {
-		let key_addr = tangle::storage().eth2_client().max_unfinalized_blocks_per_submitter(&self.chain);
-		
-		let value: u32 = self.api.storage().fetch_or_default(&key_addr, None)
-			.await
-			.map_err(|err| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to get api storage value: {err:?}"))))?;
+		let key_addr = tangle::storage()
+			.eth2_client()
+			.max_unfinalized_blocks_per_submitter(&self.chain);
+
+		let value: u32 =
+			self.api.storage().fetch_or_default(&key_addr, None).await.map_err(|err| {
+				Error::Io(std::io::Error::new(
+					std::io::ErrorKind::Other,
+					format!("Failed to get api storage value: {err:?}"),
+				))
+			})?;
 
 		Ok(value)
 	}
@@ -337,29 +434,20 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 		// env
 		let var = value.strip_prefix('$').unwrap_or(value);
 		log::trace!("Reading {} from env", var);
-		let val = std::env::var(var).map_err(|e| {
-			crate::Error::from(format!(
-				"error while loading this env {var}: {e}",
-			))
-		})?;
-		let maybe_pair =
-			Pair::from_string(&val, None);
+		let val = std::env::var(var)
+			.map_err(|e| crate::Error::from(format!("error while loading this env {var}: {e}",)))?;
+		let maybe_pair = Pair::from_string(&val, None);
 		match maybe_pair {
 			Ok(pair) => Ok(pair),
-			Err(e) => {
-				Err(format!("{e:?}").into())
-			}
+			Err(e) => Err(format!("{e:?}").into()),
 		}
 	} else if value.starts_with('>') {
 		todo!("Implement command execution to extract the private key")
 	} else {
-		let maybe_pair =
-			Pair::from_string(value, None);
+		let maybe_pair = Pair::from_string(value, None);
 		match maybe_pair {
 			Ok(pair) => Ok(pair),
-			Err(e) => {
-				Err(format!("{e:?}").into())
-			}
+			Err(e) => Err(format!("{e:?}").into()),
 		}
 	}
 }
