@@ -201,6 +201,9 @@ mod tests {
 		eth_client_pallet: &EthClientPallet,
 	) -> crate::config::Config {
 		return crate::config::Config {
+			enabled: true,
+			chain_id: 123,
+			name: "test config".into(),
 			beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 			eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 			substrate_endpoint: "https://localhost:9944".to_string(),
@@ -228,7 +231,7 @@ mod tests {
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
 		let api = setup_api().await.unwrap();
-		let mut eth_client_pallet = EthClientPallet::new(api);
+		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::None);
 		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
 		init_config.validate_updates = Some(false);
 		init_config.substrate_network_id = SubstrateNetwork::Testnet;
@@ -245,7 +248,7 @@ mod tests {
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
 		let api = setup_api().await.unwrap();
-		let mut eth_client_pallet = EthClientPallet::new(api);
+		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::None);
 		let mut init_config = get_init_config(&config_for_test, &eth_client_pallet);
 		init_config.substrate_network_id = SubstrateNetwork::Testnet;
 		init_config.trusted_signer_account_id = None;
@@ -259,7 +262,7 @@ mod tests {
 			ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
 		let api = setup_api().await.unwrap();
-		let mut eth_client_pallet = EthClientPallet::new(api);
+		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::None);
 		let init_config = get_init_config(&config_for_test, &eth_client_pallet);
 
 		init_pallet(&init_config, &mut eth_client_pallet).await.unwrap();

@@ -4,6 +4,7 @@ use eth2_pallet_init::{
 	init_pallet::init_pallet,
 	substrate_pallet_client::{setup_api, EthClientPallet},
 };
+use webb_proposals::TypedChainId;
 // use eth2near_logger::SimpleLogger;
 // use log::LevelFilter;
 use std::string::String;
@@ -48,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// init_log(&args, &config);
 
 	let api = setup_api().await.unwrap();
-	let mut eth_client_contract = EthClientPallet::new(api);
+	let mut eth_client_contract = EthClientPallet::new(api, TypedChainId::None);
 	init_pallet(&config, &mut eth_client_contract)
 		.await
 		.expect("Error on contract initialization");

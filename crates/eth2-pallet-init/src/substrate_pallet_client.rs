@@ -64,18 +64,22 @@ pub struct EthClientPallet {
 }
 
 impl EthClientPallet {
-	pub fn new(api: OnlineClient<PolkadotConfig>) -> Self {
-		Self::new_with_pair(api, sp_keyring::AccountKeyring::Alice.pair())
+	pub fn new(api: OnlineClient<PolkadotConfig>, typed_chain_id: TypedChainId) -> Self {
+		Self::new_with_pair(api, sp_keyring::AccountKeyring::Alice.pair(), typed_chain_id)
 	}
 
-	pub fn new_with_pair(api: OnlineClient<PolkadotConfig>, pair: Pair) -> Self {
+	pub fn new_with_pair(
+		api: OnlineClient<PolkadotConfig>,
+		pair: Pair,
+		typed_chain_id: TypedChainId,
+	) -> Self {
 		let signer = PairSigner::new(pair);
 		// set to defaults. These values will change later in init
 		Self {
 			end_slot: 0,
 			api,
 			signer,
-			chain: tangle::runtime_types::webb_proposals::header::TypedChainId::None,
+			chain: convert_typed_chain_ids(typed_chain_id),
 			max_submitted_blocks_by_account: None,
 		}
 	}
@@ -83,9 +87,10 @@ impl EthClientPallet {
 	pub fn new_with_suri_key<T: AsRef<str>>(
 		api: OnlineClient<PolkadotConfig>,
 		suri_key: T,
+		typed_chain_id: TypedChainId,
 	) -> Result<Self, crate::Error> {
 		let pair = get_sr25519_keys_from_suri(suri_key)?;
-		Ok(Self::new_with_pair(api, pair))
+		Ok(Self::new_with_pair(api, pair, typed_chain_id))
 	}
 
 	pub fn get_signer_account_id(&self) -> AccountId32 {
@@ -303,6 +308,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
+		println!("Getting finalized beacon block slot for {:?}...", self.chain);
 		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
 		self.get_value(&addr).await.map(|r| r.unwrap().header.slot)
 	}

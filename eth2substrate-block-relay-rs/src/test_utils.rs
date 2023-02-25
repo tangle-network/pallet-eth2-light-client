@@ -249,7 +249,7 @@ pub async fn get_client_pallet(
 	config_for_test: &ConfigForTests,
 ) -> Box<dyn EthClientPalletTrait> {
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api);
+	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
 
 	let mut config = get_init_config(config_for_test, &eth_client_pallet);
 	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
@@ -306,7 +306,7 @@ pub async fn get_relay_from_slot(
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api);
+	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
 
 	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test).await;
 
