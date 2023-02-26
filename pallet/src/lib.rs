@@ -527,7 +527,7 @@ pub mod pallet {
 				Self::validate_light_client_update(typed_chain_id, &light_client_update)?;
 			}
 
-			Self::commit_light_client_update(typed_chain_id, light_client_update)?;
+			Self::commit_light_client_update(typed_chain_id, light_client_update.clone())?;
 			Self::deposit_event(Event::SubmitBeaconChainLightClientUpdate {
 				typed_chain_id,
 				submitter,
