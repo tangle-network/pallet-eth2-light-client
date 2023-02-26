@@ -8,7 +8,6 @@ pub struct ConfigForTests {
 	pub beacon_endpoint: String,
 	pub eth1_endpoint: String,
 	pub network_name: EthNetwork,
-	pub wasm_filepath: String,
 }
 
 impl ConfigForTests {

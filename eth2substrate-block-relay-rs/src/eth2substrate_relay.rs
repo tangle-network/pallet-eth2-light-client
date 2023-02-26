@@ -3,10 +3,10 @@ use crate::{
 	last_slot_searcher::LastSlotSearcher,
 	prometheus_metrics,
 	prometheus_metrics::{
-		CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH, CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR,
+		CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH, CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE,
 		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH,
-		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR, LAST_ETH_SLOT, LAST_ETH_SLOT_ON_NEAR,
-		LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_NEAR,
+		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE, LAST_ETH_SLOT,
+		LAST_ETH_SLOT_ON_SUBSTRATE, LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE,
 	},
 };
 use bitvec::macros::internal::funty::Fundamental;
@@ -199,17 +199,19 @@ impl Eth2SubstrateRelay {
 			.await
 			.map_err(to_error)?;
 
-		LAST_ETH_SLOT_ON_NEAR
-			.inc_by(cmp::max(0, last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_NEAR.get()));
+		LAST_ETH_SLOT_ON_SUBSTRATE.inc_by(cmp::max(
+			0,
+			last_eth2_slot_on_substrate as i64 - LAST_ETH_SLOT_ON_SUBSTRATE.get(),
+		));
 
 		if let Ok(last_block_number) = self
 			.beacon_rpc_client
 			.get_block_number_for_slot(last_eth2_slot_on_substrate)
 			.await
 		{
-			CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR.inc_by(cmp::max(
+			CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.inc_by(cmp::max(
 				0,
-				last_block_number as i64 - CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR.get(),
+				last_block_number as i64 - CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.get(),
 			));
 		}
 
@@ -222,9 +224,9 @@ impl Eth2SubstrateRelay {
 			.get_finalized_beacon_block_slot()
 			.await
 			.map_err(to_error)?;
-		LAST_FINALIZED_ETH_SLOT_ON_NEAR.inc_by(cmp::max(
+		LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE.inc_by(cmp::max(
 			0,
-			last_finalized_slot_on_substrate as i64 - LAST_FINALIZED_ETH_SLOT_ON_NEAR.get(),
+			last_finalized_slot_on_substrate as i64 - LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE.get(),
 		));
 
 		if let Ok(last_block_number) = self
@@ -232,9 +234,10 @@ impl Eth2SubstrateRelay {
 			.get_block_number_for_slot(last_finalized_slot_on_substrate)
 			.await
 		{
-			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR.inc_by(cmp::max(
+			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.inc_by(cmp::max(
 				0,
-				last_block_number as i64 - CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR.get(),
+				last_block_number as i64 -
+					CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.get(),
 			));
 		}
 
@@ -286,11 +289,11 @@ impl Eth2SubstrateRelay {
 
 			let mut last_eth2_slot_on_substrate: u64 = skip_fail!(
 				self.get_last_eth2_slot_on_substrate(max_slot_for_submission).await,
-				"Fail to get last slot on NEAR",
+				"Fail to get last slot on SUBSTRATE",
 				self.sleep_time_on_sync_secs
 			);
 
-			info!(target: "relay", "Last slot on NEAR = {}; max slot for submission = {}",
+			info!(target: "relay", "Last slot on SUBSTRATE = {}; max slot for submission = {}",
                   last_eth2_slot_on_substrate, max_slot_for_submission);
 
 			if last_eth2_slot_on_substrate < max_slot_for_submission {
@@ -415,7 +418,7 @@ impl Eth2SubstrateRelay {
 		current_slot: u64,
 		last_eth2_slot_on_substrate: &mut u64,
 	) {
-		info!(target: "relay", "Try submit headers from slot={} to {} to NEAR", *last_eth2_slot_on_substrate + 1, current_slot - 1);
+		info!(target: "relay", "Try submit headers from slot={} to {} to SUBSTRATE", *last_eth2_slot_on_substrate + 1, current_slot - 1);
 		let _execution_outcome = return_on_fail!(
 			self.eth_client_pallet.send_headers(&headers, current_slot - 1).await,
 			"Error on header submission"
@@ -493,7 +496,7 @@ impl Eth2SubstrateRelay {
 		}
 
 		if last_finalized_slot_on_eth <= last_finalized_slot_on_substrate {
-			info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on NEAR. Skipping sending light client update.");
+			info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on SUBSTRATE. Skipping sending light client update.");
 			return false
 		}
 
@@ -507,7 +510,7 @@ impl Eth2SubstrateRelay {
 	async fn send_light_client_updates_with_checks(&mut self, last_submitted_slot: u64) -> bool {
 		let last_finalized_slot_on_substrate: u64 = return_val_on_fail!(
 			self.get_last_finalized_slot_on_substrate().await,
-			"Error on getting finalized block slot on NEAR. Skipping sending light client update",
+			"Error on getting finalized block slot on SUBSTRATE. Skipping sending light client update",
 			false
 		);
 
@@ -515,7 +518,7 @@ impl Eth2SubstrateRelay {
                 "Error on getting last finalized slot on Ethereum. Skipping sending light client update",
                 false).as_u64();
 
-		info!(target: "relay", "last_finalized_slot on near/eth {}/{}", last_finalized_slot_on_substrate, last_finalized_slot_on_eth);
+		info!(target: "relay", "last_finalized_slot on substrate/eth {}/{}", last_finalized_slot_on_substrate, last_finalized_slot_on_eth);
 
 		if self
 			.is_enough_blocks_for_light_client_update(
@@ -554,7 +557,7 @@ impl Eth2SubstrateRelay {
 		if last_finalized_slot_on_eth >=
 			last_finalized_slot_on_substrate + self.max_blocks_for_finalization
 		{
-			info!(target: "relay", "Too big gap between slot of finalized block on NEAR and ETH. Sending hand made light client update");
+			info!(target: "relay", "Too big gap between slot of finalized block on SUBSTRATE and ETH. Sending hand made light client update");
 			self.send_hand_made_light_client_update(last_finalized_slot_on_substrate).await;
 		} else {
 			self.send_regular_light_client_update(
@@ -583,21 +586,21 @@ impl Eth2SubstrateRelay {
 		last_finalized_slot_on_eth: u64,
 		last_finalized_slot_on_substrate: u64,
 	) {
-		let last_eth2_period_on_near_chain =
+		let last_eth2_period_on_substrate_chain =
 			BeaconRPCClient::get_period_for_slot(last_finalized_slot_on_substrate);
-		info!(target: "relay", "Last finalized slot/period on near={}/{}", last_finalized_slot_on_substrate, last_eth2_period_on_near_chain);
+		info!(target: "relay", "Last finalized slot/period on substrate={}/{}", last_finalized_slot_on_substrate, last_eth2_period_on_substrate_chain);
 
 		let end_period = BeaconRPCClient::get_period_for_slot(last_finalized_slot_on_eth);
 		info!(target: "relay", "Last finalized slot/period on ethereum={}/{}", last_finalized_slot_on_eth, end_period);
 
-		let light_client_update = if end_period == last_eth2_period_on_near_chain {
-			debug!(target: "relay", "Finalized period on ETH and NEAR are equal. Don't fetch sync commity update");
+		let light_client_update = if end_period == last_eth2_period_on_substrate_chain {
+			debug!(target: "relay", "Finalized period on ETH and SUBSTRATE are equal. Don't fetch sync commity update");
 			return_on_fail!(
 				self.beacon_rpc_client.get_finality_light_client_update().await,
 				"Error on getting light client update. Skipping sending light client update"
 			)
 		} else {
-			debug!(target: "relay", "Finalized period on ETH and NEAR are different. Fetching sync commity update");
+			debug!(target: "relay", "Finalized period on ETH and SUBSTRATE are different. Fetching sync commity update");
 			return_on_fail!(
 				self.beacon_rpc_client.get_light_client_update_for_last_period().await,
 				"Error on getting light client update. Skipping sending light client update"
@@ -656,7 +659,7 @@ impl Eth2SubstrateRelay {
 				light_client_update.finality_update.header_update.beacon_header.slot;
 
 			if finality_update_slot <= last_finalized_slot_on_substrate {
-				info!(target: "relay", "Finality update slot for hand made light client update <= last finality update on NEAR. Increment gap for attested slot and skipping light client update.");
+				info!(target: "relay", "Finality update slot for hand made light client update <= last finality update on SUBSTRATE. Increment gap for attested slot and skipping light client update.");
 				attested_slot = return_on_fail!(
 					self.get_attested_slot(last_finalized_slot_on_substrate + ONE_EPOCH_IN_SLOTS)
 						.await,
@@ -731,7 +734,7 @@ impl Eth2SubstrateRelay {
 			info!(target: "relay", "Finalized block number from light client update = {}", finalized_block_number);
 			tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 		} else {
-			debug!(target: "relay", "Finalized block for light client update is not found on NEAR. Skipping send light client update");
+			debug!(target: "relay", "Finalized block for light client update is not found on SUBSTRATE. Skipping send light client update");
 		}
 	}
 }

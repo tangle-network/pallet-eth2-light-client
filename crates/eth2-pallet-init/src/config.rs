@@ -16,7 +16,7 @@ pub struct Config {
 	// endpoint for the Ethereum full node, which supports Eth1 RPC API
 	pub eth1_endpoint: String,
 
-	// endpoint for a full node on the NEAR chain
+	// endpoint for a full node on the SUBSTRATE chain
 	pub substrate_endpoint: String,
 
 	// Account id from which relay make requests
@@ -25,7 +25,7 @@ pub struct Config {
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
-	// Account id for eth client contract on NEAR
+	// Account id for eth client contract on SUBSTRATE
 	pub contract_account_id: String,
 
 	// The Ethereum network name (mainnet, kiln, ropsten, goerli)
@@ -77,6 +77,6 @@ impl Config {
 		Url::parse(&self.eth1_endpoint).expect("Incorrect ETH1 endpoint");
 
 		// check `substrate_endpoint`
-		Url::parse(&self.substrate_endpoint).expect("Incorrect NEAR endpoint");
+		Url::parse(&self.substrate_endpoint).expect("Incorrect SUBSTRATE endpoint");
 	}
 }

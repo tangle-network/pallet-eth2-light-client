@@ -10,7 +10,7 @@ pub struct LastSlotSearcher {
 
 type EthClientContract = Box<dyn EthClientPalletTrait>;
 
-// Implementation of functions for searching last slot on NEAR contract
+// Implementation of functions for searching last slot on SUBSTRATE contract
 impl LastSlotSearcher {
 	pub fn new(enable_binsearch: bool) -> Self {
 		Self { enable_binsearch }
@@ -22,12 +22,12 @@ impl LastSlotSearcher {
 		beacon_rpc_client: &BeaconRPCClient,
 		eth_client_contract: &EthClientContract,
 	) -> Result<u64, crate::Error> {
-		info!(target: "relay", "= Search for last slot on near =");
+		info!(target: "relay", "= Search for last slot on SUBSTRATE =");
 
 		let finalized_slot =
 			eth_client_contract.get_finalized_beacon_block_slot().await.map_err(to_error)?;
 		let finalized_number = beacon_rpc_client.get_block_number_for_slot(finalized_slot).await?;
-		info!(target: "relay", "Finalized slot/block_number on near={}/{}", finalized_slot, finalized_number);
+		info!(target: "relay", "Finalized slot/block_number on SUBSTRATE={}/{}", finalized_slot, finalized_number);
 
 		let last_submitted_slot = eth_client_contract.get_last_submitted_slot().await;
 		trace!(target: "relay", "Last submitted slot={}", last_submitted_slot);
@@ -56,10 +56,10 @@ impl LastSlotSearcher {
 		}
 	}
 
-	// Search for the slot before the first unknown slot on NEAR
+	// Search for the slot before the first unknown slot on SUBSTRATE
 	// Assumptions:
-	//     (1) start_slot is known on NEAR
-	//     (2) last_slot is unknown on NEAR
+	//     (1) start_slot is known on SUBSTRATE
+	//     (2) last_slot is unknown on SUBSTRATE
 	// Return error in case of problem with network connection
 	async fn binary_slot_search(
 		&self,
@@ -102,7 +102,7 @@ impl LastSlotSearcher {
 				.await,
 			Err(err) => match err.is_no_block_for_slot_error {
 				Some(_) => {
-					let (left_slot, slot_on_near) = self
+					let (left_slot, slot_on_substrate) = self
 						.find_left_non_error_slot(
 							slot + 1,
 							last_eth_slot + 1,
@@ -111,7 +111,7 @@ impl LastSlotSearcher {
 							eth_client_contract,
 						)
 						.await;
-					match slot_on_near {
+					match slot_on_substrate {
 						true =>
 							self.binsearch_slot_forward(
 								left_slot,
@@ -135,10 +135,10 @@ impl LastSlotSearcher {
 		}
 	}
 
-	// Search for the slot before the first unknown slot on NEAR
+	// Search for the slot before the first unknown slot on SUBSTRATE
 	// Assumptions:
-	// (1) start_slot is known on NEAR
-	// (2) last_slot is unknown on NEAR
+	// (1) start_slot is known on SUBSTRATE
+	// (2) last_slot is unknown on SUBSTRATE
 	// Return error in case of problem with network connection
 	async fn binsearch_slot_forward(
 		&self,
@@ -165,7 +165,7 @@ impl LastSlotSearcher {
 				Ok(false) => break,
 				Err(err) => match err.is_no_block_for_slot_error {
 					Some(_) => {
-						let (slot_id, slot_on_near) = self
+						let (slot_id, slot_on_substrate) = self
 							.find_left_non_error_slot(
 								slot + current_step - 1,
 								prev_slot,
@@ -174,7 +174,7 @@ impl LastSlotSearcher {
 								eth_client_contract,
 							)
 							.await;
-						if slot_on_near {
+						if slot_on_substrate {
 							prev_slot = slot_id;
 							current_step = cmp::min(current_step * 2, max_slot - slot);
 						} else {
@@ -196,10 +196,10 @@ impl LastSlotSearcher {
 		.await
 	}
 
-	// Search for the slot before the first unknown slot on NEAR
+	// Search for the slot before the first unknown slot on SUBSTRATE
 	// Assumptions:
-	// (1) start_slot is known on NEAR
-	// (2) last_slot is unknown on NEAR
+	// (1) start_slot is known on SUBSTRATE
+	// (2) last_slot is unknown on SUBSTRATE
 	// Return error in case of problem with network connection
 	async fn binsearch_slot_range(
 		&self,
@@ -220,7 +220,7 @@ impl LastSlotSearcher {
 				Ok(false) => last_slot = mid_slot,
 				Err(err) => match err.is_no_block_for_slot_error {
 					Some(_) => {
-						let (left_slot, is_left_slot_on_near) = self
+						let (left_slot, is_left_slot_on_substrate) = self
 							.find_left_non_error_slot(
 								mid_slot - 1,
 								start_slot,
@@ -229,7 +229,7 @@ impl LastSlotSearcher {
 								eth_client_contract,
 							)
 							.await;
-						if is_left_slot_on_near {
+						if is_left_slot_on_substrate {
 							start_slot = mid_slot;
 						} else {
 							last_slot = left_slot;
@@ -243,9 +243,9 @@ impl LastSlotSearcher {
 		Ok(start_slot)
 	}
 
-	// Returns the last slot known with block known on NEAR
+	// Returns the last slot known with block known on SUBSTRATE
 	// Slot -- expected last known slot
-	// finalized_slot -- last finalized slot on NEAR, assume as known slot
+	// finalized_slot -- last finalized slot on SUBSTRATE, assume as known slot
 	// last_eth_slot -- head slot on Eth
 	async fn linear_slot_search(
 		&self,
@@ -283,7 +283,7 @@ impl LastSlotSearcher {
 				.await,
 			Err(err) => match err.is_no_block_for_slot_error {
 				Some(_) => {
-					let (left_slot, slot_on_near) = self
+					let (left_slot, slot_on_substrate) = self
 						.find_left_non_error_slot(
 							slot + 1,
 							last_eth_slot + 1,
@@ -293,7 +293,7 @@ impl LastSlotSearcher {
 						)
 						.await;
 
-					match slot_on_near {
+					match slot_on_substrate {
 						true =>
 							self.linear_search_forward(
 								left_slot,
@@ -317,7 +317,7 @@ impl LastSlotSearcher {
 		}
 	}
 
-	// Returns the slot before the first unknown block on NEAR
+	// Returns the slot before the first unknown block on SUBSTRATE
 	// The search range is [slot .. max_slot)
 	// If there is no unknown block in this range max_slot - 1 will be returned
 	// Assumptions:
@@ -348,7 +348,7 @@ impl LastSlotSearcher {
 		Ok(slot)
 	}
 
-	// Returns the slot before the first unknown block on NEAR
+	// Returns the slot before the first unknown block on SUBSTRATE
 	// The search range is [last_slot .. start_slot)
 	// If no such block are found the start_slot will be returned
 	// Assumptions:
@@ -385,7 +385,7 @@ impl LastSlotSearcher {
 	}
 
 	// Find the leftmost non-empty slot. Search range: [left_slot, right_slot).
-	// Returns pair: (1) slot_id and (2) is this block already known on Eth client on NEAR
+	// Returns pair: (1) slot_id and (2) is this block already known on Eth client on SUBSTRATE
 	// Assume that right_slot is non-empty and it's block were submitted to Substrate,
 	// so if non correspondent block is found we return (right_slot, false)
 	async fn find_left_non_error_slot(
@@ -429,7 +429,7 @@ impl LastSlotSearcher {
 		beacon_rpc_client: &BeaconRPCClient,
 		eth_client_contract: &EthClientContract,
 	) -> Result<bool, crate::Error> {
-		trace!(target: "relay", "Check if block with slot={} on NEAR", slot);
+		trace!(target: "relay", "Check if block with slot={} on SUBSTRATE", slot);
 		match beacon_rpc_client.get_beacon_block_body_for_block_id(&format!("{}", slot)).await {
 			Ok(beacon_block_body) => {
 				let hash: H256 = H256::from(
@@ -443,10 +443,10 @@ impl LastSlotSearcher {
 				);
 
 				if eth_client_contract.is_known_block(&hash).await.map_err(to_error)? {
-					trace!(target: "relay", "Block with slot={} was found on NEAR", slot);
+					trace!(target: "relay", "Block with slot={} was found on SUBSTRATE", slot);
 					Ok(true)
 				} else {
-					trace!(target: "relay", "Block with slot={} not found on Near", slot);
+					trace!(target: "relay", "Block with slot={} not found on SUBSTRATE", slot);
 					Ok(false)
 				}
 			},
@@ -734,7 +734,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.linear_search_forward(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.right_bound_in_slot_search,
@@ -744,7 +744,7 @@ mod tests {
 			.await
 			.unwrap();
 
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 2);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 2);
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -755,7 +755,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.linear_search_forward(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.right_bound_in_slot_search,
@@ -765,7 +765,7 @@ mod tests {
 			.await
 			.unwrap();
 
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 	}
 
 	#[tokio::test]
@@ -795,7 +795,7 @@ mod tests {
 
 		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.linear_slot_search(
 				config_for_test.slot_without_block - 1,
 				finalized_slot,
@@ -805,9 +805,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.linear_slot_search(
 				config_for_test.slot_without_block,
 				finalized_slot,
@@ -817,9 +817,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.linear_slot_search(
 				config_for_test.first_slot + 1,
 				finalized_slot,
@@ -829,9 +829,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.linear_slot_search(
 				config_for_test.slot_without_block + 5,
 				finalized_slot,
@@ -841,7 +841,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 	}
 
 	#[tokio::test]
@@ -914,7 +914,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_range(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.right_bound_in_slot_search,
@@ -923,7 +923,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 2);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 2);
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -933,7 +933,7 @@ mod tests {
 			config_for_test.slot_without_block - 1,
 		)
 		.await;
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_range(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.right_bound_in_slot_search,
@@ -942,9 +942,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_range(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.slot_without_block,
@@ -953,9 +953,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 1);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 1);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_range(
 				config_for_test.slot_without_block,
 				config_for_test.right_bound_in_slot_search,
@@ -964,7 +964,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
 		beacon_rpc_client = BeaconRPCClient::new(
 			"http://httpstat.us/504/",
@@ -1012,7 +1012,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_forward(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.right_bound_in_slot_search,
@@ -1021,7 +1021,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 2);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 2);
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -1032,7 +1032,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_forward(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.right_bound_in_slot_search,
@@ -1041,9 +1041,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_forward(
 				eth_client_contract.get_finalized_beacon_block_slot().await.unwrap() + 1,
 				config_for_test.slot_without_block,
@@ -1052,9 +1052,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 1);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 1);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binsearch_slot_forward(
 				config_for_test.slot_without_block,
 				config_for_test.right_bound_in_slot_search,
@@ -1063,7 +1063,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
 		beacon_rpc_client = BeaconRPCClient::new(
 			"http://httpstat.us/504/",
@@ -1112,7 +1112,7 @@ mod tests {
 
 		let finalized_slot = eth_client_contract.get_finalized_beacon_block_slot().await.unwrap();
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binary_slot_search(
 				finalized_slot + 1,
 				finalized_slot,
@@ -1122,7 +1122,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 2);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 2);
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -1133,7 +1133,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binary_slot_search(
 				finalized_slot + 1,
 				finalized_slot,
@@ -1143,9 +1143,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binary_slot_search(
 				finalized_slot + 1,
 				finalized_slot,
@@ -1155,9 +1155,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binary_slot_search(
 				finalized_slot + 1,
 				finalized_slot,
@@ -1167,9 +1167,9 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 1);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 1);
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.binary_slot_search(
 				config_for_test.slot_without_block,
 				finalized_slot,
@@ -1179,7 +1179,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 1);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 1);
 
 		beacon_rpc_client = BeaconRPCClient::new(
 			"http://httpstat.us/504/",
@@ -1226,7 +1226,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.get_last_slot(
 				config_for_test.right_bound_in_slot_search,
 				&beacon_rpc_client,
@@ -1234,7 +1234,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 2);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 2);
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -1245,7 +1245,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.get_last_slot(
 				config_for_test.right_bound_in_slot_search,
 				&beacon_rpc_client,
@@ -1253,7 +1253,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
 		beacon_rpc_client = BeaconRPCClient::new(
 			"http://httpstat.us/504/",
@@ -1299,7 +1299,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.get_last_slot(
 				config_for_test.right_bound_in_slot_search,
 				&beacon_rpc_client,
@@ -1307,7 +1307,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block - 2);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block - 2);
 
 		send_execution_blocks(
 			&beacon_rpc_client,
@@ -1318,7 +1318,7 @@ mod tests {
 		)
 		.await;
 
-		let last_block_on_near = last_slot_searcher
+		let last_block_on_substrate = last_slot_searcher
 			.get_last_slot(
 				config_for_test.right_bound_in_slot_search,
 				&beacon_rpc_client,
@@ -1326,7 +1326,7 @@ mod tests {
 			)
 			.await
 			.unwrap();
-		assert_eq!(last_block_on_near, config_for_test.slot_without_block);
+		assert_eq!(last_block_on_substrate, config_for_test.slot_without_block);
 
 		beacon_rpc_client = BeaconRPCClient::new(
 			"http://httpstat.us/504/",

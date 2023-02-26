@@ -8,15 +8,17 @@ lazy_static! {
 	pub static ref REGISTRY: Registry = Registry::new();
 	pub static ref LAST_ETH_SLOT: IntCounter =
 		IntCounter::new("last_eth_slot", "Last Ethereum Slot").expect("metric can't be created");
-	pub static ref LAST_ETH_SLOT_ON_NEAR: IntCounter =
-		IntCounter::new("last_eth_slot_on_near", "Last Ethereum Slot on NEAR")
+	pub static ref LAST_ETH_SLOT_ON_SUBSTRATE: IntCounter =
+		IntCounter::new("last_eth_slot_on_substrate", "Last Ethereum Slot on SUBSTRATE")
 			.expect("metric can't be created");
 	pub static ref LAST_FINALIZED_ETH_SLOT: IntCounter =
 		IntCounter::new("last_finalized_eth_slot", "Last Finalized Ethereum Slot")
 			.expect("metric can't be created");
-	pub static ref LAST_FINALIZED_ETH_SLOT_ON_NEAR: IntCounter =
-		IntCounter::new("last_finalized_eth_slot_on_near", "Last Finalized Ethereum Slot on NEAR")
-			.expect("metric can't be created");
+	pub static ref LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE: IntCounter = IntCounter::new(
+		"last_finalized_eth_slot_on_substrate",
+		"Last Finalized Ethereum Slot on SUBSTRATE"
+	)
+	.expect("metric can't be created");
 	pub static ref FAILS_ON_HEADERS_SUBMISSION: IntCounter =
 		IntCounter::new("fails_on_headers_submission", "Fails number on Headers Submission")
 			.expect("metric can't be created");
@@ -35,16 +37,17 @@ lazy_static! {
 		"Chain finalized execution block height on eth"
 	)
 	.expect("metric cann't be created");
-	pub static ref CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR: IntCounter = IntCounter::new(
-		"chain_execution_block_height_on_near",
-		"Chain execution block height on near"
+	pub static ref CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE: IntCounter = IntCounter::new(
+		"chain_execution_block_height_on_substrate",
+		"Chain execution block height on substrate"
 	)
 	.expect("metric can't be created");
-	pub static ref CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR: IntCounter = IntCounter::new(
-		"chain_finalized_execution_block_height_on_near",
-		"Chain finalized execution block height on near"
-	)
-	.expect("metric can't be created");
+	pub static ref CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE: IntCounter =
+		IntCounter::new(
+			"chain_finalized_execution_block_height_on_substrate",
+			"Chain finalized execution block height on substrate"
+		)
+		.expect("metric can't be created");
 }
 
 fn register_custom_metrics() {
@@ -53,16 +56,16 @@ fn register_custom_metrics() {
 		.expect("last_eth_slot can't be registered");
 
 	REGISTRY
-		.register(Box::new(LAST_ETH_SLOT_ON_NEAR.clone()))
-		.expect("last_eth_slot_on_near can't be registered");
+		.register(Box::new(LAST_ETH_SLOT_ON_SUBSTRATE.clone()))
+		.expect("last_eth_slot_on_substrate can't be registered");
 
 	REGISTRY
 		.register(Box::new(LAST_FINALIZED_ETH_SLOT.clone()))
 		.expect("last_finalized_eth_slot can't be registered");
 
 	REGISTRY
-		.register(Box::new(LAST_FINALIZED_ETH_SLOT_ON_NEAR.clone()))
-		.expect("last_finalized_eth_slot_on_near can't be registered");
+		.register(Box::new(LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE.clone()))
+		.expect("last_finalized_eth_slot_on_substrate can't be registered");
 
 	REGISTRY
 		.register(Box::new(FAILS_ON_HEADERS_SUBMISSION.clone()))
@@ -81,12 +84,12 @@ fn register_custom_metrics() {
 		.expect("chain_finalized_execution_block_height_on_eth can't be registered");
 
 	REGISTRY
-		.register(Box::new(CHAIN_EXECUTION_BLOCK_HEIGHT_ON_NEAR.clone()))
-		.expect("chain_execution_block_height_on_near can't be registered");
+		.register(Box::new(CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.clone()))
+		.expect("chain_execution_block_height_on_substrate can't be registered");
 
 	REGISTRY
-		.register(Box::new(CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_NEAR.clone()))
-		.expect("chain_finalized_execution_block_height_on_near can't be registered");
+		.register(Box::new(CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.clone()))
+		.expect("chain_finalized_execution_block_height_on_substrate can't be registered");
 }
 
 async fn metrics_handler() -> Result<impl Reply, Rejection> {

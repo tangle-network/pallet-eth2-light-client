@@ -4,10 +4,8 @@ use eth2_pallet_init::{
 	init_pallet::init_pallet,
 	substrate_pallet_client::{setup_api, EthClientPallet},
 };
-use webb_proposals::TypedChainId;
-// use eth2near_logger::SimpleLogger;
-// use log::LevelFilter;
 use std::string::String;
+use webb_proposals::TypedChainId;
 
 #[derive(Parser, Default, Debug)]
 #[clap(version, about = "ETH2 contract initialization")]
