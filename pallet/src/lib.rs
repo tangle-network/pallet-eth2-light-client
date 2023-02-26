@@ -100,6 +100,7 @@ pub use traits::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
+	use eth_types::eth2::BeaconBlockHeader;
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::{OptionQuery, *},
@@ -293,12 +294,30 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		Init { typed_chain_id: TypedChainId, header_info: ExecutionHeaderInfo<T::AccountId> },
-		RegisterSubmitter { typed_chain_id: TypedChainId, origin: T::AccountId },
-		UnregisterSubmitter { typed_chain_id: TypedChainId, origin: T::AccountId },
-		SubmitBeaconChainLightClientUpdate { typed_chain_id: TypedChainId, origin: T::AccountId },
-		SubmitExecutionHeader { typed_chain_id: TypedChainId, origin: T::AccountId },
-		UpdateTrustedSigner { trusted_signer: T::AccountId, origin: T::AccountId },
+		Init {
+			typed_chain_id: TypedChainId,
+			header_info: ExecutionHeaderInfo<T::AccountId>,
+		},
+		RegisterSubmitter {
+			typed_chain_id: TypedChainId,
+			submitter: T::AccountId,
+		},
+		UnregisterSubmitter {
+			typed_chain_id: TypedChainId,
+			submitter: T::AccountId,
+		},
+		SubmitBeaconChainLightClientUpdate {
+			typed_chain_id: TypedChainId,
+			submitter: T::AccountId,
+			beacon_block_header: BeaconBlockHeader,
+		},
+		SubmitExecutionHeader {
+			typed_chain_id: TypedChainId,
+			header_info: ExecutionHeaderInfo<T::AccountId>,
+		},
+		UpdateTrustedSigner {
+			trusted_signer: T::AccountId,
+		},
 	}
 
 	#[pallet::error]
@@ -450,7 +469,7 @@ pub mod pallet {
 			Submitters::<T>::insert(typed_chain_id, submitter.clone(), 0);
 			Self::deposit_event(Event::RegisterSubmitter {
 				typed_chain_id,
-				origin: submitter.clone(),
+				submitter: submitter.clone(),
 			});
 			ensure!(
 				Submitters::<T>::contains_key(typed_chain_id, &submitter),
@@ -487,7 +506,7 @@ pub mod pallet {
 				ExistenceRequirement::AllowDeath,
 			)?;
 
-			Self::deposit_event(Event::UnregisterSubmitter { typed_chain_id, origin: submitter });
+			Self::deposit_event(Event::UnregisterSubmitter { typed_chain_id, submitter });
 
 			Ok(().into())
 		}
@@ -511,7 +530,8 @@ pub mod pallet {
 			Self::commit_light_client_update(typed_chain_id, light_client_update)?;
 			Self::deposit_event(Event::SubmitBeaconChainLightClientUpdate {
 				typed_chain_id,
-				origin: submitter,
+				submitter,
+				beacon_block_header: light_client_update.attested_beacon_header,
 			});
 			Ok(().into())
 		}
@@ -553,7 +573,10 @@ pub mod pallet {
 			);
 			UnfinalizedHeaders::<T>::insert(typed_chain_id, block_hash, &block_info);
 
-			Self::deposit_event(Event::SubmitExecutionHeader { typed_chain_id, origin: submitter });
+			Self::deposit_event(Event::SubmitExecutionHeader {
+				typed_chain_id,
+				header_info: block_info,
+			});
 
 			Ok(().into())
 		}
@@ -571,7 +594,7 @@ pub mod pallet {
 			);
 			TrustedSigner::<T>::put(trusted_signer.clone());
 
-			Self::deposit_event(Event::UpdateTrustedSigner { trusted_signer, origin });
+			Self::deposit_event(Event::UpdateTrustedSigner { trusted_signer });
 
 			Ok(().into())
 		}
