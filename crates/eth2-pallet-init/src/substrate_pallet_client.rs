@@ -300,15 +300,20 @@ impl EthClientPalletTrait for EthClientPallet {
 
 	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, crate::Error> {
 		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
-		self.get_value(&addr)
-			.await
-			.map(|r| eth_types::H256::from(r.unwrap().beacon_block_root.0))
+		if let Some(header) = self.get_value(&addr).await? {
+			Ok(eth_types::H256::from(header.beacon_block_root.0))
+		} else {
+			Err(crate::Error::from("Unable to get value for get_finalized_beacon_block_hash"))
+		}
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
-		println!("Getting finalized beacon block slot for {:?}...", self.chain);
 		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
-		self.get_value(&addr).await.map(|r| r.unwrap().header.slot)
+		if let Some(header) = self.get_value(&addr).await? {
+			Ok(header.header.slot)
+		} else {
+			Err(crate::Error::from("Unable to get value for get_finalized_beacon_block_slot"))
+		}
 	}
 
 	async fn send_headers(
