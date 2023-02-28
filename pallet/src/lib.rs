@@ -563,7 +563,7 @@ pub mod pallet {
 			let block_info = ExecutionHeaderInfo {
 				parent_hash: block_header.parent_hash.0,
 				block_number: block_header.number,
-				submitter: submitter,
+				submitter,
 			};
 			ensure!(
 				UnfinalizedHeaders::<T>::get(typed_chain_id, block_hash).is_none(),
