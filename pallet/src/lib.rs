@@ -414,7 +414,7 @@ pub mod pallet {
 			let finalized_execution_header_info = ExecutionHeaderInfo {
 				parent_hash: args.finalized_execution_header.parent_hash.0,
 				block_number: args.finalized_execution_header.number,
-				submitter: signer.clone(),
+				submitter: signer,
 			};
 
 			if let Some(account) = args.trusted_signer.clone() {
@@ -563,7 +563,7 @@ pub mod pallet {
 			let block_info = ExecutionHeaderInfo {
 				parent_hash: block_header.parent_hash.0,
 				block_number: block_header.number,
-				submitter: submitter.clone(),
+				submitter: submitter,
 			};
 			ensure!(
 				UnfinalizedHeaders::<T>::get(typed_chain_id, block_hash).is_none(),
@@ -589,7 +589,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(
-				TrustedSigner::<T>::get() == Some(origin.clone()),
+				TrustedSigner::<T>::get() == Some(origin),
 				Error::<T>::NotTrustedSigner
 			);
 			TrustedSigner::<T>::put(trusted_signer.clone());
