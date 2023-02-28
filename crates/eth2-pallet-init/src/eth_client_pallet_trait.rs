@@ -15,7 +15,7 @@ pub struct Eth2LightClientError {
 #[async_trait]
 pub trait EthClientPalletTrait: Send + Sync + 'static {
 	/// Returns the last submitted slot by this relay
-	async fn get_last_submitted_slot(&self) -> u64;
+	async fn get_last_submitted_slot(&self) -> Result<u64, crate::Error>;
 
 	/// Checks if the block with the execution block hash is known to Ethereum Light Client on
 	/// SUBSTRATE

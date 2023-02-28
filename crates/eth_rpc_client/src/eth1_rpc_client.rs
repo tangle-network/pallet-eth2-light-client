@@ -16,7 +16,6 @@ impl Eth1RPCClient {
 		&self,
 		number: u64,
 	) -> Result<BlockHeader, crate::Error> {
-		println!("KB0");
 		let hex_str_number = format!("0x{:x}", number);
 		let json_value = json!({
 			"id": 0,
@@ -34,9 +33,7 @@ impl Eth1RPCClient {
 			.text()
 			.await?;
 
-		println!("KB1 {res}");
 		let val: Value = serde_json::from_str(&res)?;
-		println!("KB2: {}", serde_json::to_string(&val)?);
 		let mut block_json = serde_json::to_string(&val["result"])?;
 
 		// TODO: use aliases instead for deserialization
@@ -93,19 +90,19 @@ mod tests {
 		ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap())
 	}
 
-	#[test]
-	fn test_smoke_get_block_by_number() {
+	#[tokio::test]
+	async fn test_smoke_get_block_by_number() {
 		let config = get_test_config();
 
 		let eth1_rpc_client = Eth1RPCClient::new(&config.eth1_endpoint);
-		eth1_rpc_client.get_block_header_by_number(config.eth1_number).unwrap();
+		eth1_rpc_client.get_block_header_by_number(config.eth1_number).await.unwrap();
 	}
 
-	#[test]
-	fn test_is_syncing() {
+	#[tokio::test]
+	async fn test_is_syncing() {
 		let config = get_test_config();
 
 		let eth1_rpc_client = Eth1RPCClient::new(&config.eth1_endpoint);
-		assert!(!eth1_rpc_client.is_syncing().unwrap());
+		assert!(!eth1_rpc_client.is_syncing().await.unwrap());
 	}
 }

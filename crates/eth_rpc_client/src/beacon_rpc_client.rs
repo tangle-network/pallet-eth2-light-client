@@ -568,8 +568,8 @@ mod tests {
 		);
 	}
 
-	#[test]
-	fn test_get_json_from_raw_request() {
+	#[tokio::test]
+	async fn test_get_json_from_raw_request() {
 		let config = get_test_config();
 		let file_json_str =
 			std::fs::read_to_string(&config.path_to_block).expect("Unable to read file");
@@ -577,7 +577,7 @@ mod tests {
 		let url = format!("{}/eth/v2/beacon/blocks/{}", config.beacon_endpoint, config.first_slot);
 		let beacon_rpc_client =
 			BeaconRPCClient::new(&url, TIMEOUT_SECONDS, TIMEOUT_STATE_SECONDS, None);
-		let rpc_json_str = beacon_rpc_client.get_json_from_raw_request(&url);
+		let rpc_json_str = beacon_rpc_client.get_json_from_raw_request(&url).await;
 		assert_eq!(rpc_json_str.unwrap(), file_json_str.trim());
 	}
 
@@ -605,8 +605,8 @@ mod tests {
 		.unwrap();
 	}
 
-	#[test]
-	fn test_get_beacon_block_header() {
+	#[tokio::test]
+	async fn test_get_beacon_block_header() {
 		let config = get_test_config();
 		let beacon_block_header = BeaconRPCClient::new(
 			&config.beacon_endpoint,
@@ -615,6 +615,7 @@ mod tests {
 			None,
 		)
 		.get_beacon_block_header_for_block_id(&format!("{}", config.first_slot))
+		.await
 		.unwrap();
 
 		let header_json_str =
@@ -647,8 +648,8 @@ mod tests {
 		);
 	}
 
-	#[test]
-	fn test_get_beacon_block_body() {
+	#[tokio::test]
+	async fn test_get_beacon_block_body() {
 		let config = get_test_config();
 
 		let beacon_block_body = BeaconRPCClient::new(
@@ -658,6 +659,7 @@ mod tests {
 			None,
 		)
 		.get_beacon_block_body_for_block_id(&config.first_slot.to_string())
+		.await
 		.unwrap();
 
 		let block_json_str =
@@ -673,8 +675,8 @@ mod tests {
 		);
 	}
 
-	#[test]
-	fn test_is_sync() {
+	#[tokio::test]
+	async fn test_is_sync() {
 		assert!(!BeaconRPCClient::new(
 			"https://lodestar-goerli.chainsafe.io",
 			TIMEOUT_SECONDS,
@@ -682,6 +684,7 @@ mod tests {
 			None
 		)
 		.is_syncing()
+		.await
 		.unwrap());
 	}
 
@@ -718,8 +721,8 @@ mod tests {
 		assert_eq!(beacon_body_file, beacon_body_rpc);
 	}
 
-	#[test]
-	fn test_fetch_light_client_update() {
+	#[tokio::test]
+	async fn test_fetch_light_client_update() {
 		let config = get_test_config();
 
 		let beacon_rpc_client = BeaconRPCClient::new(
@@ -781,6 +784,7 @@ mod tests {
 		// check signature_slot
 		let beacon_block_body = beacon_rpc_client
 			.get_beacon_block_body_for_block_id(&format!("{}", light_client_update.signature_slot))
+			.await
 			.unwrap();
 		assert_eq!(
 			serde_json::to_string(

@@ -29,7 +29,7 @@ impl LastSlotSearcher {
 		let finalized_number = beacon_rpc_client.get_block_number_for_slot(finalized_slot).await?;
 		info!(target: "relay", "Finalized slot/block_number on SUBSTRATE={}/{}", finalized_slot, finalized_number);
 
-		let last_submitted_slot = eth_client_contract.get_last_submitted_slot().await;
+		let last_submitted_slot = eth_client_contract.get_last_submitted_slot().await?;
 		trace!(target: "relay", "Last submitted slot={}", last_submitted_slot);
 
 		let slot = cmp::max(finalized_slot, last_submitted_slot);

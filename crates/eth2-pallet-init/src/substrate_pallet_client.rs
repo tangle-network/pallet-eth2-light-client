@@ -272,10 +272,8 @@ impl EthClientPallet {
 
 #[async_trait]
 impl EthClientPalletTrait for EthClientPallet {
-	async fn get_last_submitted_slot(&self) -> u64 {
-		self.get_finalized_beacon_block_slot()
-			.await
-			.expect("Unable to obtain finalized beacon slot")
+	async fn get_last_submitted_slot(&self) -> Result<u64, crate::Error> {
+		self.get_finalized_beacon_block_slot().await
 	}
 
 	async fn is_known_block(
