@@ -21,7 +21,7 @@ jobs:
           override: true
 
     - name: Check workspace
-      run: cargo check --package pallet-eth2-light-client
+      run: cargo check --tests
 
     - name: Test workspace
       run: cargo test --package pallet-eth2-light-client

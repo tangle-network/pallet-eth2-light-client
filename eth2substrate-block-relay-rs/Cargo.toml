@@ -7,7 +7,7 @@ edition = "2021"
 types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
-eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
+eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"] }
 tree_hash = { path = "../crates/tree_hash" }
 merkle_proof = { path = "../crates/merkle_proof" }
 eth2_hashing = { path = "../crates/eth2_hashing" }
@@ -16,14 +16,14 @@ eth_rpc_client = { path = "../crates/eth_rpc_client" }
 eth2-pallet-init = { path = "../crates/eth2-pallet-init" }
 finality-update-verify = { path = "../crates/finality-update-verify" }
 
-webb = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = [
+webb = { git = "https://github.com/webb-tools/webb-rs.git", features = [
     "evm-runtime",
     "substrate-runtime"
 ]}
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git" }
 
 sp-keyring = { default-features=false, version = "7.0.0" }
-sp-core = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "polkadot-v0.9.36" }
+sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", default-features = false, features = ["derive"] }

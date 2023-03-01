@@ -15,7 +15,7 @@ pub enum Network {
 impl FromStr for Network {
 	type Err = String;
 	fn from_str(input: &str) -> Result<Network, Self::Err> {
-		match input {
+		match input.to_lowercase().as_str() {
 			"mainnet" => Ok(Network::Mainnet),
 			"kiln" => Ok(Network::Kiln),
 			"ropsten" => Ok(Network::Ropsten),

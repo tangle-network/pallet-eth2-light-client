@@ -1,9 +1,9 @@
 use eth2_pallet_init::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{env, io::Read, path::PathBuf};
 use webb_proposals::TypedChainId;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigForTests {
 	pub beacon_endpoint: String,
 	pub eth1_endpoint: String,

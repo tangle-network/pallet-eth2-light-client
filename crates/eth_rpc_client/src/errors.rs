@@ -45,7 +45,7 @@ impl Display for MissSyncAggregationError {
 
 impl Error for MissSyncAggregationError {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NoBlockForSlotError;
 
 impl Display for NoBlockForSlotError {

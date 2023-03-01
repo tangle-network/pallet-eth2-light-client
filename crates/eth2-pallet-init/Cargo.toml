@@ -20,9 +20,13 @@ sp-keyring = { default-features=false, version = "7.0.0" }
 sp-core = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "polkadot-v0.9.36" }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
+webb-relayer-types = { git = "https://github.com/webb-tools/relayer.git" }
 webb = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
 ]}
+subxt = "0.25.0"
+scale = { package = "parity-scale-codec", version = "3", default-features = false }
+scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git" }
 tokio = { version = "1.1", default-features = false, features = ["macros", "rt", "time"] }

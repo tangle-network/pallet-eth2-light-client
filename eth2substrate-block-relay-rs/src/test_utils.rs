@@ -7,6 +7,7 @@ use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
 	eth_network::EthNetwork,
 	init_pallet::init_pallet,
+	substrate_network::SubstrateNetwork,
 	substrate_pallet_client::{setup_api, EthClientPallet},
 };
 use eth_rpc_client::{
@@ -17,7 +18,7 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientUpdate, SyncCommittee},
 	BlockHeader,
 };
-use std::{thread, time};
+use std::time;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
@@ -97,7 +98,7 @@ pub async fn init_pallet_from_files(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 pub async fn init_pallet_from_specific_slot(
@@ -125,6 +126,7 @@ pub async fn init_pallet_from_specific_slot(
 
 	let finality_header = beacon_rpc_client
 		.get_beacon_block_header_for_block_id(&format!("{}", finality_slot))
+		.await
 		.unwrap();
 
 	let finality_header = eth_types::eth2::BeaconBlockHeader {
@@ -137,6 +139,7 @@ pub async fn init_pallet_from_specific_slot(
 
 	let finalized_body = beacon_rpc_client
 		.get_beacon_block_body_for_block_id(&format!("{}", finality_slot))
+		.await
 		.unwrap();
 
 	let finalized_beacon_header = ExtendedBeaconBlockHeader {
@@ -156,6 +159,7 @@ pub async fn init_pallet_from_specific_slot(
 		.get_block_header_by_number(
 			finalized_body.execution_payload().unwrap().execution_payload.block_number,
 		)
+		.await
 		.unwrap();
 
 	eth_client_pallet
@@ -174,11 +178,14 @@ pub async fn init_pallet_from_specific_slot(
 		.await
 		.unwrap();
 
-	thread::sleep(time::Duration::from_secs(30));
+	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
 fn get_config(config_for_test: &ConfigForTests) -> Config {
 	Config {
+		enabled: true,
+		chain_id: 123,
+		name: "test config".into(),
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,
@@ -201,6 +208,11 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
 		substrate_network_name: config_for_test.substrate_network_id.to_string(),
+		init_block_root: None,
+		substrate_network_id: SubstrateNetwork::Testnet,
+		trusted_signer_account_id: None,
+		validate_bls_signature: None,
+		validate_updates: None,
 	}
 }
 
@@ -209,6 +221,9 @@ fn get_init_config(
 	eth_client_pallet: &EthClientPallet,
 ) -> eth2_pallet_init::config::Config {
 	eth2_pallet_init::config::Config {
+		enabled: true,
+		chain_id: 123,
+		name: "test config".into(),
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		signer_account_id: "alice".to_string(),
@@ -234,7 +249,7 @@ pub async fn get_client_pallet(
 	config_for_test: &ConfigForTests,
 ) -> Box<dyn EthClientPalletTrait> {
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api);
+	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
 
 	let mut config = get_init_config(config_for_test, &eth_client_pallet);
 	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
@@ -291,7 +306,7 @@ pub async fn get_relay_from_slot(
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api);
+	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
 
 	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test).await;
 
