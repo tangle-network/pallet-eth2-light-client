@@ -615,9 +615,7 @@ fn compute_union_selectors(num_variants: usize) -> Vec<u8> {
 
 	assert!(
 		highest_selector <= MAX_UNION_SELECTOR,
-		"union selector {} exceeds limit of {}, enum has too many variants",
-		highest_selector,
-		MAX_UNION_SELECTOR
+		"union selector {highest_selector} exceeds limit of {MAX_UNION_SELECTOR}, enum has too many variants",
 	);
 
 	union_selectors

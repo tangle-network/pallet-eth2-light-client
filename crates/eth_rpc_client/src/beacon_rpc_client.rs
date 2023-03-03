@@ -151,9 +151,9 @@ impl BeaconRPCClient {
 			"{}/{}?start_period={}&count=1",
 			self.endpoint_url, self.routes.get_light_client_update, period
 		);
-		println!("url: {}", url);
+		println!("url: {url}");
 		let light_client_update_json_str = self.get_json_from_raw_request(&url).await?;
-		println!("light_client_update_json_str: {}", light_client_update_json_str);
+		println!("light_client_update_json_str: {light_client_update_json_str}");
 		let attested_beacon_header = Self::get_attested_header_from_light_client_update_json_str(
 			&light_client_update_json_str,
 		)?;
@@ -318,7 +318,7 @@ impl BeaconRPCClient {
 	async fn get_json_from_client(client: &Client, url: &str) -> Result<String, crate::Error> {
 		trace!(target: "relay", "Beacon chain request: {}", url);
 		let json_str = client.get(url).send().await?.text().await?;
-		if let Err(_) = serde_json::from_str::<Value>(&json_str) {
+		if serde_json::from_str::<Value>(&json_str).is_err() {
 			return Err(FailOnGettingJson { response: json_str }.into())
 		}
 
@@ -389,7 +389,7 @@ impl BeaconRPCClient {
 
 		loop {
 			if let Ok(beacon_block_body) =
-				self.get_beacon_block_body_for_block_id(&format!("{}", signature_slot)).await
+				self.get_beacon_block_body_for_block_id(&format!("{signature_slot}")).await
 			{
 				if format!(
 					"\"{:?}\"",
@@ -429,7 +429,7 @@ impl BeaconRPCClient {
 		let finalized_block_slot = finalized_header.slot;
 
 		let finalized_block_body = self
-			.get_beacon_block_body_for_block_id(&format!("{}", finalized_block_slot))
+			.get_beacon_block_body_for_block_id(&format!("{finalized_block_slot}"))
 			.await?;
 		let finalized_block_eth1data_proof =
 			ExecutionBlockProof::construct_from_beacon_block_body(&finalized_block_body)?;
@@ -479,7 +479,7 @@ impl BeaconRPCClient {
 		let finalized_slot = self.get_last_finalized_slot_number().await?.as_u64();
 
 		for slot in start_slot..finalized_slot {
-			match self.get_beacon_block_header_for_block_id(&format!("{}", slot)).await {
+			match self.get_beacon_block_header_for_block_id(&format!("{slot}")).await {
 				Ok(beacon_block_body) => return Ok(beacon_block_body),
 				Err(err) => match err.is_no_block_for_slot_error {
 					Some(_) => continue,
@@ -489,8 +489,7 @@ impl BeaconRPCClient {
 		}
 
 		Err(format!(
-			"Unable to get non empty beacon block in range [`{}`-`{}`)",
-			start_slot, finalized_slot
+			"Unable to get non empty beacon block in range [`{start_slot}`-`{finalized_slot}`)"
 		))?
 	}
 
@@ -741,7 +740,7 @@ mod tests {
 				.parse::<u64>()
 				.unwrap(),
 		);
-		println!("period: {}", period);
+		println!("period: {period}");
 		let light_client_update = beacon_rpc_client.get_light_client_update(period).await.unwrap();
 
 		// check attested_header

@@ -16,7 +16,7 @@ impl Eth1RPCClient {
 		&self,
 		number: u64,
 	) -> Result<BlockHeader, crate::Error> {
-		let hex_str_number = format!("0x{:x}", number);
+		let hex_str_number = format!("0x{number:x}");
 		let json_value = json!({
 			"id": 0,
 			"jsonrpc": "2.0",
