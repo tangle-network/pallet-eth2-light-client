@@ -66,7 +66,7 @@ pub trait TAggregateSignature<Pub, AggPub, Sig>: Sized + Clone {
 ///
 /// Provides generic functionality whilst deferring all serious cryptographic operations to the
 /// generics.
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct GenericAggregateSignature<Pub, AggPub, Sig, AggSig> {
 	/// The underlying point which performs *actual* cryptographic operations.
 	point: Option<AggSig>,
@@ -276,7 +276,7 @@ where
 }
 
 /// Hashes the `self.serialize()` bytes.
-#[allow(clippy::derived_hash_with_manual_eq)]
+#[allow(clippy::derived_hash_with_manual_eq, clippy::derive_hash_xor_eq)]
 impl<Pub, AggPub, Sig, AggSig> Hash for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,
