@@ -125,20 +125,20 @@ pub async fn init_pallet_from_specific_slot(
 	let eth1_rpc_client = Eth1RPCClient::new(&config_for_test.eth1_endpoint);
 
 	let finality_header = beacon_rpc_client
-		.get_beacon_block_header_for_block_id(&format!("{}", finality_slot))
+		.get_beacon_block_header_for_block_id(&format!("{finality_slot}"))
 		.await
 		.unwrap();
 
 	let finality_header = eth_types::eth2::BeaconBlockHeader {
 		slot: finality_header.slot.as_u64(),
 		proposer_index: finality_header.proposer_index,
-		parent_root: finality_header.parent_root.into(),
-		state_root: finality_header.state_root.into(),
-		body_root: finality_header.body_root.into(),
+		parent_root: finality_header.parent_root,
+		state_root: finality_header.state_root,
+		body_root: finality_header.body_root,
 	};
 
 	let finalized_body = beacon_rpc_client
-		.get_beacon_block_body_for_block_id(&format!("{}", finality_slot))
+		.get_beacon_block_body_for_block_id(&format!("{finality_slot}"))
 		.await
 		.unwrap();
 

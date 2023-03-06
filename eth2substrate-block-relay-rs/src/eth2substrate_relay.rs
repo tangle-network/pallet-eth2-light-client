@@ -150,7 +150,7 @@ impl Eth2SubstrateRelay {
 			.eth_client_pallet
 			.is_submitter_registered(None)
 			.await
-			.unwrap_or_else(|e| panic!("Failed to check if the submitter registered. Err {:?}", e))
+			.unwrap_or_else(|e| panic!("Failed to check if the submitter registered. Err {e:?}"))
 		{
 			eth2substrate_relay
 				.eth_client_pallet
@@ -215,7 +215,7 @@ impl Eth2SubstrateRelay {
 			));
 		}
 
-		return Ok(last_eth2_slot_on_substrate)
+		Ok(last_eth2_slot_on_substrate)
 	}
 
 	async fn get_last_finalized_slot_on_substrate(&self) -> Result<u64, crate::Error> {
@@ -419,7 +419,7 @@ impl Eth2SubstrateRelay {
 		last_eth2_slot_on_substrate: &mut u64,
 	) {
 		info!(target: "relay", "Try submit headers from slot={} to {} to SUBSTRATE", *last_eth2_slot_on_substrate + 1, current_slot - 1);
-		let _execution_outcome = return_on_fail!(
+		return_on_fail!(
 			self.eth_client_pallet.send_headers(&headers, current_slot - 1).await,
 			"Error on header submission"
 		);
@@ -476,7 +476,7 @@ impl Eth2SubstrateRelay {
 }
 
 fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
-	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{:?}", t)))
+	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{t:?}")))
 }
 
 // Implementation of functions for submitting light client updates
@@ -537,7 +537,7 @@ impl Eth2SubstrateRelay {
 			return true
 		}
 
-		return false
+		false
 	}
 
 	async fn send_light_client_updates(
@@ -624,8 +624,7 @@ impl Eth2SubstrateRelay {
 			.beacon_rpc_client
 			.get_non_empty_beacon_block_header(attested_slot)
 			.await?
-			.slot
-			.into();
+			.slot;
 		trace!(target: "relay", "Chosen attested slot {}", attested_slot);
 
 		Ok(attested_slot)
@@ -650,8 +649,7 @@ impl Eth2SubstrateRelay {
 				)
 				.await,
 				format!(
-					"Error on getting hand made light client update for attested slot={}.",
-					attested_slot
+					"Error on getting hand made light client update for attested slot={attested_slot}."
 				)
 			);
 
@@ -697,7 +695,7 @@ impl Eth2SubstrateRelay {
 				return
 			}
 
-			let _execution_outcome = return_on_fail_and_sleep!(
+			return_on_fail_and_sleep!(
 				self.eth_client_pallet
 					.send_light_client_update(light_client_update.clone())
 					.await,
@@ -834,7 +832,7 @@ mod tests {
 		end_slot += 1;
 
 		let blocks: Vec<BlockHeader> = vec![];
-		if let Ok(_) = relay.eth_client_pallet.send_headers(&blocks, end_slot).await {
+		if (relay.eth_client_pallet.send_headers(&blocks, end_slot).await).is_ok() {
 			panic!("No error on submit 0 headers");
 		}
 	}

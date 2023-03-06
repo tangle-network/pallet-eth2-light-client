@@ -115,29 +115,29 @@ impl Config {
 	}
 }
 
-impl Into<eth2_pallet_init::config::Config> for Config {
-	fn into(self) -> eth2_pallet_init::config::Config {
+impl From<Config> for eth2_pallet_init::config::Config {
+	fn from(val: Config) -> Self {
 		eth2_pallet_init::config::Config {
-			enabled: self.enabled,
-			name: self.name,
-			chain_id: self.chain_id,
-			beacon_endpoint: self.beacon_endpoint,
-			eth1_endpoint: self.eth1_endpoint,
-			substrate_endpoint: self.substrate_endpoint,
-			signer_account_id: self.signer_account_id,
-			path_to_signer_secret_key: self.path_to_signer_secret_key,
-			contract_account_id: self.contract_account_id,
-			ethereum_network: std::str::FromStr::from_str(&self.ethereum_network).unwrap(),
-			substrate_network_id: self.substrate_network_id,
-			output_dir: self.output_dir,
-			eth_requests_timeout_seconds: Some(self.eth_requests_timeout_seconds),
-			validate_updates: self.validate_updates,
-			verify_bls_signature: self.validate_bls_signature,
-			hashes_gc_threshold: self.hashes_gc_threshold,
-			max_submitted_blocks_by_account: self.max_submitted_blocks_by_account,
-			trusted_signer_account_id: self.trusted_signer_account_id,
-			init_block_root: self.init_block_root,
-			beacon_rpc_version: self.beacon_rpc_version,
+			enabled: val.enabled,
+			name: val.name,
+			chain_id: val.chain_id,
+			beacon_endpoint: val.beacon_endpoint,
+			eth1_endpoint: val.eth1_endpoint,
+			substrate_endpoint: val.substrate_endpoint,
+			signer_account_id: val.signer_account_id,
+			path_to_signer_secret_key: val.path_to_signer_secret_key,
+			contract_account_id: val.contract_account_id,
+			ethereum_network: std::str::FromStr::from_str(&val.ethereum_network).unwrap(),
+			substrate_network_id: val.substrate_network_id,
+			output_dir: val.output_dir,
+			eth_requests_timeout_seconds: Some(val.eth_requests_timeout_seconds),
+			validate_updates: val.validate_updates,
+			verify_bls_signature: val.validate_bls_signature,
+			hashes_gc_threshold: val.hashes_gc_threshold,
+			max_submitted_blocks_by_account: val.max_submitted_blocks_by_account,
+			trusted_signer_account_id: val.trusted_signer_account_id,
+			init_block_root: val.init_block_root,
+			beacon_rpc_version: val.beacon_rpc_version,
 		}
 	}
 }

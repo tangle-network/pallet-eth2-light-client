@@ -430,7 +430,7 @@ impl LastSlotSearcher {
 		eth_client_contract: &EthClientContract,
 	) -> Result<bool, crate::Error> {
 		trace!(target: "relay", "Check if block with slot={} on SUBSTRATE", slot);
-		match beacon_rpc_client.get_beacon_block_body_for_block_id(&format!("{}", slot)).await {
+		match beacon_rpc_client.get_beacon_block_body_for_block_id(&format!("{slot}")).await {
 			Ok(beacon_block_body) => {
 				let hash: H256 = H256::from(
 					beacon_block_body
@@ -1349,5 +1349,5 @@ mod tests {
 }
 
 fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
-	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{:?}", t)))
+	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{t:?}")))
 }
