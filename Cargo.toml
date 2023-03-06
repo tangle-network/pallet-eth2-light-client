@@ -4,6 +4,3 @@ members = [
 	"crates/*",
     "eth2substrate-block-relay-rs",
 ]
-
-[patch.crates-io]
-ethers-contract = { git = "https://github.com/gakonst/ethers-rs", tag = "0.6.0" }
