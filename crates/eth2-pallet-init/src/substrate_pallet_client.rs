@@ -106,6 +106,7 @@ impl EthClientPallet {
 		})
 	}
 
+	#[allow(clippy::too_many_arguments)]
 	pub async fn init(
 		&mut self,
 		typed_chain_id: TypedChainId,
@@ -265,7 +266,7 @@ impl EthClientPallet {
 
 		Err(crate::Error::from(std::io::Error::new(
 			std::io::ErrorKind::Other,
-			format!("Transaction stream ended"),
+			"Transaction stream ended",
 		)))
 	}
 }

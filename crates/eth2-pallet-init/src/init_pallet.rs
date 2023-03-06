@@ -81,7 +81,7 @@ pub async fn init_pallet(
 	let finality_slot =
 		finality_light_client_update.finality_update.header_update.beacon_header.slot;
 
-	let block_id = format!("{}", finality_slot);
+	let block_id = format!("{finality_slot}");
 
 	let finalized_header: ExtendedBeaconBlockHeader =
 		ExtendedBeaconBlockHeader::from(finality_light_client_update.finality_update.header_update);

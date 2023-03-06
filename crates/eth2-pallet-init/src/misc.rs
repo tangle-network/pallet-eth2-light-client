@@ -7,6 +7,6 @@ pub trait AsValue: Encode {
 
 impl<T: Encode> AsValue for T {
 	fn as_value(&self) -> Value {
-		Value::from_bytes(&self.encode())
+		Value::from_bytes(self.encode())
 	}
 }

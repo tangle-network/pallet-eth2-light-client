@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 pub mod config;
 pub mod config_for_tests;
 pub mod eth_client_pallet_trait;
