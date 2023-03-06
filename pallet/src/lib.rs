@@ -588,10 +588,7 @@ pub mod pallet {
 			trusted_signer: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
-			ensure!(
-				TrustedSigner::<T>::get() == Some(origin),
-				Error::<T>::NotTrustedSigner
-			);
+			ensure!(TrustedSigner::<T>::get() == Some(origin), Error::<T>::NotTrustedSigner);
 			TrustedSigner::<T>::put(trusted_signer.clone());
 
 			Self::deposit_event(Event::UpdateTrustedSigner { trusted_signer });

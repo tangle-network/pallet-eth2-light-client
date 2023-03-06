@@ -33,8 +33,7 @@ impl HandMadeFinalityLightClientUpdate {
 			)
 			.await?;
 		trace!(target: "relay", "New attested slot = {} and signature slot = {}", attested_slot, signature_slot);
-		let beacon_state =
-			beacon_rpc_client.get_beacon_state(&format!("{attested_slot}")).await?;
+		let beacon_state = beacon_rpc_client.get_beacon_state(&format!("{attested_slot}")).await?;
 
 		let finality_hash = beacon_state.finalized_checkpoint().root;
 		let finality_header = beacon_rpc_client

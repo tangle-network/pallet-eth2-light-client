@@ -4,7 +4,7 @@ use consensus_types::{
 	DOMAIN_SYNC_COMMITTEE, MIN_SYNC_COMMITTEE_PARTICIPANTS,
 };
 use eth_types::{
-	eth2::{BeaconBlockHeader, Epoch, ForkVersion, LightClientUpdate, Slot, SyncCommittee},
+	eth2::{BeaconBlockHeader, Epoch, ForkVersion, LightClientUpdate, SyncCommittee},
 	H256,
 };
 use std::error::Error;
@@ -27,7 +27,7 @@ fn to_lighthouse_beacon_block_header(
 	bridge_beacon_block_header: &BeaconBlockHeader,
 ) -> BeaconBlockHeader {
 	BeaconBlockHeader {
-		slot: Slot::from(bridge_beacon_block_header.slot),
+		slot: bridge_beacon_block_header.slot,
 		proposer_index: bridge_beacon_block_header.proposer_index,
 		parent_root: eth_types::H256(h256_to_hash256(bridge_beacon_block_header.parent_root)),
 		state_root: eth_types::H256(h256_to_hash256(bridge_beacon_block_header.state_root)),
