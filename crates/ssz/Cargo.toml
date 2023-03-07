@@ -10,7 +10,7 @@ license = "Apache-2.0"
 name = "ssz"
 
 [dependencies]
-ethereum-types = { version = "0.14.0", default-features = false }
+ethereum-types = { version = "0.14.1", default-features = false }
 smallvec = { version = "1.6.1", features = ["const_generics"], default-features = false }
 itertools = { version = "0.10.3", default-features = false }
 

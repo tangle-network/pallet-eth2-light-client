@@ -27,7 +27,7 @@ sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polka
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-ethereum-types = { version = "0.14.0" }
+ethereum-types = { version = "0.14.1" }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "3.1.6", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time"] }

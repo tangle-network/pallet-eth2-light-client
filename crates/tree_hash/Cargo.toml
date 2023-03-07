@@ -7,7 +7,7 @@ license = "Apache-2.0"
 description = "Efficient Merkle-hashing as used in Ethereum 2.0"
 
 [dependencies]
-ethereum-types = { version = "0.14.0", default-features = false }
+ethereum-types = { version = "0.14.1", default-features = false }
 eth2_hashing = { path = "../eth2_hashing", default-features = false, features = ["zero_hash_cache"] }
 smallvec = { version = "1.6.1", default-features = false }
 
