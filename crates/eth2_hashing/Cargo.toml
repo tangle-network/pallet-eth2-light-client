@@ -1,7 +1,7 @@
 [package]
 name = "eth2_hashing"
 version = "0.3.0"
-authors = ["Paul Hauner <paul@paulhauner.com>"]
+authors = ["Paul Hauner <paul@paulhauner.com>, Webb Developers <hello@webb.tools>"]
 edition = "2021"
 license = "Apache-2.0"
 description = "Hashing primitives used in Ethereum 2.0"
