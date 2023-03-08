@@ -170,12 +170,19 @@ impl EthClientPallet {
 	where
 		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a,
 	{
-		let value = self.api.storage().at(None).await?.fetch_or_default(key_addr).await.map_err(|err| {
-			Error::Io(std::io::Error::new(
-				std::io::ErrorKind::Other,
-				format!("Failed to get api storage value: {err:?}"),
-			))
-		})?;
+		let value =
+			self.api
+				.storage()
+				.at(None)
+				.await?
+				.fetch_or_default(key_addr)
+				.await
+				.map_err(|err| {
+					Error::Io(std::io::Error::new(
+						std::io::ErrorKind::Other,
+						format!("Failed to get api storage value: {err:?}"),
+					))
+				})?;
 
 		Ok(value)
 	}
