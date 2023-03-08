@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"] }
