@@ -21,7 +21,7 @@ sp-core = { git = "https://github.com/paritytech/substrate.git", default-feature
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 webb-relayer-types = { git = "https://github.com/webb-tools/relayer.git" }
-webb = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = [
+webb = { git = "https://github.com/webb-tools/webb-rs.git", branch = "felix/relayer-anvil", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
 ]}

@@ -5,8 +5,8 @@ authors = ["Paul Hauner <paul@paulhauner.com>"]
 edition = "2021"
 
 [dependencies]
-eth2_ssz = { path = "../ssz", default-features = false }
-tree_hash = { path = "../tree_hash", default-features = false }
+eth2_ssz = { path = "../ssz", default-features = false, features = ["arbitrary"] }
+tree_hash = { path = "../tree_hash", default-features = false, features = ["arbitrary"] }
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false }
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }

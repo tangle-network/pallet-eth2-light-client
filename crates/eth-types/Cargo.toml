@@ -12,8 +12,8 @@ ethereum-types = { version = "0.14.1", features = ["codec", "rlp"], default-feat
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
-eth2_ssz = { path = "../ssz", default-features = false }
-tree_hash = { path = "../tree_hash", default-features = false }
+eth2_ssz = { path = "../ssz", default-features = false, features = ["arbitrary"] }
+tree_hash = { path = "../tree_hash", default-features = false, features = ["arbitrary"] }
 tree_hash_derive = { path = "../tree_hash_derive", default-features = false }
 eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
@@ -32,3 +32,4 @@ std = [
 ]
 eip1559 = []
 eth2 = []
+arbitrary = ["ethereum-types/arbitrary"]
