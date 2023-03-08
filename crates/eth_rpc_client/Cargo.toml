@@ -6,15 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
-finality-update-verify = { default-features = false, path = "../finality-update-verify" }
+eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559", "arbitrary"] }
+finality-update-verify = { default-features = false, path = "../finality-update-verify", features = ["arbitrary"] }
 types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable", features = ["arbitrary"] }
-merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable", features = ["arbitrary"] }
 eth2_hashing = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 eth2_ssz = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable", features = ["arbitrary"] }
 
-ethereum-types = "0.14.1"
+ethereum-types = { version = "0.14.1", features = ["arbitrary"] }
 funty = "2.0.0"
 
 log = { version = "0.4", features = ["std", "serde"] }

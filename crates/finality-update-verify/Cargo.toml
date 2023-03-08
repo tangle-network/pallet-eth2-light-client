@@ -14,3 +14,13 @@ serde = { version = "1.0", default-features = false, features = ["derive"] }
 [dev-dependencies]
 serde_json = "1.0.74"
 toml = "0.5.9"
+
+[features]
+default = ["std"]
+std = [
+    "serde/std",
+]
+arbitrary = [
+    "eth-types/arbitrary",
+    "tree_hash/arbitrary",
+]

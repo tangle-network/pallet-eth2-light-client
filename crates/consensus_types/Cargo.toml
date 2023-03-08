@@ -34,9 +34,7 @@ std = [
 	"eth-types/std",
 	"bitvec/std",
     "merkle_proof/std",
-
 	"codec/std",
 	"scale-info/std",
-
 	"ethereum-types/std",
 ]
