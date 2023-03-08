@@ -3,7 +3,7 @@ use eth_types::{
 	eth2::{LightClientState, LightClientUpdate},
 	BlockHeader,
 };
-use sp_core::crypto::AccountId32;
+use subxt::utils::AccountId32;
 
 pub type Balance = u128;
 

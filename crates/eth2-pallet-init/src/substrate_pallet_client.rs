@@ -4,13 +4,11 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	BlockHeader, H256,
 };
-use sp_core::crypto::AccountId32;
-use subxt::ext::sp_core::Pair as PairT;
+use subxt::utils::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
 		self,
-		ext::sp_core::sr25519::Pair,
 		metadata::DecodeWithMetadata,
 		storage::{address::Yes, StorageAddress},
 		tx::{PairSigner, TxPayload, TxStatus},
@@ -19,6 +17,8 @@ use webb::substrate::{
 };
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
+use sp_core::sr25519::Pair;
+use sp_core::Pair as PairT;
 
 use crate::eth_client_pallet_trait::EthClientPalletTrait;
 
@@ -126,13 +126,13 @@ impl EthClientPallet {
 
 		let trusted_signer = if let Some(trusted_signer) = trusted_signer {
 			let bytes: [u8; 32] = *trusted_signer.as_ref();
-			Some(subxt::ext::sp_runtime::AccountId32::from(bytes))
+			Some(subxt::utils::AccountId32::from(bytes))
 		} else {
 			None
 		};
 
 		let init_input: tangle::runtime_types::eth_types::pallet::InitInput<
-			subxt::ext::sp_runtime::AccountId32,
+			subxt::utils::AccountId32,
 		> = tangle::runtime_types::eth_types::pallet::InitInput {
 			finalized_execution_header: Decode::decode(
 				&mut finalized_execution_header.encode().as_slice(),
@@ -170,7 +170,7 @@ impl EthClientPallet {
 	where
 		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a,
 	{
-		let value = self.api.storage().fetch_or_default(key_addr, None).await.map_err(|err| {
+		let value = self.api.storage().at(None).await?.fetch_or_default(key_addr).await.map_err(|err| {
 			Error::Io(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				format!("Failed to get api storage value: {err:?}"),
@@ -187,7 +187,7 @@ impl EthClientPallet {
 	where
 		Address: StorageAddress<IsFetchable = Yes> + 'a,
 	{
-		let value = self.api.storage().fetch(key_addr, None).await.map_err(|err| {
+		let value = self.api.storage().at(None).await?.fetch(key_addr).await.map_err(|err| {
 			Error::Io(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				format!("Failed to get api storage value: {err:?}"),
@@ -369,7 +369,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		let bytes: [u8; 32] = *account_id.as_ref();
 		let addr = tangle::storage()
 			.eth2_client()
-			.submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
+			.submitters(&self.chain, subxt::utils::AccountId32::from(bytes));
 		self.get_value(&addr).await.map(|r| r.is_some())
 	}
 
@@ -427,7 +427,7 @@ impl EthClientPalletTrait for EthClientPallet {
 			.max_unfinalized_blocks_per_submitter(&self.chain);
 
 		let value: u32 =
-			self.api.storage().fetch_or_default(&key_addr, None).await.map_err(|err| {
+			self.api.storage().at(None).await?.fetch_or_default(&key_addr).await.map_err(|err| {
 				Error::Io(std::io::Error::new(
 					std::io::ErrorKind::Other,
 					format!("Failed to get api storage value: {err:?}"),
