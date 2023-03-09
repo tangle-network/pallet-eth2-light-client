@@ -15,5 +15,4 @@ right_empty_slot = 3885723
 slot_without_block_2 = 3885743
 finalized_slot_before_new_period = 3891168
 substrate_network_name="Tangle Test Network"
-type_chain_id = "Evm"
 substrate_network_id = "Testnet"
