@@ -56,10 +56,10 @@ use eth_types::{
 };
 use frame_support::{
 	pallet_prelude::{ensure, DispatchError},
+	sp_runtime::traits::Saturating,
 	traits::Get,
 	PalletId,
 };
-use frame_support::sp_runtime::traits::Saturating;
 use sp_std::{collections::btree_map::BTreeMap, convert::TryInto, prelude::*};
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
@@ -68,8 +68,10 @@ pub use pallet::*;
 
 use bitvec::prelude::{BitVec, Lsb0};
 
-use frame_support::traits::{Currency, ExistenceRequirement};
-use frame_support::sp_runtime::traits::AccountIdConversion;
+use frame_support::{
+	sp_runtime::traits::AccountIdConversion,
+	traits::{Currency, ExistenceRequirement},
+};
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;

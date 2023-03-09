@@ -4,6 +4,7 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	BlockHeader, H256,
 };
+use sp_core::{sr25519::Pair, Pair as PairT};
 use subxt::utils::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
@@ -17,8 +18,6 @@ use webb::substrate::{
 };
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
-use sp_core::sr25519::Pair;
-use sp_core::Pair as PairT;
 
 use crate::eth_client_pallet_trait::EthClientPalletTrait;
 
@@ -434,12 +433,14 @@ impl EthClientPalletTrait for EthClientPallet {
 			.max_unfinalized_blocks_per_submitter(&self.chain);
 
 		let value: u32 =
-			self.api.storage().at(None).await?.fetch_or_default(&key_addr).await.map_err(|err| {
-				Error::Io(std::io::Error::new(
-					std::io::ErrorKind::Other,
-					format!("Failed to get api storage value: {err:?}"),
-				))
-			})?;
+			self.api.storage().at(None).await?.fetch_or_default(&key_addr).await.map_err(
+				|err| {
+					Error::Io(std::io::Error::new(
+						std::io::ErrorKind::Other,
+						format!("Failed to get api storage value: {err:?}"),
+					))
+				},
+			)?;
 
 		Ok(value)
 	}
