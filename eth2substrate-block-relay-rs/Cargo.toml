@@ -22,7 +22,7 @@ webb = { version = "0.5.17", features = [
 ]}
 webb-proposals = { version = "0.5.4" }
 
-sp-keyring = { default-features=false, version = "18.0.0" }
+sp-keyring = { version = "18.0.0", default-features = false }
 sp-core = { version = "16.0.0" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"

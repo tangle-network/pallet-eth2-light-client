@@ -57,10 +57,7 @@ pub trait EthClientPalletTrait<A = AccountId32>: Send + Sync + 'static {
 	async fn register_submitter(&self) -> Result<(), crate::Error>;
 
 	/// Checks if the relay is registered in the Ethereum Light Client on SUBSTRATE
-	async fn is_submitter_registered(
-		&self,
-		account_id: Option<A>,
-	) -> Result<bool, crate::Error>;
+	async fn is_submitter_registered(&self, account_id: Option<A>) -> Result<bool, crate::Error>;
 
 	/// Gets the Light Client State of the Ethereum Light Client on SUBSTRATE
 	async fn get_light_client_state(&self) -> Result<LightClientState, crate::Error>;
