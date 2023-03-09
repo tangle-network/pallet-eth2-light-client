@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use sp_runtime::AccountId32;
 
 use crate::{
 	mock::RuntimeOrigin,
@@ -38,7 +39,7 @@ impl MockEthClientPallet {
 }
 
 #[async_trait]
-impl EthClientPalletTrait for MockEthClientPallet {
+impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 	async fn get_last_submitted_slot(&self) -> Result<u64, eth2_pallet_init::Error> {
 		let header = self.get_header().unwrap();
 		Ok(header.header.slot)
@@ -91,7 +92,7 @@ impl EthClientPalletTrait for MockEthClientPallet {
 
 	async fn is_submitter_registered(
 		&self,
-		_account_id: Option<sp_core::crypto::AccountId32>,
+		_account_id: Option<AccountId32>,
 	) -> Result<bool, eth2_pallet_init::Error> {
 		Ok(true)
 	}

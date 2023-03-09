@@ -4,7 +4,8 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	BlockHeader, H256,
 };
-use sp_core::{crypto::AccountId32, sr25519::Pair, Pair as PairT};
+use sp_core::{sr25519::Pair, Pair as PairT};
+use subxt::utils::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
