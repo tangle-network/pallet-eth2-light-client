@@ -1,13 +1,13 @@
 [package]
-name = "eth2-pallet-init"
+name = "webb-eth2-pallet-init"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tree_hash = { path = "../tree_hash", default-features = false }
-merkle_proof = { path = "../merkle_proof", default-features = false }
-consensus_types = { path = "../consensus_types" }
-eth_rpc_client = { path = "../eth_rpc_client" }
+tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-features = false }
+merkle-proof = { package = "webb-merkle-proof",  path = "../merkle-proof", default-features = false }
+consensus-types = { package = "webb-consensus-types", path = "../consensus-types" }
+eth-rpc-client = { package = "webb-eth-rpc-client", path = "../eth-rpc-client" }
 eth-types = { path = "../eth-types/", default-features = false, features = ["eth2", "eip1559"]}
 log = { version = "0.4", features = ["std", "serde"] }
 clap = { version = "3.1.6", features = ["derive"] }

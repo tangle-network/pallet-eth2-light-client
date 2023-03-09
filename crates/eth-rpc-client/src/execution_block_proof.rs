@@ -43,22 +43,28 @@ impl ExecutionBlockProof {
 			&beacon_block_body
 				.execution_payload()
 				.map_err(|_| MissExecutionPayload)?
-				.execution_payload,
+				.execution_payload_ref()
+				.to_owned(),
 		);
 
+		// TODO: Handle unwrap error
 		let l1_execution_payload_proof = beacon_block_merkle_tree
 			.0
 			.generate_proof(
 				Self::L1_BEACON_BLOCK_BODY_TREE_EXECUTION_PAYLOAD_INDEX,
 				Self::L1_BEACON_BLOCK_BODY_PROOF_SIZE,
 			)
+			.unwrap()
 			.1;
+
+		// TODO: Handle unwrap error
 		let mut block_proof = execution_payload_merkle_tree
 			.0
 			.generate_proof(
 				Self::L2_EXECUTION_PAYLOAD_TREE_EXECUTION_BLOCK_INDEX,
 				Self::L2_EXECUTION_PAYLOAD_PROOF_SIZE,
 			)
+			.unwrap()
 			.1;
 		block_proof.extend(&l1_execution_payload_proof);
 
@@ -66,8 +72,8 @@ impl ExecutionBlockProof {
 			block_hash: beacon_block_body
 				.execution_payload()
 				.map_err(|_| MissExecutionPayload)?
-				.execution_payload
-				.block_hash
+				.execution_payload_ref()
+				.block_hash()
 				.into_root(),
 			proof: block_proof.as_slice().try_into()?,
 		})
@@ -180,7 +186,11 @@ mod tests {
 			.unwrap();
 
 		assert_eq!(
-			beacon_block_body.execution_payload().unwrap().execution_payload.block_hash,
+			beacon_block_body
+				.execution_payload()
+				.unwrap()
+				.execution_payload_ref()
+				.block_hash(),
 			types::ExecutionBlockHash::from_root(execution_block_proof.get_execution_block_hash())
 		);
 

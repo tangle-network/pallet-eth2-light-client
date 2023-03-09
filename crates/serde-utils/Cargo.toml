@@ -1,5 +1,5 @@
 [package]
-name = "eth2_serde_utils"
+name = "webb-eth2-serde-utils"
 version = "0.1.1"
 authors = ["Paul Hauner <paul@paulhauner.com", "Michael Sproul <michael@sigmaprime.io>"]
 edition = "2021"

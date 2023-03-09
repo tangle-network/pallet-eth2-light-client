@@ -1,4 +1,4 @@
-use ssz::{Decode, DecodeError, Encode, SszDecoderBuilder, SszEncoder};
+use eth2_ssz::{Decode, DecodeError, Encode, SszDecoderBuilder, SszEncoder};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Foo {

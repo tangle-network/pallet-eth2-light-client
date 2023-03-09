@@ -1,5 +1,5 @@
+use eth2_ssz::{Decode, DecodeError, Encode};
 use ethereum_types::H256;
-use ssz::{Decode, DecodeError, Encode};
 use ssz_derive::{Decode, Encode};
 
 mod round_trip {
@@ -291,7 +291,7 @@ mod round_trip {
 }
 
 mod derive_macro {
-	use ssz::{Decode, Encode};
+	use eth2_ssz::{Decode, Encode};
 	use ssz_derive::{Decode, Encode};
 	use std::fmt::Debug;
 

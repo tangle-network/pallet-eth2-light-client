@@ -1,5 +1,5 @@
 [package]
-name = "eth2_ssz"
+name = "webb-eth2-ssz"
 version = "0.4.1"
 authors = ["Paul Hauner <paul@sigmaprime.io>"]
 edition = "2021"
@@ -15,7 +15,7 @@ smallvec = { version = "1.6.1", features = ["const_generics"], default-features 
 itertools = { version = "0.10.3", default-features = false }
 
 [dev-dependencies]
-eth2_ssz_derive = { path = "../ssz_derive" }
+eth2-ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive" }
 
 [features]
 arbitrary = ["ethereum-types/arbitrary"]

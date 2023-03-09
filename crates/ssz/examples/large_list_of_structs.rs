@@ -4,7 +4,7 @@
 
 #![allow(clippy::needless_collect)]
 
-use ssz::{Decode, Encode};
+use eth2_ssz::{Decode, Encode};
 use ssz_derive::{Decode, Encode};
 
 #[derive(Clone, Copy, Encode, Decode)]

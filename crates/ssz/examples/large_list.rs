@@ -4,7 +4,7 @@
 
 #![allow(clippy::needless_collect)]
 
-use ssz::{Decode, Encode};
+use eth2_ssz::{Decode, Encode};
 
 fn main() {
 	let vec: Vec<u64> = vec![4242; 8196];

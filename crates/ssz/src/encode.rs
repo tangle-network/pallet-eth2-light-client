@@ -57,7 +57,7 @@ pub trait Encode {
 ///
 /// ```rust
 /// use ssz_derive::{Encode, Decode};
-/// use ssz::{Decode, Encode, SszEncoder};
+/// use eth2_ssz::{Decode, Encode, SszEncoder};
 ///
 /// #[derive(PartialEq, Debug, Encode, Decode)]
 /// struct Foo {

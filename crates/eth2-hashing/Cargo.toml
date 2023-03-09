@@ -1,5 +1,5 @@
 [package]
-name = "eth2_hashing"
+name = "webb-eth2-hashing"
 version = "0.3.0"
 authors = ["Paul Hauner <paul@paulhauner.com>, Webb Developers <hello@webb.tools>"]
 edition = "2021"

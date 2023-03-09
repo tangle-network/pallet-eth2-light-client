@@ -10,7 +10,7 @@
 //!
 //! ```rust
 //! use ssz_derive::{Encode, Decode};
-//! use ssz::four_byte_option_impl;
+//! use eth2_ssz::four_byte_option_impl;
 //!
 //! four_byte_option_impl!(impl_for_u64, u64);
 //!
@@ -33,7 +33,7 @@ macro_rules! four_byte_option_impl {
 			pub mod encode {
 				use super::*;
 				#[allow(unused_imports)]
-				use ssz::*;
+				use eth2_ssz::*;
 
 				pub fn is_ssz_fixed_len() -> bool {
 					false
@@ -78,7 +78,7 @@ macro_rules! four_byte_option_impl {
 			pub mod decode {
 				use super::*;
 				#[allow(unused_imports)]
-				use ssz::*;
+				use eth2_ssz::*;
 
 				pub fn is_ssz_fixed_len() -> bool {
 					false
@@ -102,7 +102,7 @@ macro_rules! four_byte_option_impl {
 					if index == 0 {
 						Ok(None)
 					} else if index == 1 {
-						Ok(Some(<$type as ssz::Decode>::from_ssz_bytes(value_bytes)?))
+						Ok(Some(<$type as eth2_ssz::Decode>::from_ssz_bytes(value_bytes)?))
 					} else {
 						Err(DecodeError::BytesInvalid(format!(
 							"{} is not a valid union index for Option<T>",

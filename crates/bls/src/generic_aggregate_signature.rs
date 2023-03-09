@@ -15,12 +15,12 @@ use core::{
 };
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
+use eth2_ssz::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{
 	de::{Deserialize, Deserializer},
 	ser::{Serialize, Serializer},
 };
-use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
 /// The compressed bytes used to represent `GenericAggregateSignature::empty()`.

@@ -9,7 +9,7 @@
 //!
 //! ```rust
 //! use ssz_derive::{Encode, Decode};
-//! use ssz::{Decode, Encode};
+//! use eth2_ssz::{Decode, Encode};
 //!
 //! #[derive(PartialEq, Debug, Encode, Decode)]
 //! struct Foo {
@@ -68,7 +68,7 @@ pub const BYTES_PER_UNION_SELECTOR: usize = 1;
 /// extensions).
 pub const MAX_UNION_SELECTOR: u8 = 127;
 
-/// Convenience function to SSZ encode an object supporting ssz::Encode.
+/// Convenience function to SSZ encode an object supporting eth2_ssz::Encode.
 ///
 /// Equivalent to `val.as_ssz_bytes()`.
 pub fn ssz_encode<T>(val: &T) -> Vec<u8>

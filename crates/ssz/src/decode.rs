@@ -263,7 +263,7 @@ impl<'a> SszDecoderBuilder<'a> {
 ///
 /// ```rust
 /// use ssz_derive::{Encode, Decode};
-/// use ssz::{Decode, Encode, SszDecoder, SszDecoderBuilder};
+/// use eth2_ssz::{Decode, Encode, SszDecoder, SszDecoderBuilder};
 ///
 /// #[derive(PartialEq, Debug, Encode, Decode)]
 /// struct Foo {

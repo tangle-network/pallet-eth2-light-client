@@ -1,7 +1,7 @@
 use ethereum_types::H256;
 use merkle_proof::MerkleTree;
 use tree_hash::TreeHash;
-use types::{BeaconBlockBody, BeaconState, ExecutionPayload, MainnetEthSpec};
+use types::{BeaconBlockBody, BeaconState, ExecutionPayload, ExecutionPayloadRef, MainnetEthSpec};
 
 /// `BeaconBlockBodyMerkleTree` is built on the `BeaconBlockBody` data structure,
 /// where the leaves of the Merkle Tree are the hashes of the
@@ -52,22 +52,22 @@ impl ExecutionPayloadMerkleTree {
 	pub const TREE_NUM_LEAVES: usize = 14;
 	pub const TREE_DEPTH: usize = 4;
 
-	pub fn new(execution_payload: &ExecutionPayload<MainnetEthSpec>) -> Self {
+	pub fn new(execution_payload: &ExecutionPayloadRef<MainnetEthSpec>) -> Self {
 		let leaves: [H256; Self::TREE_NUM_LEAVES] = [
-			execution_payload.parent_hash.tree_hash_root(),
-			execution_payload.fee_recipient.tree_hash_root(),
-			execution_payload.state_root.tree_hash_root(),
-			execution_payload.receipts_root.tree_hash_root(),
-			execution_payload.logs_bloom.tree_hash_root(),
-			execution_payload.prev_randao.tree_hash_root(),
-			execution_payload.block_number.tree_hash_root(),
-			execution_payload.gas_limit.tree_hash_root(),
-			execution_payload.gas_used.tree_hash_root(),
-			execution_payload.timestamp.tree_hash_root(),
-			execution_payload.extra_data.tree_hash_root(),
-			execution_payload.base_fee_per_gas.tree_hash_root(),
-			execution_payload.block_hash.tree_hash_root(),
-			execution_payload.transactions.tree_hash_root(),
+			execution_payload.parent_hash().tree_hash_root(),
+			execution_payload.fee_recipient().tree_hash_root(),
+			execution_payload.state_root().tree_hash_root(),
+			execution_payload.receipts_root().tree_hash_root(),
+			execution_payload.logs_bloom().tree_hash_root(),
+			execution_payload.prev_randao().tree_hash_root(),
+			execution_payload.block_number().tree_hash_root(),
+			execution_payload.gas_limit().tree_hash_root(),
+			execution_payload.gas_used().tree_hash_root(),
+			execution_payload.timestamp().tree_hash_root(),
+			execution_payload.extra_data().tree_hash_root(),
+			execution_payload.base_fee_per_gas().tree_hash_root(),
+			execution_payload.block_hash().tree_hash_root(),
+			execution_payload.transactions().tree_hash_root(),
 		];
 
 		Self(MerkleTree::create(&leaves, Self::TREE_DEPTH))

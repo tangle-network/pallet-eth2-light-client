@@ -12,10 +12,10 @@ ethereum-types = { version = "0.14.1", features = ["codec", "rlp"], default-feat
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
-eth2_ssz = { path = "../ssz", default-features = false, features = ["arbitrary"] }
-tree_hash = { path = "../tree_hash", default-features = false, features = ["arbitrary"] }
-tree_hash_derive = { path = "../tree_hash_derive", default-features = false }
-eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
+eth2-ssz = { package = "webb-eth2-ssz",  path = "../ssz", default-features = false, features = ["arbitrary"] }
+tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-features = false, features = ["arbitrary"] }
+tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
+eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
@@ -27,7 +27,7 @@ std = [
 	"codec/std",
 	"scale-info/std",
 	"ethereum-types/std",
-	"eth2_serde_utils/std",
+	"eth2-serde-utils/std",
 	"ethereum-types/serialize"
 ]
 eip1559 = []
