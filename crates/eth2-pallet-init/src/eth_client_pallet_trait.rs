@@ -13,7 +13,7 @@ pub struct Eth2LightClientError {
 
 /// Interface for using Ethereum Light Client
 #[async_trait]
-pub trait EthClientPalletTrait: Send + Sync + 'static {
+pub trait EthClientPalletTrait<A = AccountId32>: Send + Sync + 'static {
 	/// Returns the last submitted slot by this relay
 	async fn get_last_submitted_slot(&self) -> Result<u64, crate::Error>;
 
@@ -59,7 +59,7 @@ pub trait EthClientPalletTrait: Send + Sync + 'static {
 	/// Checks if the relay is registered in the Ethereum Light Client on SUBSTRATE
 	async fn is_submitter_registered(
 		&self,
-		account_id: Option<AccountId32>,
+		account_id: Option<A>,
 	) -> Result<bool, crate::Error>;
 
 	/// Gets the Light Client State of the Ethereum Light Client on SUBSTRATE
