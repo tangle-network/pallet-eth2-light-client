@@ -7,7 +7,7 @@ use eth_rpc_client::{
 };
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
-use sp_core::crypto::AccountId32;
+use subxt::utils::AccountId32;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
@@ -95,8 +95,8 @@ pub async fn init_pallet(
 			finalized_body
 				.execution_payload()
 				.expect("No execution payload in finalized body")
-				.execution_payload
-				.block_number,
+				.execution_payload_ref()
+				.block_number(),
 		)
 		.await
 		.expect("Error on fetching finalized execution header");

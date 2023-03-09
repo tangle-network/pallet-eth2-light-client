@@ -1,7 +1,6 @@
 use super::*;
 
 mod impls;
-use alloc::{vec, vec::Vec};
 
 /// Provides SSZ encoding (serialization) via the `as_ssz_bytes(&self)` method.
 ///
@@ -57,7 +56,7 @@ pub trait Encode {
 ///
 /// ```rust
 /// use ssz_derive::{Encode, Decode};
-/// use eth2_ssz::{Decode, Encode, SszEncoder};
+/// use ssz::{Decode, Encode, SszEncoder};
 ///
 /// #[derive(PartialEq, Debug, Encode, Decode)]
 /// struct Foo {

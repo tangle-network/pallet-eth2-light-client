@@ -1,6 +1,6 @@
-use eth2_ssz::{Decode, DecodeError, Encode, SszDecoderBuilder, SszEncoder};
+use ssz::{Decode, DecodeError, Encode, SszDecoderBuilder, SszEncoder};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub struct Foo {
 	a: u16,
 	b: Vec<u8>,

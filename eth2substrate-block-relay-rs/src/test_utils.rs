@@ -148,8 +148,8 @@ pub async fn init_pallet_from_specific_slot(
 		execution_block_hash: finalized_body
 			.execution_payload()
 			.unwrap()
-			.execution_payload
-			.block_hash
+			.execution_payload_ref()
+			.block_hash()
 			.into_root()
 			.0
 			.into(),
@@ -157,7 +157,11 @@ pub async fn init_pallet_from_specific_slot(
 
 	let finalized_execution_header: BlockHeader = eth1_rpc_client
 		.get_block_header_by_number(
-			finalized_body.execution_payload().unwrap().execution_payload.block_number,
+			finalized_body
+				.execution_payload()
+				.unwrap()
+				.execution_payload_ref()
+				.block_number(),
 		)
 		.await
 		.unwrap();

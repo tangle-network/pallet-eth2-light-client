@@ -436,8 +436,8 @@ impl LastSlotSearcher {
 					beacon_block_body
 						.execution_payload()
 						.map_err(|_| ExecutionPayloadError)?
-						.execution_payload
-						.block_hash
+						.execution_payload_ref()
+						.block_hash()
 						.into_root()
 						.as_bytes(),
 				);

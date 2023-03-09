@@ -1,5 +1,5 @@
 #![recursion_limit = "256"]
-//! Provides procedural derive macros for the `Encode` and `Decode` traits of the `eth2_ssz` crate.
+//! Provides procedural derive macros for the `Encode` and `Decode` traits of the `ssz` crate.
 //!
 //! Supports field attributes, see each derive macro for more information.
 
@@ -148,15 +148,15 @@ fn ssz_encode_derive_struct(derive_input: &DeriveInput, struct_data: &DataStruct
 				)
 			});
 		} else {
-			field_is_ssz_fixed_len.push(quote! { <#ty as eth2_ssz::Encode>::is_ssz_fixed_len() });
-			field_fixed_len.push(quote! { <#ty as eth2_ssz::Encode>::ssz_fixed_len() });
+			field_is_ssz_fixed_len.push(quote! { <#ty as ssz::Encode>::is_ssz_fixed_len() });
+			field_fixed_len.push(quote! { <#ty as ssz::Encode>::ssz_fixed_len() });
 			field_ssz_bytes_len.push(quote! { self.#ident.ssz_bytes_len() });
 			field_encoder_append.push(quote! { encoder.append(&self.#ident) });
 		}
 	}
 
 	let output = quote! {
-		impl #impl_generics eth2_ssz::Encode for #name #ty_generics #where_clause {
+		impl #impl_generics ssz::Encode for #name #ty_generics #where_clause {
 			fn is_ssz_fixed_len() -> bool {
 				#(
 					#field_is_ssz_fixed_len &&
@@ -165,7 +165,7 @@ fn ssz_encode_derive_struct(derive_input: &DeriveInput, struct_data: &DataStruct
 			}
 
 			fn ssz_fixed_len() -> usize {
-				if <Self as eth2_ssz::Encode>::is_ssz_fixed_len() {
+				if <Self as ssz::Encode>::is_ssz_fixed_len() {
 					let mut len: usize = 0;
 					#(
 						len = len
@@ -179,8 +179,8 @@ fn ssz_encode_derive_struct(derive_input: &DeriveInput, struct_data: &DataStruct
 			}
 
 			fn ssz_bytes_len(&self) -> usize {
-				if <Self as eth2_ssz::Encode>::is_ssz_fixed_len() {
-					<Self as eth2_ssz::Encode>::ssz_fixed_len()
+				if <Self as ssz::Encode>::is_ssz_fixed_len() {
+					<Self as ssz::Encode>::ssz_fixed_len()
 				} else {
 					let mut len: usize = 0;
 					#(
@@ -190,7 +190,7 @@ fn ssz_encode_derive_struct(derive_input: &DeriveInput, struct_data: &DataStruct
 								.expect("encode ssz_bytes_len length overflow");
 						} else {
 							len = len
-								.checked_add(eth2_ssz::BYTES_PER_LENGTH_OFFSET)
+								.checked_add(ssz::BYTES_PER_LENGTH_OFFSET)
 								.expect("encode ssz_bytes_len length overflow for offset");
 							len = len
 								.checked_add(#field_ssz_bytes_len)
@@ -210,7 +210,7 @@ fn ssz_encode_derive_struct(derive_input: &DeriveInput, struct_data: &DataStruct
 						.expect("encode ssz_append offset overflow");
 				)*
 
-				let mut encoder = eth2_ssz::SszEncoder::container(buf, offset);
+				let mut encoder = ssz::SszEncoder::container(buf, offset);
 
 				#(
 					#field_encoder_append;
@@ -263,14 +263,14 @@ fn ssz_encode_derive_enum_transparent(
 
 			let ty = &(&variant.fields).into_iter().next().unwrap().ty;
 			let type_assert = quote! {
-				!<#ty as eth2_ssz::Encode>::is_ssz_fixed_len()
+				!<#ty as ssz::Encode>::is_ssz_fixed_len()
 			};
 			(pattern, type_assert)
 		})
 		.unzip();
 
 	let output = quote! {
-		impl #impl_generics eth2_ssz::Encode for #name #ty_generics #where_clause {
+		impl #impl_generics ssz::Encode for #name #ty_generics #where_clause {
 			fn is_ssz_fixed_len() -> bool {
 				assert!(
 					#(
@@ -334,7 +334,7 @@ fn ssz_encode_derive_enum_union(derive_input: &DeriveInput, enum_data: &DataEnum
 	let union_selectors = compute_union_selectors(patterns.len());
 
 	let output = quote! {
-		impl #impl_generics eth2_ssz::Encode for #name #ty_generics #where_clause {
+		impl #impl_generics ssz::Encode for #name #ty_generics #where_clause {
 			fn is_ssz_fixed_len() -> bool {
 				false
 			}
@@ -355,7 +355,7 @@ fn ssz_encode_derive_enum_union(derive_input: &DeriveInput, enum_data: &DataEnum
 					#(
 						#patterns => {
 							let union_selector: u8 = #union_selectors;
-							debug_assert!(union_selector <= eth2_ssz::MAX_UNION_SELECTOR);
+							debug_assert!(union_selector <= ssz::MAX_UNION_SELECTOR);
 							buf.push(union_selector);
 							inner.ssz_append(buf)
 						},
@@ -447,9 +447,9 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 				let #ident = decoder.decode_next_with(|slice| #module::from_ssz_bytes(slice))?;
 			});
 		} else {
-			is_ssz_fixed_len = quote! { <#ty as eth2_ssz::Decode>::is_ssz_fixed_len() };
-			ssz_fixed_len = quote! { <#ty as eth2_ssz::Decode>::ssz_fixed_len() };
-			from_ssz_bytes = quote! { <#ty as eth2_ssz::Decode>::from_ssz_bytes(slice) };
+			is_ssz_fixed_len = quote! { <#ty as ssz::Decode>::is_ssz_fixed_len() };
+			ssz_fixed_len = quote! { <#ty as ssz::Decode>::ssz_fixed_len() };
+			from_ssz_bytes = quote! { <#ty as ssz::Decode>::from_ssz_bytes(slice) };
 
 			register_types.push(quote! {
 				builder.register_type::<#ty>()?;
@@ -464,11 +464,11 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 				start = end;
 				end = end
 					.checked_add(#ssz_fixed_len)
-					.ok_or_else(|| eth2_ssz::DecodeError::OutOfBoundsByte {
+					.ok_or_else(|| ssz::DecodeError::OutOfBoundsByte {
 						i: usize::max_value()
 					})?;
 				let slice = bytes.get(start..end)
-					.ok_or_else(|| eth2_ssz::DecodeError::InvalidByteLength {
+					.ok_or_else(|| ssz::DecodeError::InvalidByteLength {
 						len: bytes.len(),
 						expected: end
 					})?;
@@ -480,7 +480,7 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 	}
 
 	let output = quote! {
-		impl #impl_generics eth2_ssz::Decode for #name #ty_generics #where_clause {
+		impl #impl_generics ssz::Decode for #name #ty_generics #where_clause {
 			fn is_ssz_fixed_len() -> bool {
 				#(
 					#is_fixed_lens &&
@@ -489,7 +489,7 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 			}
 
 			fn ssz_fixed_len() -> usize {
-				if <Self as eth2_ssz::Decode>::is_ssz_fixed_len() {
+				if <Self as ssz::Decode>::is_ssz_fixed_len() {
 					let mut len: usize = 0;
 					#(
 						len = len
@@ -502,12 +502,12 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 				}
 			}
 
-			fn from_ssz_bytes(bytes: &[u8]) -> core::result::Result<Self, eth2_ssz::DecodeError> {
-				if <Self as eth2_ssz::Decode>::is_ssz_fixed_len() {
-					if bytes.len() != <Self as eth2_ssz::Decode>::ssz_fixed_len() {
-						return Err(eth2_ssz::DecodeError::InvalidByteLength {
+			fn from_ssz_bytes(bytes: &[u8]) -> core::result::Result<Self, ssz::DecodeError> {
+				if <Self as ssz::Decode>::is_ssz_fixed_len() {
+					if bytes.len() != <Self as ssz::Decode>::ssz_fixed_len() {
+						return Err(ssz::DecodeError::InvalidByteLength {
 							len: bytes.len(),
-							expected: <Self as eth2_ssz::Decode>::ssz_fixed_len(),
+							expected: <Self as ssz::Decode>::ssz_fixed_len(),
 						});
 					}
 
@@ -524,7 +524,7 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 						)*
 					})
 				} else {
-					let mut builder = eth2_ssz::SszDecoderBuilder::new(bytes);
+					let mut builder = ssz::SszDecoderBuilder::new(bytes);
 
 					#(
 						#register_types
@@ -576,25 +576,25 @@ fn ssz_decode_derive_enum_union(derive_input: &DeriveInput, enum_data: &DataEnum
 	let union_selectors = compute_union_selectors(constructors.len());
 
 	let output = quote! {
-		impl #impl_generics eth2_ssz::Decode for #name #ty_generics #where_clause {
+		impl #impl_generics ssz::Decode for #name #ty_generics #where_clause {
 			fn is_ssz_fixed_len() -> bool {
 				false
 			}
 
-			fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, eth2_ssz::DecodeError> {
+			fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, ssz::DecodeError> {
 				// Sanity check to ensure the definition here does not drift from the one defined in
 				// `ssz`.
-				debug_assert_eq!(#MAX_UNION_SELECTOR, eth2_ssz::MAX_UNION_SELECTOR);
+				debug_assert_eq!(#MAX_UNION_SELECTOR, ssz::MAX_UNION_SELECTOR);
 
-				let (selector, body) = eth2_ssz::split_union_bytes(bytes)?;
+				let (selector, body) = ssz::split_union_bytes(bytes)?;
 
 				match selector.into() {
 					#(
 						#union_selectors => {
-							<#var_types as eth2_ssz::Decode>::from_ssz_bytes(body).map(#constructors)
+							<#var_types as ssz::Decode>::from_ssz_bytes(body).map(#constructors)
 						},
 					)*
-					other => Err(eth2_ssz::DecodeError::UnionSelectorInvalid(other))
+					other => Err(ssz::DecodeError::UnionSelectorInvalid(other))
 				}
 			}
 		}

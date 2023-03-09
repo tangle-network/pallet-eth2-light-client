@@ -1,10 +1,10 @@
 use clap::Parser;
-use eth2_pallet_init::{
+use std::string::String;
+use webb_eth2_pallet_init::{
 	config::Config,
 	init_pallet::init_pallet,
 	substrate_pallet_client::{setup_api, EthClientPallet},
 };
-use std::string::String;
 use webb_proposals::TypedChainId;
 
 #[derive(Parser, Default, Debug)]

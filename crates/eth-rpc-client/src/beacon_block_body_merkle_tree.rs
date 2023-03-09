@@ -1,7 +1,7 @@
 use ethereum_types::H256;
 use merkle_proof::MerkleTree;
 use tree_hash::TreeHash;
-use types::{BeaconBlockBody, BeaconState, ExecutionPayload, ExecutionPayloadRef, MainnetEthSpec};
+use types::{BeaconBlockBody, BeaconState, ExecutionPayloadRef, MainnetEthSpec};
 
 /// `BeaconBlockBodyMerkleTree` is built on the `BeaconBlockBody` data structure,
 /// where the leaves of the Merkle Tree are the hashes of the
@@ -170,7 +170,7 @@ mod tests {
 			serde_json::from_str(&json_str).unwrap();
 		let beacon_block_body_merkle_tree = BeaconBlockBodyMerkleTree::new(&beacon_block_body);
 		let execution_payload_merkle_tree = ExecutionPayloadMerkleTree::new(
-			&beacon_block_body.execution_payload().unwrap().execution_payload,
+			&beacon_block_body.execution_payload().unwrap().execution_payload_ref(),
 		);
 
 		assert_eq!(
@@ -178,10 +178,13 @@ mod tests {
 			execution_payload_merkle_tree.0.hash()
 		);
 
-		let execution_payload_proof = beacon_block_body_merkle_tree.0.generate_proof(
-			EXECUTION_PAYLOAD_INDEX,
-			BeaconBlockBodyMerkleTree::BEACON_BLOCK_BODY_TREE_DEPTH,
-		);
+		let execution_payload_proof = beacon_block_body_merkle_tree
+			.0
+			.generate_proof(
+				EXECUTION_PAYLOAD_INDEX,
+				BeaconBlockBodyMerkleTree::BEACON_BLOCK_BODY_TREE_DEPTH,
+			)
+			.unwrap();
 		assert_eq!(execution_payload_proof.0, execution_payload_merkle_tree.0.hash());
 		assert!(merkle_proof::verify_merkle_proof(
 			execution_payload_merkle_tree.0.hash(),

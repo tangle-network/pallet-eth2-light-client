@@ -1,17 +1,14 @@
 use super::*;
 use crate::decode::try_from_iter::{TryCollect, TryFromIter};
-use alloc::{
-	collections::{BTreeMap, BTreeSet},
-	string::ToString,
-	sync::Arc,
-};
-use core::{
-	iter::{self, FromIterator},
-	num::NonZeroUsize,
-};
+use core::num::NonZeroUsize;
 use ethereum_types::{H160, H256, U128, U256};
 use itertools::process_results;
 use smallvec::SmallVec;
+use std::{
+	collections::{BTreeMap, BTreeSet},
+	iter::{self, FromIterator},
+	sync::Arc,
+};
 
 macro_rules! impl_decodable_for_uint {
 	($type: ident, $bit_size: expr) => {
@@ -31,7 +28,7 @@ macro_rules! impl_decodable_for_uint {
 				if len != expected {
 					Err(DecodeError::InvalidByteLength { len, expected })
 				} else {
-					let mut array: [u8; $bit_size / 8] = core::default::Default::default();
+					let mut array: [u8; $bit_size / 8] = std::default::Default::default();
 					array.clone_from_slice(bytes);
 
 					Ok(Self::from_le_bytes(array))
@@ -249,6 +246,20 @@ impl Decode for NonZeroUsize {
 	}
 }
 
+impl<T: Decode> Decode for Option<T> {
+	fn is_ssz_fixed_len() -> bool {
+		false
+	}
+	fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, DecodeError> {
+		let (selector, body) = split_union_bytes(bytes)?;
+		match selector.into() {
+			0u8 => Ok(None),
+			1u8 => <T as Decode>::from_ssz_bytes(body).map(Option::Some),
+			other => Err(DecodeError::UnionSelectorInvalid(other)),
+		}
+	}
+}
+
 impl<T: Decode> Decode for Arc<T> {
 	fn is_ssz_fixed_len() -> bool {
 		T::is_ssz_fixed_len()
@@ -377,6 +388,7 @@ macro_rules! impl_decodable_for_u8_array {
 
 impl_decodable_for_u8_array!(4);
 impl_decodable_for_u8_array!(32);
+impl_decodable_for_u8_array!(48);
 
 macro_rules! impl_for_vec {
 	($type: ty, $max_len: expr) => {
@@ -458,7 +470,7 @@ pub fn decode_list_of_variable_length_items<T: Decode, Container: TryFromIter<T>
 ) -> Result<Container, DecodeError> {
 	if bytes.is_empty() {
 		return Container::try_from_iter(iter::empty()).map_err(|e| {
-			DecodeError::BytesInvalid(format!("Error trying to collect empty list: {e:?}"))
+			DecodeError::BytesInvalid(format!("Error trying to collect empty list: {:?}", e))
 		})
 	}
 
@@ -473,7 +485,8 @@ pub fn decode_list_of_variable_length_items<T: Decode, Container: TryFromIter<T>
 
 	if max_len.map_or(false, |max| num_items > max) {
 		return Err(DecodeError::BytesInvalid(format!(
-			"Variable length list of {num_items} items exceeds maximum of {max_len:?}"
+			"Variable length list of {} items exceeds maximum of {:?}",
+			num_items, max_len
 		)))
 	}
 
@@ -497,13 +510,12 @@ pub fn decode_list_of_variable_length_items<T: Decode, Container: TryFromIter<T>
 		}),
 		|iter| iter.try_collect(),
 	)?
-	.map_err(|e| DecodeError::BytesInvalid(format!("Error collecting into container: {e:?}")))
+	.map_err(|e| DecodeError::BytesInvalid(format!("Error collecting into container: {:?}", e)))
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use alloc::{vec, vec::Vec};
 
 	// Note: decoding of valid bytes is generally tested "indirectly" in the `/tests` dir, by
 	// encoding then decoding the element.

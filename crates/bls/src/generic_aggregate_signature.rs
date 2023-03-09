@@ -15,12 +15,12 @@ use core::{
 };
 #[cfg(feature = "std")]
 use eth2_serde_utils::hex::encode as hex_encode;
-use eth2_ssz::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{
 	de::{Deserialize, Deserializer},
 	ser::{Serialize, Serializer},
 };
+use ssz::{Decode, Encode};
 use tree_hash::TreeHash;
 
 /// The compressed bytes used to represent `GenericAggregateSignature::empty()`.
@@ -276,7 +276,7 @@ where
 }
 
 /// Hashes the `self.serialize()` bytes.
-#[allow(clippy::derived_hash_with_manual_eq)]
+#[allow(clippy::derive_hash_xor_eq)]
 impl<Pub, AggPub, Sig, AggSig> Hash for GenericAggregateSignature<Pub, AggPub, Sig, AggSig>
 where
 	Sig: TSignature<Pub>,

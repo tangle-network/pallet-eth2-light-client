@@ -168,7 +168,7 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 		}
 
 		#[cfg(feature = "eth2")]
-		impl eth2_ssz::Decode for $name {
+		impl ssz::Decode for $name {
 			fn is_ssz_fixed_len() -> bool {
 				true
 			}
@@ -177,12 +177,12 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 				$len
 			}
 
-			fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, eth2_ssz::DecodeError> {
+			fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, ssz::DecodeError> {
 				let len = bytes.len();
-				let expected = <Self as eth2_ssz::Decode>::ssz_fixed_len();
+				let expected = <Self as ssz::Decode>::ssz_fixed_len();
 
 				if len != expected {
-					Err(eth2_ssz::DecodeError::InvalidByteLength { len, expected })
+					Err(ssz::DecodeError::InvalidByteLength { len, expected })
 				} else {
 					Ok(bytes.into())
 				}
@@ -190,7 +190,7 @@ macro_rules! arr_ethereum_types_wrapper_impl {
 		}
 
 		#[cfg(feature = "eth2")]
-		impl eth2_ssz::Encode for $name {
+		impl ssz::Encode for $name {
 			fn is_ssz_fixed_len() -> bool {
 				true
 			}

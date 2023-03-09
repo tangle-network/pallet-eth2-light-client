@@ -2,9 +2,7 @@
 //!
 //! Useful for `cargo flamegraph`.
 
-#![allow(clippy::needless_collect)]
-
-use eth2_ssz::{Decode, Encode};
+use ssz::{Decode, Encode};
 
 fn main() {
 	let vec: Vec<u64> = vec![4242; 8196];

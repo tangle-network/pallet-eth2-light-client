@@ -65,15 +65,15 @@ macro_rules! impl_ssz_decode {
 			$byte_size
 		}
 
-		fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, eth2_ssz::DecodeError> {
+		fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, ssz::DecodeError> {
 			let len = bytes.len();
-			let expected = <Self as eth2_ssz::Decode>::ssz_fixed_len();
+			let expected = <Self as ssz::Decode>::ssz_fixed_len();
 
 			if len != expected {
-				Err(eth2_ssz::DecodeError::InvalidByteLength { len, expected })
+				Err(ssz::DecodeError::InvalidByteLength { len, expected })
 			} else {
 				Self::deserialize(bytes)
-					.map_err(|e| eth2_ssz::DecodeError::BytesInvalid(format!("{:?}", e)))
+					.map_err(|e| ssz::DecodeError::BytesInvalid(format!("{:?}", e)))
 			}
 		}
 	};

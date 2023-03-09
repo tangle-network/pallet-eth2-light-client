@@ -16,14 +16,14 @@ eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-cl
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
 
-webb = { git = "https://github.com/webb-tools/webb-rs.git", branch = "main", features = [
+webb = { version = "0.5.17", features = [
     "evm-runtime",
     "substrate-runtime"
 ]}
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git" }
+webb-proposals = { version = "0.5.4" }
 
-sp-keyring = { default-features=false, version = "7.0.0" }
-sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+sp-keyring = { version = "18.0.0", default-features = false }
+sp-core = { version = "16.0.0" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", default-features = false, features = ["derive"] }

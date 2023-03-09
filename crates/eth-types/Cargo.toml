@@ -12,7 +12,7 @@ ethereum-types = { version = "0.14.1", features = ["codec", "rlp"], default-feat
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
-eth2-ssz = { package = "webb-eth2-ssz",  path = "../ssz", default-features = false, features = ["arbitrary"] }
+ssz = { package = "webb-eth2-ssz",  path = "../ssz", default-features = false, features = ["arbitrary"] }
 tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-features = false, features = ["arbitrary"] }
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }

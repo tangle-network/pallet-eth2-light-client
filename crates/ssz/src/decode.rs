@@ -1,15 +1,14 @@
 use super::*;
-use core::cmp::Ordering;
 use smallvec::{smallvec, SmallVec};
+use std::cmp::Ordering;
 
 type SmallVec8<T> = SmallVec<[T; 8]>;
 
 pub mod impls;
 pub mod try_from_iter;
-use alloc::{format, string::String, vec::Vec};
 
 /// Returned when SSZ decoding fails.
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum DecodeError {
 	/// The bytes supplied were too short to be decoded into the specified type.
 	InvalidByteLength { len: usize, expected: usize },
@@ -263,7 +262,7 @@ impl<'a> SszDecoderBuilder<'a> {
 ///
 /// ```rust
 /// use ssz_derive::{Encode, Decode};
-/// use eth2_ssz::{Decode, Encode, SszDecoder, SszDecoderBuilder};
+/// use ssz::{Decode, Encode, SszDecoder, SszDecoderBuilder};
 ///
 /// #[derive(PartialEq, Debug, Encode, Decode)]
 /// struct Foo {
@@ -353,7 +352,7 @@ fn decode_offset(bytes: &[u8]) -> Result<usize, DecodeError> {
 	if len != expected {
 		Err(DecodeError::InvalidLengthPrefix { len, expected })
 	} else {
-		let mut array: [u8; BYTES_PER_LENGTH_OFFSET] = core::default::Default::default();
+		let mut array: [u8; BYTES_PER_LENGTH_OFFSET] = std::default::Default::default();
 		array.clone_from_slice(bytes);
 
 		Ok(u32::from_le_bytes(array) as usize)

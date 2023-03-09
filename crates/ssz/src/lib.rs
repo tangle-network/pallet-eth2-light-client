@@ -9,7 +9,7 @@
 //!
 //! ```rust
 //! use ssz_derive::{Encode, Decode};
-//! use eth2_ssz::{Decode, Encode};
+//! use ssz::{Decode, Encode};
 //!
 //! #[derive(PartialEq, Debug, Encode, Decode)]
 //! struct Foo {
@@ -33,13 +33,6 @@
 //!
 //! See `examples/` for manual implementations of the `Encode` and `Decode` traits.
 
-// Ensure we're `no_std` when compiling for Wasm.
-#![cfg_attr(not(feature = "std"), no_std)]
-
-extern crate alloc;
-
-use alloc::vec::Vec;
-
 mod decode;
 mod encode;
 pub mod legacy;
@@ -56,11 +49,9 @@ pub use union_selector::UnionSelector;
 pub const BYTES_PER_LENGTH_OFFSET: usize = 4;
 /// The maximum value that can be represented using `BYTES_PER_LENGTH_OFFSET`.
 #[cfg(target_pointer_width = "32")]
-pub const MAX_LENGTH_VALUE: usize =
-	(core::u32::MAX >> (8 * (4 - BYTES_PER_LENGTH_OFFSET))) as usize;
+pub const MAX_LENGTH_VALUE: usize = (std::u32::MAX >> (8 * (4 - BYTES_PER_LENGTH_OFFSET))) as usize;
 #[cfg(target_pointer_width = "64")]
-pub const MAX_LENGTH_VALUE: usize =
-	(core::u64::MAX >> (8 * (8 - BYTES_PER_LENGTH_OFFSET))) as usize;
+pub const MAX_LENGTH_VALUE: usize = (std::u64::MAX >> (8 * (8 - BYTES_PER_LENGTH_OFFSET))) as usize;
 
 /// The number of bytes used to indicate the variant of a union.
 pub const BYTES_PER_UNION_SELECTOR: usize = 1;
@@ -68,7 +59,7 @@ pub const BYTES_PER_UNION_SELECTOR: usize = 1;
 /// extensions).
 pub const MAX_UNION_SELECTOR: u8 = 127;
 
-/// Convenience function to SSZ encode an object supporting eth2_ssz::Encode.
+/// Convenience function to SSZ encode an object supporting ssz::Encode.
 ///
 /// Equivalent to `val.as_ssz_bytes()`.
 pub fn ssz_encode<T>(val: &T) -> Vec<u8>

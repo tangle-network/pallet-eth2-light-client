@@ -4,7 +4,8 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	BlockHeader, H256,
 };
-use sp_core::{crypto::AccountId32, sr25519::Pair, Pair as PairT};
+use sp_core::{sr25519::Pair, Pair as PairT};
+use subxt::utils::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
@@ -374,7 +375,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		let bytes: [u8; 32] = *account_id.as_ref();
 		let addr = tangle::storage()
 			.eth2_client()
-			.submitters(&self.chain, subxt::ext::sp_core::crypto::AccountId32::from(bytes));
+			.submitters(&self.chain, subxt::utils::AccountId32::from(bytes));
 		self.get_value(&addr).await.map(|r| r.is_some())
 	}
 

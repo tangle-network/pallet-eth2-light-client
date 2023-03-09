@@ -15,7 +15,7 @@ smallvec = { version = "1.6.1", features = ["const_generics"], default-features 
 itertools = { version = "0.10.3", default-features = false }
 
 [dev-dependencies]
-eth2-ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive" }
+ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive" }
 
 [features]
 arbitrary = ["ethereum-types/arbitrary"]
