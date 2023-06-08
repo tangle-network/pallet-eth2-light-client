@@ -95,8 +95,8 @@ pub async fn init_pallet(
 			finalized_body
 				.execution_payload()
 				.expect("No execution payload in finalized body")
-				.execution_payload
-				.block_number,
+				.execution_payload_ref()
+				.block_number(),
 		)
 		.await
 		.expect("Error on fetching finalized execution header");

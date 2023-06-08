@@ -127,7 +127,6 @@ pub fn read_four_byte_union_selector(bytes: &[u8]) -> Result<usize, DecodeError>
 mod test {
 	use super::*;
 	use crate as ssz;
-	use alloc::{format, vec, vec::Vec};
 	use ssz_derive::{Decode, Encode};
 
 	type VecU16 = Vec<u16>;
@@ -161,7 +160,7 @@ mod test {
 		assert_eq!(impl_vec_u16::decode::from_ssz_bytes(&bytes).unwrap(), item);
 	}
 
-	fn round_trip<T: Encode + Decode + core::fmt::Debug + PartialEq>(items: Vec<T>) {
+	fn round_trip<T: Encode + Decode + std::fmt::Debug + PartialEq>(items: Vec<T>) {
 		for item in items {
 			let encoded = &item.as_ssz_bytes();
 			assert_eq!(item.ssz_bytes_len(), encoded.len());

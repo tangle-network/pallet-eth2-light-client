@@ -1,5 +1,5 @@
 [package]
-name = "eth2_ssz_derive"
+name = "webb-eth2-ssz-derive"
 version = "0.3.0"
 authors = ["Paul Hauner <paul@sigmaprime.io>"]
 edition = "2021"

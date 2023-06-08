@@ -1,20 +1,22 @@
 [package]
-name = "bls"
+name = "webb-bls"
 version = "0.2.0"
-authors = ["Paul Hauner <paul@paulhauner.com>"]
+authors = ["Paul Hauner <paul@paulhauner.com>, Webb Developers <hello@webb.tools>"]
 edition = "2021"
 
 [dependencies]
-eth2_ssz = { path = "../ssz", default-features = false }
-tree_hash = { path = "../tree_hash", default-features = false }
+ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false, features = ["arbitrary"] }
+tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-features = false, features = ["arbitrary"] }
+eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
+eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
+
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false }
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 serde = { version = "1.0.101", features = ["derive"], optional = true, default-features = false}
-eth2_serde_utils = { path = "../serde_utils", default-features = false, optional = true }
+
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
-eth2_hashing = { path = "../eth2_hashing", default-features = false, features = ["zero_hash_cache"] }
-ethereum-types = { version = "0.14.0", default-features = false }
+ethereum-types = { version = "0.14.1", default-features = false }
 zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
 
 [features]
@@ -25,7 +27,7 @@ std = [
     "rand_chacha/std",
     "hex/std",
     "milagro_bls/std",
-    "eth2_hashing/std",
+    "eth2-hashing/std",
     "ethereum-types/std",
-    "eth2_serde_utils/std",
+    "eth2-serde-utils/std",
 ]

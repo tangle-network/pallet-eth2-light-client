@@ -242,9 +242,11 @@ impl HandMadeFinalityLightClientUpdate {
 		const BEACON_STATE_MERKLE_TREE_DEPTH: usize = 5;
 		const BEACON_STATE_NEXT_SYNC_COMMITTEE_INDEX: usize = 23;
 
+		// TODO: Handle unwrap error
 		let proof = beacon_state_merkle_tree
 			.0
-			.generate_proof(BEACON_STATE_NEXT_SYNC_COMMITTEE_INDEX, BEACON_STATE_MERKLE_TREE_DEPTH);
+			.generate_proof(BEACON_STATE_NEXT_SYNC_COMMITTEE_INDEX, BEACON_STATE_MERKLE_TREE_DEPTH)
+			.unwrap();
 
 		let next_sync_committee_branch = proof.1;
 
@@ -297,10 +299,11 @@ impl HandMadeFinalityLightClientUpdate {
 		const BEACON_STATE_FINALIZED_CHECKPOINT_INDEX: usize = 20;
 
 		let beacon_state_merkle_tree = BeaconStateMerkleTree::new(beacon_state);
-		let mut proof = beacon_state_merkle_tree.0.generate_proof(
-			BEACON_STATE_FINALIZED_CHECKPOINT_INDEX,
-			BEACON_STATE_MERKLE_TREE_DEPTH,
-		);
+		// TODO: Handle unwrap error
+		let mut proof = beacon_state_merkle_tree
+			.0
+			.generate_proof(BEACON_STATE_FINALIZED_CHECKPOINT_INDEX, BEACON_STATE_MERKLE_TREE_DEPTH)
+			.unwrap();
 
 		let mut finality_branch = vec![beacon_state.finalized_checkpoint().epoch.tree_hash_root()];
 		finality_branch.append(&mut proof.1);

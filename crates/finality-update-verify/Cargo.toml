@@ -1,16 +1,26 @@
 [package]
-name = "finality-update-verify"
+name = "webb-finality-update-verify"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
-consensus_types = { path = "../consensus_types" }
-bls = { path = "../bls" }
-tree_hash = { path = "../tree_hash" }
+consensus-types = { package = "webb-consensus-types",  path = "../consensus-types" }
+bls = { package = "webb-bls", path = "../bls" }
+tree-hash = { package = "webb-tree-hash",  path = "../tree-hash" }
 bitvec = "1.0.0"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
 serde_json = "1.0.74"
 toml = "0.5.9"
+
+[features]
+default = ["std"]
+std = [
+    "serde/std",
+]
+arbitrary = [
+    "eth-types/arbitrary",
+    "tree-hash/arbitrary",
+]

@@ -1,0 +1,36 @@
+[package]
+name = "webb-eth-rpc-client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559", "arbitrary"] }
+finality-update-verify = { package = "webb-finality-update-verify", path = "../finality-update-verify", features = ["arbitrary"] }
+types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+tree_hash = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable", features = ["arbitrary"] }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable", features = ["arbitrary"] }
+eth2_hashing = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+eth2_ssz = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable", features = ["arbitrary"] }
+
+ethereum-types = { version = "0.14.1", features = ["arbitrary"] }
+funty = "2.0.0"
+
+log = { version = "0.4", features = ["std", "serde"] }
+serde_json = { version = "1.0.74", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["blocking", "json"] }
+clap = { version = "3.1.6", features = ["derive"] }
+tokio = { version = "1.1", features = ["macros", "rt", "time"] }
+env_logger = "0.9.0"
+futures = { version = "0.3.21", default-features = false }
+async-std = { version = "1.12.0", default-features = false }
+hex = "*"
+toml = "0.5.9"
+atomic_refcell = "0.1.8"
+bitvec = "*"
+dotenv = "0.15.0"
+
+prometheus = { version = "0.9", features = ["process"] }
+lazy_static = "1.4"
+warp = "0.2"
+thread = "*"

@@ -249,8 +249,8 @@ impl BeaconRPCClient {
 		Ok(beacon_block_body
 			.execution_payload()
 			.map_err(|_| ExecutionPayloadError)?
-			.execution_payload
-			.block_number)
+			.execution_payload_ref()
+			.block_number())
 	}
 
 	pub async fn get_finality_light_client_update(

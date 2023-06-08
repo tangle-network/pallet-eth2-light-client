@@ -19,28 +19,60 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! # Eth2 Light Client Module
-//!
-//! A module for storing block headers from the Ethereum 2.0 Beacon Chain and
-//! verifying their validity. It should also expose an API that allows one to
-//! verify the state of the Ethereum 2.0 Beacon Chain at a given block header.
+//! This pallet provides functionality for managing light client data on the Substrate chain.
+//! It allows submitting beacon chain light client updates, submitting execution headers,
+//! updating the trusted signer, and interacting with finalized and unfinalized headers.
 //!
 //! ## Overview
 //!
-//! The Eth2 Light Client module provides functionality maintaing and storing
-//! metadata about the Eth2 Beacon Chain.
-//!
-//! The supported dispatchable functions are documented in the [`Call`] enum.
-//!
-//! ### Terminology
-//!
-//! ### Goals
+//! The main functionality of this pallet is to manage light client data, including:
+//! - Submitting beacon chain light client updates
+//! - Submitting execution headers
+//! - Updating the trusted signer
+//! - Interacting with finalized and unfinalized headers
 //!
 //! ## Interface
 //!
-//! ## Related Modules
+//! ### Dispatchable Functions
 //!
-//! * [`System`](../frame_system/index.html)
-//! * [`Support`](../frame_support/index.html)
+//! * `submit_beacon_chain_light_client_update` - Submit a beacon chain light client update.
+//! * `submit_execution_header` - Submit an execution header.
+//! * `update_trusted_signer` - Update the trusted signer account.
+//!
+//! ### Public Functions
+//!
+//! * `calculate_min_storage_balance_for_submitter` - Calculate the minimum storage balance required for a submitter.
+//! * `initialized` - Check if the light client is initialized for a specific chain.
+//! * `last_block_number` - Get the last finalized execution block number for a given chain.
+//! * `block_hash_safe` - Get the block hash for a given chain and block number, if available.
+//! * `is_known_execution_header` - Check if an execution header is already submitted for a given chain and hash.
+//! * `finalized_beacon_block_root` - Get the finalized beacon block root for a given chain.
+//! * `finalized_beacon_block_slot` - Get the finalized beacon block slot for a given chain.
+//! * `finalized_beacon_block_header` - Get the finalized beacon block header for a given chain.
+//! * `min_storage_balance_for_submitter` - Get the minimum balance required for a submitter to register a new account on a given chain.
+//! * `get_light_client_state` - Get the current light client state for a given chain.
+//! * `get_trusted_signer` - Get the trusted signer account.
+//! * `is_light_client_update_allowed` - Check if a light client update is allowed for a given submitter and chain.
+//! * `validate_light_client_update` - Validate a light client update for a given chain.
+//! * `verify_bls_signatures` - Verify the BLS signatures for a given chain, update, and sync committee bits.
+//! * `verify_finality_branch` - Verify the finality branch of a light client update.
+//! * `compute_fork_version` - Compute the fork version for an epoch.
+//! * `compute_fork_version_by_slot` - Compute the fork version for a slot.
+//! * `update_finalized_header` - Update the finalized header for a given chain.
+//! * `commit_light_client_update` - Commit a light client update for a given chain.
+//! * `gc_headers` - Remove information about old headers.
+//! * `update_submitter` - Update the submitter's account for a given chain.
+//! * `account_id` - Get the account ID.
+//!
+//! ### Types
+//!
+//! * `Call` - Enum representing the dispatchable functions in this pallet.
+//! * `Config` - A trait representing the configurable parameters of this pallet.
+//! * `Error` - Enum representing the possible errors that can be returned by this pallet's functions.
+//! * `Event` - Enum representing the possible events that can be emitted by this pallet.
+//! * `LightClientUpdate` - Struct representing a light client update.
+//! * `TypedChainId` - Enum representing the supported chains.
+//! * `BlockHeader` - Struct representing a block header.
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]

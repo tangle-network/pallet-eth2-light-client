@@ -1,11 +1,11 @@
-use alloc::{
-	collections::{BTreeMap, BTreeSet},
-	vec::Vec,
-};
-use core::{convert::Infallible, fmt::Debug};
 use smallvec::SmallVec;
+use std::{
+	collections::{BTreeMap, BTreeSet},
+	convert::Infallible,
+	fmt::Debug,
+};
 
-/// Partial variant of `core::iter::FromIterator`.
+/// Partial variant of `std::iter::FromIterator`.
 ///
 /// This trait is implemented for types which can be constructed from an iterator of decoded SSZ
 /// values, but which may refuse values once a length limit is reached.

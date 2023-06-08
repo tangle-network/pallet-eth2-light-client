@@ -1,20 +1,20 @@
 [package]
-name = "eth2_to_substrate_relay"
+name = "eth2-to-substrate-relay"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"] }
-tree_hash = { path = "../crates/tree_hash" }
-merkle_proof = { path = "../crates/merkle_proof" }
-eth2_hashing = { path = "../crates/eth2_hashing" }
-eth2_ssz = { path = "../crates/ssz" }
-eth_rpc_client = { path = "../crates/eth_rpc_client" }
-eth2-pallet-init = { path = "../crates/eth2-pallet-init" }
-finality-update-verify = { path = "../crates/finality-update-verify" }
+tree-hash = { package = "webb-tree-hash",  path = "../crates/tree-hash" }
+merkle-proof = { package = "webb-merkle-proof",  path = "../crates/merkle-proof" }
+eth2-hashing = { package = "webb-eth2-hashing", path = "../crates/eth2-hashing" }
+eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz" }
+eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-client" }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
+finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
 
 webb = { version = "0.5.17", features = [
     "evm-runtime",
@@ -27,7 +27,7 @@ sp-core = { version = "16.0.0" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-ethereum-types = { version = "0.14.0" }
+ethereum-types = { version = "0.14.1" }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "3.1.6", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time"] }

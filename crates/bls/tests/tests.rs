@@ -1,9 +1,9 @@
 extern crate alloc;
 
 use alloc::borrow::Cow;
-use bls::{Hash256, INFINITY_SIGNATURE, SECRET_KEY_BYTES_LEN};
 use core::fmt::Debug;
 use ssz::{Decode, Encode};
+use webb_bls::{Hash256, INFINITY_SIGNATURE, SECRET_KEY_BYTES_LEN};
 
 fn ssz_round_trip<T: Encode + Decode + PartialEq + Debug>(item: T) {
 	assert_eq!(item, T::from_ssz_bytes(&item.as_ssz_bytes()).unwrap());
@@ -12,7 +12,7 @@ fn ssz_round_trip<T: Encode + Decode + PartialEq + Debug>(item: T) {
 macro_rules! test_suite {
 	($impls: ident) => {
 		use super::*;
-		use bls::$impls::*;
+		use webb_bls::$impls::*;
 
 		fn secret_from_u64(i: u64) -> SecretKey {
 			let mut secret_bytes = [0; 32];

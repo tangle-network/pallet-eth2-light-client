@@ -10,8 +10,8 @@ targets = ["x86_64-unknown-linux-gnu"]
 serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs", default-features = false, features = ["scale", "evm", "substrate"] }
-ethereum-types = { version = "0.14.0", default-features = false }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm", "substrate"] }
+ethereum-types = { version = "0.14.1", default-features = false }
 derive_more = { version = "^0.99.2", default-features = false }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
@@ -19,11 +19,11 @@ tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
 eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
-eth2_ssz = { path = "../crates/ssz", default-features = false }
-merkle_proof = { path = "../crates/merkle_proof", default-features = false }
-bls = { path = "../crates/bls", default-features = false }
-tree_hash = { path = "../crates/tree_hash", default-features = false }
-tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
+eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz", default-features = false }
+merkle-proof = { package = "webb-merkle-proof", path = "../crates/merkle-proof", default-features = false }
+bls = { package = "webb-bls", path = "../crates/bls", default-features = false }
+tree-hash = { package = "webb-tree-hash", path = "../crates/tree-hash", default-features = false }
+tree-hash-derive = { package = "webb-tree-hash-derive", path = "../crates/tree-hash-derive", default-features = false }
 
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
 frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
@@ -36,7 +36,7 @@ hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 [dev-dependencies]
 lazy_static = "1.4.0"
 serde_json = { version = "1.0.58", default-features = false, features = ["alloc"] }
-eth2-pallet-init = { path = "../crates/eth2-pallet-init" }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 async-trait = "0.1.58"
 
 [features]
@@ -45,14 +45,14 @@ std = [
 	"codec/std",
 	"scale-info/std",
 	"webb-proposals/std",
-	"tree_hash/std",
+	"tree-hash/std",
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
 	"sp-runtime/std",
 	"sp-std/std",
 	"ethereum-types/std",
-	"merkle_proof/std",
+	"merkle-proof/std",
 	"bls/std",
 	"bitvec/std",
 	"rlp/std",

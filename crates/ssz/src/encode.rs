@@ -1,7 +1,6 @@
 use super::*;
 
 mod impls;
-use alloc::{vec, vec::Vec};
 
 /// Provides SSZ encoding (serialization) via the `as_ssz_bytes(&self)` method.
 ///

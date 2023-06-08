@@ -22,6 +22,15 @@ use std::time;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
+pub fn get_typed_chain_id(config: &ConfigForTests) -> TypedChainId {
+	match config.network_name {
+		EthNetwork::Mainnet => TypedChainId::Evm(1),
+		EthNetwork::Kiln => TypedChainId::Evm(1337802),
+		EthNetwork::Ropsten => TypedChainId::Evm(3),
+		EthNetwork::Goerli => TypedChainId::Evm(5),
+	}
+}
+
 pub fn read_json_file_from_data_dir(file_name: &str) -> std::string::String {
 	let mut json_file_path = std::env::current_exe().unwrap();
 	json_file_path.pop();
@@ -148,8 +157,8 @@ pub async fn init_pallet_from_specific_slot(
 		execution_block_hash: finalized_body
 			.execution_payload()
 			.unwrap()
-			.execution_payload
-			.block_hash
+			.execution_payload_ref()
+			.block_hash()
 			.into_root()
 			.0
 			.into(),
@@ -157,14 +166,20 @@ pub async fn init_pallet_from_specific_slot(
 
 	let finalized_execution_header: BlockHeader = eth1_rpc_client
 		.get_block_header_by_number(
-			finalized_body.execution_payload().unwrap().execution_payload.block_number,
+			finalized_body
+				.execution_payload()
+				.unwrap()
+				.execution_payload_ref()
+				.block_number(),
 		)
 		.await
 		.unwrap();
 
+	let typed_chain_id = get_typed_chain_id(config_for_test);
+
 	eth_client_pallet
 		.init(
-			config_for_test.type_chain_id.chain_id().into(),
+			typed_chain_id.chain_id().into(),
 			finalized_execution_header,
 			finalized_beacon_header,
 			current_sync_committee,
@@ -189,8 +204,8 @@ fn get_config(config_for_test: &ConfigForTests) -> Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,
-		signer_account_id: "NaN".to_string(),
-		path_to_signer_secret_key: "NaN".to_string(),
+		signer_account_id: "5Dqf9U5dgQ9GLqdfaxXGjpZf9af1sCV8UrnpRgqJPbe3wCwX".to_string(),
+		path_to_signer_secret_key: "/tmp/empty/secret_key".to_string(),
 		contract_account_id: "NaN".to_string(),
 		ethereum_network: config_for_test.network_name.to_string(),
 		interval_between_light_client_updates_submission_in_epochs: 1,
@@ -249,7 +264,8 @@ pub async fn get_client_pallet(
 	config_for_test: &ConfigForTests,
 ) -> Box<dyn EthClientPalletTrait> {
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
+	let typed_chain_id = get_typed_chain_id(config_for_test);
+	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
 
 	let mut config = get_init_config(config_for_test, &eth_client_pallet);
 	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
@@ -306,7 +322,8 @@ pub async fn get_relay_from_slot(
 ) -> Eth2SubstrateRelay {
 	let config = get_config(config_for_test);
 	let api = setup_api().await.unwrap();
-	let mut eth_client_pallet = EthClientPallet::new(api, config_for_test.type_chain_id);
+	let typed_chain_id = get_typed_chain_id(config_for_test);
+	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
 
 	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test).await;
 

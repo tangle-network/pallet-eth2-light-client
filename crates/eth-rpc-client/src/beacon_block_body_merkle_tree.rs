@@ -1,7 +1,7 @@
 use ethereum_types::H256;
 use merkle_proof::MerkleTree;
 use tree_hash::TreeHash;
-use types::{BeaconBlockBody, BeaconState, ExecutionPayload, MainnetEthSpec};
+use types::{BeaconBlockBody, BeaconState, ExecutionPayloadRef, MainnetEthSpec};
 
 /// `BeaconBlockBodyMerkleTree` is built on the `BeaconBlockBody` data structure,
 /// where the leaves of the Merkle Tree are the hashes of the
@@ -52,22 +52,22 @@ impl ExecutionPayloadMerkleTree {
 	pub const TREE_NUM_LEAVES: usize = 14;
 	pub const TREE_DEPTH: usize = 4;
 
-	pub fn new(execution_payload: &ExecutionPayload<MainnetEthSpec>) -> Self {
+	pub fn new(execution_payload: &ExecutionPayloadRef<MainnetEthSpec>) -> Self {
 		let leaves: [H256; Self::TREE_NUM_LEAVES] = [
-			execution_payload.parent_hash.tree_hash_root(),
-			execution_payload.fee_recipient.tree_hash_root(),
-			execution_payload.state_root.tree_hash_root(),
-			execution_payload.receipts_root.tree_hash_root(),
-			execution_payload.logs_bloom.tree_hash_root(),
-			execution_payload.prev_randao.tree_hash_root(),
-			execution_payload.block_number.tree_hash_root(),
-			execution_payload.gas_limit.tree_hash_root(),
-			execution_payload.gas_used.tree_hash_root(),
-			execution_payload.timestamp.tree_hash_root(),
-			execution_payload.extra_data.tree_hash_root(),
-			execution_payload.base_fee_per_gas.tree_hash_root(),
-			execution_payload.block_hash.tree_hash_root(),
-			execution_payload.transactions.tree_hash_root(),
+			execution_payload.parent_hash().tree_hash_root(),
+			execution_payload.fee_recipient().tree_hash_root(),
+			execution_payload.state_root().tree_hash_root(),
+			execution_payload.receipts_root().tree_hash_root(),
+			execution_payload.logs_bloom().tree_hash_root(),
+			execution_payload.prev_randao().tree_hash_root(),
+			execution_payload.block_number().tree_hash_root(),
+			execution_payload.gas_limit().tree_hash_root(),
+			execution_payload.gas_used().tree_hash_root(),
+			execution_payload.timestamp().tree_hash_root(),
+			execution_payload.extra_data().tree_hash_root(),
+			execution_payload.base_fee_per_gas().tree_hash_root(),
+			execution_payload.block_hash().tree_hash_root(),
+			execution_payload.transactions().tree_hash_root(),
 		];
 
 		Self(MerkleTree::create(&leaves, Self::TREE_DEPTH))
@@ -170,7 +170,7 @@ mod tests {
 			serde_json::from_str(&json_str).unwrap();
 		let beacon_block_body_merkle_tree = BeaconBlockBodyMerkleTree::new(&beacon_block_body);
 		let execution_payload_merkle_tree = ExecutionPayloadMerkleTree::new(
-			&beacon_block_body.execution_payload().unwrap().execution_payload,
+			&beacon_block_body.execution_payload().unwrap().execution_payload_ref(),
 		);
 
 		assert_eq!(
@@ -178,10 +178,13 @@ mod tests {
 			execution_payload_merkle_tree.0.hash()
 		);
 
-		let execution_payload_proof = beacon_block_body_merkle_tree.0.generate_proof(
-			EXECUTION_PAYLOAD_INDEX,
-			BeaconBlockBodyMerkleTree::BEACON_BLOCK_BODY_TREE_DEPTH,
-		);
+		let execution_payload_proof = beacon_block_body_merkle_tree
+			.0
+			.generate_proof(
+				EXECUTION_PAYLOAD_INDEX,
+				BeaconBlockBodyMerkleTree::BEACON_BLOCK_BODY_TREE_DEPTH,
+			)
+			.unwrap();
 		assert_eq!(execution_payload_proof.0, execution_payload_merkle_tree.0.hash());
 		assert!(merkle_proof::verify_merkle_proof(
 			execution_payload_merkle_tree.0.hash(),

@@ -1,5 +1,5 @@
 [package]
-name = "eth2_serde_utils"
+name = "webb-eth2-serde-utils"
 version = "0.1.1"
 authors = ["Paul Hauner <paul@paulhauner.com", "Michael Sproul <michael@sigmaprime.io>"]
 edition = "2021"
@@ -10,7 +10,7 @@ license = "Apache-2.0"
 serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 serde_json = { version = "1.0.58", default-features = false, features = ["alloc"], optional = true }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
-ethereum-types = { version = "0.14.0", default-features = false, features = ["serialize"] }
+ethereum-types = { version = "0.14.1", default-features = false, features = ["serialize"] }
 
 [features]
 default = ["std"]

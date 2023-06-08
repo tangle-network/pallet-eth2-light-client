@@ -1,0 +1,29 @@
+[package]
+name = "webb-tree-hash"
+version = "0.4.1"
+authors = ["Paul Hauner <paul@paulhauner.com>"]
+edition = "2021"
+license = "Apache-2.0"
+description = "Efficient Merkle-hashing as used in Ethereum 2.0"
+
+[lib]
+name = "tree_hash"
+
+[dependencies]
+ethereum-types = { version = "0.14.1", default-features = false }
+eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
+smallvec = { version = "1.6.1", default-features = false }
+
+[dev-dependencies]
+rand = { version = "0.8.5", default-features = false }
+tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
+ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false, features = ["arbitrary"] }
+ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive", default-features = false }
+
+[features]
+default = ["std"]
+std = [
+    "ethereum-types/std",
+    "eth2-hashing/std",
+]
+arbitrary = ["ethereum-types/arbitrary"]
