@@ -25,12 +25,12 @@ bls = { path = "../crates/bls", default-features = false }
 tree_hash = { path = "../crates/tree_hash", default-features = false }
 tree_hash_derive = { path = "../crates/tree_hash_derive", default-features = false }
 
-frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
-frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
