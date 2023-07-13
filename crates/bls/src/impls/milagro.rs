@@ -82,7 +82,7 @@ impl TPublicKey for milagro::PublicKey {
 
 impl TAggregatePublicKey<milagro::PublicKey> for milagro::AggregatePublicKey {
 	fn to_public_key(&self) -> GenericPublicKey<milagro::PublicKey> {
-		GenericPublicKey::from_point(milagro::PublicKey { point: self.point.clone() })
+		GenericPublicKey::from_point(milagro::PublicKey { point: self.point })
 	}
 
 	fn aggregate(pubkeys: &[GenericPublicKey<milagro::PublicKey>]) -> Result<Self, Error> {

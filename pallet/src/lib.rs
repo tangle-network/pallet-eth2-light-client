@@ -112,7 +112,6 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
@@ -376,7 +375,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(0)]
+		#[pallet::weight({0})]
 		#[pallet::call_index(0)]
 		pub fn init(
 			origin: OriginFor<T>,
@@ -449,7 +448,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(1)]
+		#[pallet::weight({1})]
 		#[pallet::call_index(1)]
 		pub fn register_submitter(
 			origin: OriginFor<T>,
@@ -486,7 +485,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(2)]
+		#[pallet::weight({2})]
 		#[pallet::call_index(2)]
 		pub fn unregister_submitter(
 			origin: OriginFor<T>,
@@ -514,7 +513,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(3)]
+		#[pallet::weight({3})]
 		#[pallet::call_index(3)]
 		pub fn submit_beacon_chain_light_client_update(
 			origin: OriginFor<T>,
@@ -539,7 +538,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(4)]
+		#[pallet::weight({4})]
 		#[pallet::call_index(4)]
 		pub fn submit_execution_header(
 			origin: OriginFor<T>,
@@ -584,7 +583,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(5)]
+		#[pallet::weight({5})]
 		#[pallet::call_index(5)]
 		pub fn update_trusted_signer(
 			origin: OriginFor<T>,

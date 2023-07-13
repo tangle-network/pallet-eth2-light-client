@@ -93,7 +93,7 @@ mod round_trip {
 		];
 
 		for i in 0..items.len() {
-			assert_eq!(items[i].as_ssz_bytes(), expected_encodings[i], "Failed on {}", i);
+			assert_eq!(items[i].as_ssz_bytes(), expected_encodings[i], "Failed on {i}");
 		}
 	}
 
@@ -188,7 +188,7 @@ mod round_trip {
 		];
 
 		for i in 0..items.len() {
-			assert_eq!(items[i].as_ssz_bytes(), expected_encodings[i], "Failed on {}", i);
+			assert_eq!(items[i].as_ssz_bytes(), expected_encodings[i], "Failed on {i}");
 		}
 	}
 
