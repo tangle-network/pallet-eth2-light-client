@@ -1,9 +1,8 @@
 use crate::{
 	eth2::{ExtendedBeaconBlockHeader, SyncCommittee},
-	BlockHeader,
+	BlockHeader, H256,
 };
 use codec::{Decode, Encode};
-use ethereum_types::H256;
 use scale_info::TypeInfo;
 
 /// Minimal information about a header.
@@ -23,7 +22,6 @@ pub struct InitInput<AccountId> {
 	pub validate_updates: bool,
 	pub verify_bls_signatures: bool,
 	pub hashes_gc_threshold: u64,
-	pub max_submitted_blocks_by_account: u32,
 	pub trusted_signer: Option<AccountId>,
 }
 
@@ -38,8 +36,19 @@ impl<AccountId> InitInput<AccountId> {
 			validate_updates: self.validate_updates,
 			verify_bls_signatures: self.verify_bls_signatures,
 			hashes_gc_threshold: self.hashes_gc_threshold,
-			max_submitted_blocks_by_account: self.max_submitted_blocks_by_account,
 			trusted_signer,
 		}
+	}
+}
+
+#[derive(Clone, PartialEq, Encode, Decode, TypeInfo)]
+pub enum ClientMode {
+    SubmitLightClientUpdate,
+    SubmitHeader,
+}
+
+impl Default for ClientMode {
+	fn default() -> Self {
+		Self::SubmitLightClientUpdate
 	}
 }
