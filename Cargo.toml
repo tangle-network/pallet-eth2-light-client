@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "pallet",
-	"crates/*",
+    "crates/*",
     "eth2substrate-block-relay-rs",
 ]
 
