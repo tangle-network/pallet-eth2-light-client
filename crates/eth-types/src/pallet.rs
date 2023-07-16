@@ -43,8 +43,8 @@ impl<AccountId> InitInput<AccountId> {
 
 #[derive(Clone, PartialEq, Encode, Decode, TypeInfo)]
 pub enum ClientMode {
-    SubmitLightClientUpdate,
-    SubmitHeader,
+	SubmitLightClientUpdate,
+	SubmitHeader,
 }
 
 impl Default for ClientMode {

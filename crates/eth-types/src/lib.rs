@@ -31,6 +31,8 @@ pub mod eth2;
 #[cfg(feature = "eth2")]
 pub mod pallet;
 
+pub mod primitives;
+
 #[macro_use]
 pub mod macros;
 

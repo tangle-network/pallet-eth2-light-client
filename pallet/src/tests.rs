@@ -26,7 +26,7 @@ pub fn submit_and_check_execution_headers(
 			typed_chain_id,
 			header.clone()
 		));
-		assert!(Eth2Client::is_known_execution_header(typed_chain_id, header.calculate_hash()));
+		assert!(Eth2Client::is_known_execution_header(typed_chain_id, header.number));
 		assert!(Eth2Client::block_hash_safe(typed_chain_id, header.number).is_none());
 	}
 }
@@ -79,7 +79,6 @@ mod kiln_tests {
 	pub fn test_submit_update_two_periods() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
@@ -101,7 +100,7 @@ mod kiln_tests {
 			// (finalized)
 			for header in headers.iter().skip(1) {
 				let header_hash = header.calculate_hash();
-				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header_hash));
+				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
@@ -116,8 +115,6 @@ mod kiln_tests {
 					.unwrap()
 					.execution_block_hash
 			));
-
-			assert_ok!(Eth2Client::unregister_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 		})
 	}
 
@@ -125,7 +122,6 @@ mod kiln_tests {
 	pub fn test_submit_execution_block_from_fork_chain() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
@@ -151,7 +147,7 @@ mod kiln_tests {
 
 			for header in headers.iter().skip(1) {
 				let header_hash = header.calculate_hash();
-				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header_hash));
+				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
@@ -160,10 +156,7 @@ mod kiln_tests {
 			}
 
 			// Check that forked execution header was not finalized
-			assert!(Eth2Client::is_known_execution_header(
-				KILN_CHAIN,
-				fork_header.calculate_hash()
-			));
+			assert!(Eth2Client::is_known_execution_header(KILN_CHAIN, fork_header.number));
 			assert!(
 				Eth2Client::block_hash_safe(KILN_CHAIN, fork_header.number).unwrap_or_default()
 				!= fork_header.calculate_hash(),
@@ -182,10 +175,8 @@ mod kiln_tests {
 				validate_updates: true,
 				verify_bls_signatures: true,
 				hashes_gc_threshold: 500,
-				max_submitted_blocks_by_account: 7000,
 				trusted_signer: None,
 			}));
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			// After submitting the execution header, it should be present in the execution headers
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
@@ -202,10 +193,7 @@ mod kiln_tests {
 
 			// Last 500 execution headers are finalized
 			for header in headers.iter().skip(1).rev().take(500) {
-				assert!(!Eth2Client::is_known_execution_header(
-					KILN_CHAIN,
-					header.calculate_hash()
-				));
+				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
 						header.calculate_hash(),
@@ -219,10 +207,7 @@ mod kiln_tests {
 			// Headers older than last 500 hundred headers are both removed and are not present in
 			// execution header list
 			for header in headers.iter().skip(1).rev().skip(500) {
-				assert!(!Eth2Client::is_known_execution_header(
-					KILN_CHAIN,
-					header.calculate_hash()
-				));
+				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).is_none(),
 					"Execution block hash was not removed: {:?}",
@@ -233,61 +218,12 @@ mod kiln_tests {
 	}
 
 	#[test]
-	pub fn test_panic_on_exhausted_submit_limit() {
-		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(Some(InitOptions {
-				validate_updates: true,
-				verify_bls_signatures: true,
-				hashes_gc_threshold: 7100,
-				max_submitted_blocks_by_account: 100,
-				trusted_signer: None,
-			}));
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
-			// After submitting the execution header, it should be present in the execution headers
-			// list but absent in canonical chain blocks (not-finalized)
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).take(100).collect(),
-			);
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
-					headers[101].clone()
-				),
-				Error::<Test>::SubmitterExhaustedLimit
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_max_submit_blocks_by_account_limit() {
-		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(Some(InitOptions {
-				validate_updates: true,
-				verify_bls_signatures: true,
-				hashes_gc_threshold: 7100,
-				max_submitted_blocks_by_account: 100,
-				trusted_signer: None,
-			}));
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).take(100).collect(),
-			);
-		});
-	}
-
-	#[test]
 	pub fn test_trusted_signer() {
 		new_test_ext().execute_with(|| {
 			let (_headers, updates, _init_input) = get_test_context(Some(InitOptions {
 				validate_updates: true,
 				verify_bls_signatures: true,
 				hashes_gc_threshold: 7100,
-				max_submitted_blocks_by_account: 100,
 				trusted_signer: Some([2u8; 32]),
 			}));
 			assert_err!(
@@ -397,7 +333,6 @@ mod kiln_tests {
 	pub fn test_panic_on_submit_update_with_missing_execution_blocks() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
@@ -418,7 +353,6 @@ mod kiln_tests {
 	pub fn test_panic_on_submit_same_execution_blocks() {
 		new_test_ext().execute_with(|| {
 			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			assert_ok!(Eth2Client::submit_execution_header(
 				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
@@ -431,23 +365,6 @@ mod kiln_tests {
 					headers[1].clone()
 				),
 				Error::<Test>::BlockAlreadySubmitted
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_execution_block_after_submitter_unregistered() {
-		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
-			assert_ok!(Eth2Client::unregister_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
-					headers[1].clone()
-				),
-				Error::<Test>::SubmitterNotRegistered,
 			);
 		});
 	}
@@ -478,7 +395,7 @@ mod kiln_tests {
 					KILN_CHAIN,
 					updates[0].clone()
 				),
-				Error::<Test>::ActiveHeaderSlotNumberLessThanFinalizedSlot,
+				Error::<Test>::ActiveHeaderSlotLessThanFinalizedSlot,
 			);
 		});
 	}
@@ -488,7 +405,6 @@ mod kiln_tests {
 		new_test_ext().execute_with(|| {
 			let (headers, _updates, _init_input) = get_test_context(None);
 			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
 			assert_ok!(Eth2Client::submit_execution_header(
 				RuntimeOrigin::signed(ALICE),
 				KILN_CHAIN,
@@ -502,41 +418,6 @@ mod kiln_tests {
 					headers[3].clone()
 				),
 				Error::<Test>::UnknownParentHeader
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_unregister_submitter() {
-		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
-			assert_ok!(Eth2Client::register_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN));
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).take(5).collect(),
-			);
-
-			assert_err!(
-				Eth2Client::unregister_submitter(RuntimeOrigin::signed(ALICE), KILN_CHAIN),
-				Error::<Test>::SubmitterHasUsedStorage,
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_skipping_register_submitter() {
-		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
-					headers[1].clone()
-				),
-				Error::<Test>::SubmitterNotRegistered,
 			);
 		});
 	}
@@ -604,7 +485,6 @@ mod mainnet_tests {
 				validate_updates: true,
 				verify_bls_signatures: false,
 				hashes_gc_threshold: 500,
-				max_submitted_blocks_by_account: 7000,
 				trusted_signer: None,
 			}));
 

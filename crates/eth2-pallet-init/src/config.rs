@@ -7,16 +7,13 @@ use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-	pub enabled: bool,
-	pub name: String,
-	pub chain_id: u32,
 	// endpoint to a full node of Eth2 Beacon chain with Light Client API
 	pub beacon_endpoint: String,
 
 	// endpoint for the Ethereum full node, which supports Eth1 RPC API
 	pub eth1_endpoint: String,
 
-	// endpoint for a full node on the SUBSTRATE chain
+	// endpoint for a full node on the Substrate chain
 	pub substrate_endpoint: String,
 
 	// Account id from which relay make requests
@@ -25,7 +22,7 @@ pub struct Config {
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
-	// Account id for eth client contract on SUBSTRATE
+	// Account id for eth client contract on Substrate
 	pub contract_account_id: String,
 
 	// The Ethereum network name (mainnet, kiln, ropsten, goerli)
