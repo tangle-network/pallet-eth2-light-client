@@ -11,7 +11,13 @@ use webb_proposals::TypedChainId;
 
 use crate::mock::Eth2Client;
 use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
-use eth_types::{self, eth2::{ExtendedBeaconBlockHeader, LightClientState}, primitives::{FinalExecutionOutcomeView, FinalExecutionStatus}, H256, pallet::ClientMode};
+use eth_types::{
+	self,
+	eth2::{ExtendedBeaconBlockHeader, LightClientState},
+	pallet::ClientMode,
+	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
+	H256,
+};
 
 pub struct MockEthClientPallet {
 	network: TypedChainId,

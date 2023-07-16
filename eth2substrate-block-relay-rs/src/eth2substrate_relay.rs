@@ -308,9 +308,11 @@ impl Eth2SubstrateRelay {
 		{
 			Ok(tail_block_number - 1)
 		} else {
-			self.beacon_rpc_client.get_block_number_for_slot(Slot::new(
-				self.eth_client_pallet.get_finalized_beacon_block_slot().await?,
-			)).await
+			self.beacon_rpc_client
+				.get_block_number_for_slot(Slot::new(
+					self.eth_client_pallet.get_finalized_beacon_block_slot().await?,
+				))
+				.await
 		}
 	}
 
@@ -453,13 +455,15 @@ impl Eth2SubstrateRelay {
 		);
 
 		if let FinalExecutionStatus::Failure(error_message) = execution_outcome.status {
-		    FAILS_ON_HEADERS_SUBMISSION.inc();
-		    warn!(target: "relay", "FAIL status on Headers submission. Error: {:?}",
-		error_message); }
+			FAILS_ON_HEADERS_SUBMISSION.inc();
+			warn!(target: "relay", "FAIL status on Headers submission. Error: {:?}",
+		error_message);
+		}
 
 		*last_eth2_slot_on_substrate = current_slot - 1;
 		// info!(target: "relay", "Successful headers submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",
-		//                           self.substrate_network_name, execution_outcome.transaction.hash);
+		//                           self.substrate_network_name,
+		// execution_outcome.transaction.hash);
 		tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 	}
 
@@ -514,20 +518,20 @@ impl Eth2SubstrateRelay {
 		last_finalized_slot_on_substrate: u64,
 		last_finalized_slot_on_eth: u64,
 	) -> bool {
-        if (last_finalized_slot_on_eth as i64) - (last_finalized_slot_on_substrate as i64)
-            < (ONE_EPOCH_IN_SLOTS * self.interval_between_light_client_updates_submission_in_epochs)
-                as i64
-        {
-            info!(target: "relay", "Light client update were send less then {} epochs ago. Skipping sending light client update", self.interval_between_light_client_updates_submission_in_epochs);
-            return false;
-        }
+		if (last_finalized_slot_on_eth as i64) - (last_finalized_slot_on_substrate as i64) <
+			(ONE_EPOCH_IN_SLOTS * self.interval_between_light_client_updates_submission_in_epochs)
+				as i64
+		{
+			info!(target: "relay", "Light client update were send less then {} epochs ago. Skipping sending light client update", self.interval_between_light_client_updates_submission_in_epochs);
+			return false
+		}
 
-        if last_finalized_slot_on_eth <= last_finalized_slot_on_substrate {
-            info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on Substrate. Skipping sending light client update.");
-            return false;
-        }
+		if last_finalized_slot_on_eth <= last_finalized_slot_on_substrate {
+			info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on Substrate. Skipping sending light client update.");
+			return false
+		}
 
-        true
+		true
 	}
 
 	fn is_shot_run_mode(&self) -> bool {
@@ -593,11 +597,11 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn send_light_client_update_from_file(&mut self) {
-        if let Some(light_client_update) = self.next_light_client_update.clone() {
-            self.send_specific_light_client_update(light_client_update);
-            self.terminate = true;
-        }
-    }
+		if let Some(light_client_update) = self.next_light_client_update.clone() {
+			self.send_specific_light_client_update(light_client_update);
+			self.terminate = true;
+		}
+	}
 
 	async fn send_regular_light_client_update(
 		&mut self,
@@ -691,7 +695,7 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn send_specific_light_client_update(&mut self, light_client_update: LightClientUpdate) {
-        let verification_result = return_val_on_fail!(
+		let verification_result = return_val_on_fail!(
 			self.verify_bls_signature_for_finality_update(&light_client_update),
 			"Error on bls verification. Skip sending the light client update",
 			false
@@ -701,16 +705,15 @@ impl Eth2SubstrateRelay {
 			info!(target: "relay", "PASS bls signature verification!");
 		} else {
 			warn!(target: "relay", "NOT PASS bls signature verification. Skip sending this light client update");
-			return false;
+			return false
 		}
 
 		let execution_outcome = return_val_on_fail_and_sleep!(
-				self.eth_client_pallet
-					.send_light_client_update(light_client_update.clone()),
-				"Fail to send light client update",
-				self.sleep_time_on_sync_secs,
-				false
-			);
+			self.eth_client_pallet.send_light_client_update(light_client_update.clone()),
+			"Fail to send light client update",
+			self.sleep_time_on_sync_secs,
+			false
+		);
 
 		info!(target: "relay", "Sending light client update");
 
@@ -723,21 +726,15 @@ impl Eth2SubstrateRelay {
 		// 						self.substrate_network_name, execution_outcome.transaction.hash);
 
 		let finalized_block_number = return_val_on_fail!(
-				self.beacon_rpc_client
-					.get_block_number_for_slot(types::Slot::new(
-						light_client_update
-							.finality_update
-							.header_update
-							.beacon_header
-							.slot
-							.as_u64()
-					)),
-				"Fail on getting finalized block number",
-				false
-			);
+			self.beacon_rpc_client.get_block_number_for_slot(types::Slot::new(
+				light_client_update.finality_update.header_update.beacon_header.slot.as_u64()
+			)),
+			"Fail on getting finalized block number",
+			false
+		);
 
 		info!(target: "relay", "Finalized block number from light client update = {}", finalized_block_number);
 		sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
-		return true;
+		return true
 	}
 }

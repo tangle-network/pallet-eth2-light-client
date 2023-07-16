@@ -25,7 +25,8 @@ pub trait EthClientPalletTrait<A = AccountId32>: Send + Sync + 'static {
 	/// Gets finalized beacon block slot from Ethereum Light Client on Substrate
 	fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error>;
 
-	/// Sends headers to Ethereum Light Client on Substrate. Returns final execution outcome or an error.
+	/// Sends headers to Ethereum Light Client on Substrate. Returns final execution outcome or an
+	/// error.
 	///
 	/// # Arguments
 	///
