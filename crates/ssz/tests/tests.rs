@@ -6,7 +6,7 @@ mod round_trip {
 	use super::*;
 	use std::{collections::BTreeMap, iter::FromIterator};
 
-	fn round_trip<T: Encode + Decode + std::fmt::Debug + PartialEq>(items: Vec<T>) {
+	fn round_trip<T: Encode + Decode + core::fmt::Debug + PartialEq>(items: Vec<T>) {
 		for item in items {
 			let encoded = &item.as_ssz_bytes();
 			assert_eq!(item.ssz_bytes_len(), encoded.len());
