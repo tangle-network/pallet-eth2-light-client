@@ -1,9 +1,9 @@
-use smallvec::SmallVec;
-use std::{
+use alloc::{
 	collections::{BTreeMap, BTreeSet},
-	convert::Infallible,
-	fmt::Debug,
+	vec::Vec,
 };
+use core::{convert::Infallible, fmt::Debug};
+use smallvec::SmallVec;
 
 /// Partial variant of `std::iter::FromIterator`.
 ///

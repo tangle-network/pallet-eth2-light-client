@@ -8,13 +8,6 @@ members = [
 [patch]
 [patch.crates-io]
 warp = { git = "https://github.com/macladson/warp", rev="7e75acc368229a46a236a8c991bf251fe7fe50ef" }
-eth2_ssz = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
-eth2_ssz_derive = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
-eth2_ssz_types = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
-eth2_hashing = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
-tree_hash = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
-tree_hash_derive = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
-eth2_serde_utils = { git = "https://github.com/webb-tools/lighthouse", rev="4a1eaa483d57e8c1a3aa746f8de87535fb260d08"}
 arbitrary = { git = "https://github.com/michaelsproul/arbitrary", rev="a572fd8743012a4f1ada5ee5968b1b3619c427ba" }
 
 [patch."https://github.com/ralexstokes/mev-rs"]

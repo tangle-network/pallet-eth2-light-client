@@ -24,6 +24,7 @@ merkle-proof = { package = "webb-merkle-proof", path = "../crates/merkle-proof",
 bls = { package = "webb-bls", path = "../crates/bls", default-features = false }
 tree-hash = { package = "webb-tree-hash", path = "../crates/tree-hash", default-features = false }
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../crates/tree-hash-derive", default-features = false }
+consensus = { package = "webb-consensus-types", path = "../crates/consensus-types", default-features = false }
 
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
 frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.39" }
@@ -53,6 +54,7 @@ std = [
 	"sp-std/std",
 	"ethereum-types/std",
 	"merkle-proof/std",
+	"consensus/std",
 	"bls/std",
 	"bitvec/std",
 	"rlp/std",

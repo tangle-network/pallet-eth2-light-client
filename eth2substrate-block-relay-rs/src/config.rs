@@ -118,9 +118,6 @@ impl Config {
 impl From<Config> for eth2_pallet_init::config::Config {
 	fn from(val: Config) -> Self {
 		eth2_pallet_init::config::Config {
-			enabled: val.enabled,
-			name: val.name,
-			chain_id: val.chain_id,
 			beacon_endpoint: val.beacon_endpoint,
 			eth1_endpoint: val.eth1_endpoint,
 			substrate_endpoint: val.substrate_endpoint,

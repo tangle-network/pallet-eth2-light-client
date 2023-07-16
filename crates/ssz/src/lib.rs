@@ -33,11 +33,17 @@
 //!
 //! See `examples/` for manual implementations of the `Encode` and `Decode` traits.
 
+// Ensure we're `no_std` when compiling for Wasm.
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod decode;
 mod encode;
 pub mod legacy;
 mod union_selector;
 
+use alloc::vec::Vec;
 pub use decode::{
 	impls::decode_list_of_variable_length_items, read_offset, split_union_bytes,
 	try_from_iter::TryFromIter, Decode, DecodeError, SszDecoder, SszDecoderBuilder,
@@ -49,9 +55,11 @@ pub use union_selector::UnionSelector;
 pub const BYTES_PER_LENGTH_OFFSET: usize = 4;
 /// The maximum value that can be represented using `BYTES_PER_LENGTH_OFFSET`.
 #[cfg(target_pointer_width = "32")]
-pub const MAX_LENGTH_VALUE: usize = (std::u32::MAX >> (8 * (4 - BYTES_PER_LENGTH_OFFSET))) as usize;
+pub const MAX_LENGTH_VALUE: usize =
+	(core::u32::MAX >> (8 * (4 - BYTES_PER_LENGTH_OFFSET))) as usize;
 #[cfg(target_pointer_width = "64")]
-pub const MAX_LENGTH_VALUE: usize = (std::u64::MAX >> (8 * (8 - BYTES_PER_LENGTH_OFFSET))) as usize;
+pub const MAX_LENGTH_VALUE: usize =
+	(core::u64::MAX >> (8 * (8 - BYTES_PER_LENGTH_OFFSET))) as usize;
 
 /// The number of bytes used to indicate the variant of a union.
 pub const BYTES_PER_UNION_SELECTOR: usize = 1;

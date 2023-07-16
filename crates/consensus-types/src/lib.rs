@@ -1,3 +1,8 @@
+// Ensure we're `no_std` when compiling for Wasm.
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 use bitvec::{order::Lsb0, prelude::BitVec};
 use eth_types::{
 	eth2::{
@@ -5,6 +10,7 @@ use eth_types::{
 	},
 	H256,
 };
+use alloc::{vec, vec::Vec};
 use tree_hash::TreeHash;
 
 pub const EPOCHS_PER_SYNC_COMMITTEE_PERIOD: u64 = 256;

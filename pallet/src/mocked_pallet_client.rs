@@ -34,13 +34,8 @@ impl MockEthClientPallet {
 		));
 	}
 
-	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, Box<dyn std::error::Error>> {
-		Eth2Client::finalized_beacon_header(self.network).ok_or_else(|| {
-			Box::new(std::io::Error::new(
-				std::io::ErrorKind::Other,
-				"Unable to obtain finalized beacon header",
-			)) as Box<dyn std::error::Error>
-		})
+	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, crate::Error> {
+		Eth2Client::finalized_beacon_header(self.network)
 	}
 }
 
@@ -64,7 +59,7 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 	fn send_headers(
 		&mut self,
 		headers: &[BlockHeader],
-	) -> Result<FinalExecutionOutcomeView<crate::Error>, Box<dyn std::error::Error>> {
+	) -> Result<FinalExecutionOutcomeView<crate::Error>, crate::Error> {
 		Ok(FinalExecutionOutcomeView { status: FinalExecutionStatus::NotStarted })
 	}
 
@@ -83,8 +78,4 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 	fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, crate::Error> {
 		Ok(None)
 	}
-}
-
-fn generic_error<T: sp_std::fmt::Debug>(err: T) -> eth2_pallet_init::Error {
-	eth2_pallet_init::Error::from(format!("{err:?}"))
 }

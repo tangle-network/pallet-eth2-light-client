@@ -119,7 +119,7 @@ mod tests;
 #[cfg(test)]
 mod test_utils;
 
-pub mod consensus;
+// pub mod consensus;
 use consensus::{
 	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
 	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
