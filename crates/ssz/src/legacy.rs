@@ -22,6 +22,7 @@
 //! ```
 
 use crate::*;
+use alloc::{format, vec};
 
 #[macro_export]
 macro_rules! four_byte_option_impl {

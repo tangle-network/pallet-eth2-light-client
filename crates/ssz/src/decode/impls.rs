@@ -520,7 +520,7 @@ pub fn decode_list_of_variable_length_items<T: Decode, Container: TryFromIter<T>
 #[cfg(test)]
 mod tests {
 	use super::*;
-
+	use alloc::vec;
 	// Note: decoding of valid bytes is generally tested "indirectly" in the `/tests` dir, by
 	// encoding then decoding the element.
 
