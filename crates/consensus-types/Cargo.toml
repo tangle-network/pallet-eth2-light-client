@@ -29,11 +29,11 @@ scale-info = { version = "2.1.1", default-features = false, features = ["derive"
 [features]
 default = ["std"]
 std = [
-	"tree-hash/std",
-	"eth-types/std",
-	"bitvec/std",
+    "tree-hash/std",
+    "eth-types/std",
+    "bitvec/std",
     "merkle-proof/std",
-	"codec/std",
-	"scale-info/std",
-	"ethereum-types/std",
+    "codec/std",
+    "scale-info/std",
+    "ethereum-types/std",
 ]

@@ -23,12 +23,12 @@ scale-info = { version = "2.1.1", default-features = false, features = ["derive"
 [features]
 default = ["eip1559", "eth2", "std"]
 std = [
-	"serde/std",
-	"codec/std",
-	"scale-info/std",
-	"ethereum-types/std",
-	"eth2-serde-utils/std",
-	"ethereum-types/serialize"
+    "serde/std",
+    "codec/std",
+    "scale-info/std",
+    "ethereum-types/std",
+    "eth2-serde-utils/std",
+    "ethereum-types/serialize"
 ]
 eip1559 = []
 eth2 = []
