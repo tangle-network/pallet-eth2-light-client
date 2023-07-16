@@ -15,7 +15,6 @@ pub struct ConfigForTests {
 	pub substrate_network_id: SubstrateNetwork,
 	pub first_slot: u64,
 	pub slot_without_block: u64,
-	pub wasm_filepath: String,
 	pub right_bound_in_slot_search: u64,
 	pub left_empty_slot: u64,
 	pub right_empty_slot: u64,
