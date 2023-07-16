@@ -3,6 +3,8 @@ members = [
     "pallet",
     "crates/*",
     "eth2substrate-block-relay-rs",
+    "node",
+    "runtime",
 ]
 
 [patch]

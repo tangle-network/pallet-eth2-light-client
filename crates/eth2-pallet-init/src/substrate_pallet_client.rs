@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
-	pallet::InitInput,
+	pallet::{ClientMode, InitInput},
 	BlockHeader, H256,
 };
 use sp_core::{sr25519::Pair, Pair as PairT};
