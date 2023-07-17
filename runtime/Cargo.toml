@@ -61,14 +61,14 @@ eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../crates/serde-
 ethereum-types = { version = "0.14.1", default-features = false }
 
 # Other Dependencies (ONE OF THESE IS NOT COMPATIBLE)
-# serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
-# webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
-# derive_more = { version = "^0.99.2", default-features = false }
-# rlp = { version = "0.5.0", default-features = false }
-# rlp-derive = { version = "0.1.0", default-features = false }
-# tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
-# bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
-# hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
+serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
+# webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm", "substrate"] }
+derive_more = { version = "^0.99.2", default-features = false }
+rlp = { version = "0.5.0", default-features = false }
+rlp-derive = { version = "0.1.0", default-features = false }
+tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
+bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
+hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 # pallet-eth2-light-client = { path = "../pallet", default-features = false }
 
@@ -110,11 +110,11 @@ std = [
 	"substrate-wasm-builder",
 
 	# Other dependencies (ONE OF THESE IS NOT COMPATIBLE)
-	# "serde/std",
+	"serde",
 	# "webb-proposals/std",
-	# "ethereum-types/std",
-	# "rlp/std",
-	# "bitvec/std",
+	"rlp/std",
+	"bitvec/std",
+	"hex/std",
 
 	# Local dependencies
 	"bls/std",
