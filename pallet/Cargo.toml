@@ -10,7 +10,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm", "substrate"] }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 ethereum-types = { version = "0.14.1", default-features = false }
 derive_more = { version = "^0.99.2", default-features = false }
 rlp = { version = "0.5.0", default-features = false }
@@ -43,25 +43,30 @@ async-trait = "0.1.58"
 [features]
 default = ["std"]
 std = [
+	"serde/std",
 	"codec/std",
 	"scale-info/std",
 	"webb-proposals/std",
-	"tree-hash/std",
+	"ethereum-types/std",
+	"rlp/std",
+	"bitvec/std",
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
 	"sp-runtime/std",
 	"sp-std/std",
-	"ethereum-types/std",
-	"merkle-proof/std",
-	"consensus/std",
-	"bls/std",
-	"bitvec/std",
-	"rlp/std",
-	"serde/std",
-	"hex/std",
 	"sp-core/std",
-    "eth-types/std",
+	"hex/std",
+	
+
+	# Local dependencies
+	"bls/std",
+	"consensus/std",
+	"eth-types/std",
+	"eth2-ssz/std",
+	"tree-hash/std",
+	"merkle-proof/std",
+	
 ]
 
 try-runtime = ["frame-support/try-runtime"]

@@ -5,8 +5,8 @@ authors = ["Paul Hauner <paul@paulhauner.com>, Webb Developers <hello@webb.tools
 edition = "2021"
 
 [dependencies]
-ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false, features = ["arbitrary"] }
-tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-features = false, features = ["arbitrary"] }
+ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false }
+tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-features = false }
 eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
 
@@ -30,4 +30,8 @@ std = [
     "eth2-hashing/std",
     "ethereum-types/std",
     "eth2-serde-utils/std",
+]
+arbitrary = [
+    "ssz/arbitrary",
+    "tree-hash/arbitrary",
 ]

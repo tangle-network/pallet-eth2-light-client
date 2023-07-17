@@ -18,4 +18,6 @@ itertools = { version = "0.10.3", default-features = false }
 ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive" }
 
 [features]
+default = ["std"]
+std = ["arbitrary"]
 arbitrary = ["ethereum-types/arbitrary"]

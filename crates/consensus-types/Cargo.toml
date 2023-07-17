@@ -8,14 +8,14 @@ edition = "2021"
 serde = { version = "1.0.116", default-features = false, features = ["derive"] }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
-ethereum-types = { version = "0.14.1", features = ["codec", "rlp", "serialize", "arbitrary"], default-features = false }
+ethereum-types = { version = "0.14.1", features = ["codec", "rlp", "serialize"], default-features = false }
 derive_more = { version = "^0.99.2" }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
-eth2-ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false, features = ["arbitrary"] }
+eth2-ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false }
 eth2-ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive", default-features = false }
-tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-features = false, features = ["arbitrary"] }
+tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-features = false }
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
 merkle-proof = { package = "webb-merkle-proof", path = "../merkle-proof", default-features = false }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false }
@@ -36,4 +36,9 @@ std = [
     "codec/std",
     "scale-info/std",
     "ethereum-types/std",
+]
+arbitrary = [
+    "ethereum-types/arbitrary",
+    "eth2-ssz/arbitrary",
+    "tree-hash/arbitrary",
 ]
