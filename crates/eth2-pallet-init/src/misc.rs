@@ -1,4 +1,4 @@
-use sp_core::Encode;
+use webb::substrate::scale::Encode;
 use webb::substrate::subxt::dynamic::Value;
 
 pub trait AsValue: Encode {

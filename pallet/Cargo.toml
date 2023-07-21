@@ -38,7 +38,7 @@ hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 lazy_static = "1.4.0"
 serde_json = { version = "1.0.58", default-features = false, features = ["alloc"] }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
-async-trait = "0.1.58"
+async-trait = "0.1.72"
 
 [features]
 default = ["std"]

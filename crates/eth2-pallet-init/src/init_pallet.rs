@@ -7,7 +7,7 @@ use eth_rpc_client::{
 };
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
-use subxt::utils::AccountId32;
+use webb::substrate::subxt::utils::AccountId32;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
@@ -213,7 +213,6 @@ mod tests {
 
 		let last_finalized_slot_eth_client = eth_client_pallet
 			.get_finalized_beacon_block_slot()
-			.await
 			.expect("Error on getting last finalized beacon block slot(Eth client)");
 
 		let beacon_rpc_client = BeaconRPCClient::new(

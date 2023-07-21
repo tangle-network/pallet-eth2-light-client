@@ -2,27 +2,27 @@ use async_trait::async_trait;
 
 use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
-	pallet::{ClientMode, InitInput},
+	pallet::ClientMode,
 	BlockHeader, H256,
 };
-use sp_core::{sr25519::Pair, Pair as PairT};
 use subxt::utils::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
 	subxt::{
 		self,
-		metadata::DecodeWithMetadata,
+		ext::sp_core::{sr25519::Pair, Pair as _},
 		storage::{address::Yes, StorageAddress},
 		tx::{PairSigner, TxPayload, TxStatus},
 		OnlineClient, PolkadotConfig,
 	},
+	tangle_runtime::api as tangle,
 };
 use webb_proposals::TypedChainId;
 use webb_relayer_utils::Error;
 
 use crate::eth_client_pallet_trait::EthClientPalletTrait;
 
-use self::tangle::runtime_types::pallet_eth2_light_client;
+use tangle::runtime_types::pallet_eth2_light_client;
 
 pub fn convert_typed_chain_ids(
 	t: TypedChainId,
@@ -79,7 +79,7 @@ impl EthClientPallet {
 			end_slot: 0,
 			api,
 			signer,
-			chain: convert_typed_chain_ids(typed_chain_id),
+			chain: typed_chain_id,
 			max_submitted_blocks_by_account: None,
 		}
 	}
@@ -131,24 +131,23 @@ impl EthClientPallet {
 			None
 		};
 
-		let init_input: InitInput<subxt::utils::AccountId32> =
-			tangle::runtime_types::eth_types::pallet::InitInput {
-				finalized_execution_header: Decode::decode(
-					&mut finalized_execution_header.encode().as_slice(),
-				)?,
-				finalized_beacon_header: Decode::decode(
-					&mut finalized_beacon_header.encode().as_slice(),
-				)?,
-				current_sync_committee: Decode::decode(
-					&mut current_sync_committee.encode().as_slice(),
-				)?,
-				next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice())?,
-				validate_updates: validate_updates.unwrap_or(true),
-				verify_bls_signatures: verify_bls_signatures.unwrap_or(true),
-				hashes_gc_threshold: hashes_gc_threshold.unwrap_or(100),
-				max_submitted_blocks_by_account,
-				trusted_signer,
-			};
+		let init_input = tangle::runtime_types::eth_types::pallet::InitInput {
+			finalized_execution_header: Decode::decode(
+				&mut finalized_execution_header.encode().as_slice(),
+			)?,
+			finalized_beacon_header: Decode::decode(
+				&mut finalized_beacon_header.encode().as_slice(),
+			)?,
+			current_sync_committee: Decode::decode(
+				&mut current_sync_committee.encode().as_slice(),
+			)?,
+			next_sync_committee: Decode::decode(&mut next_sync_committee.encode().as_slice())?,
+			validate_updates: validate_updates.unwrap_or(true),
+			verify_bls_signatures: verify_bls_signatures.unwrap_or(true),
+			hashes_gc_threshold: hashes_gc_threshold.unwrap_or(100),
+			max_submitted_blocks_by_account,
+			trusted_signer,
+		};
 
 		let tx = tangle::tx()
 			.eth2_client()
@@ -165,23 +164,19 @@ impl EthClientPallet {
 	async fn get_value_or_default<'a, Address: StorageAddress>(
 		&self,
 		key_addr: &Address,
-	) -> Result<<Address::Target as DecodeWithMetadata>::Target, crate::Error>
+	) -> Result<Address::Target, crate::Error>
 	where
 		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a,
 	{
 		let value =
-			self.api
-				.storage()
-				.at(None)
-				.await?
-				.fetch_or_default(key_addr)
-				.await
-				.map_err(|err| {
+			self.api.storage().at_latest().await?.fetch_or_default(key_addr).await.map_err(
+				|err| {
 					Error::Io(std::io::Error::new(
 						std::io::ErrorKind::Other,
 						format!("Failed to get api storage value: {err:?}"),
 					))
-				})?;
+				},
+			)?;
 
 		Ok(value)
 	}
@@ -189,11 +184,11 @@ impl EthClientPallet {
 	async fn get_value<'a, Address: StorageAddress>(
 		&self,
 		key_addr: &Address,
-	) -> Result<Option<<Address::Target as DecodeWithMetadata>::Target>, crate::Error>
+	) -> Result<Option<Address::Target>, crate::Error>
 	where
 		Address: StorageAddress<IsFetchable = Yes> + 'a,
 	{
-		let value = self.api.storage().at(None).await?.fetch(key_addr).await.map_err(|err| {
+		let value = self.api.storage().at_latest().await?.fetch(key_addr).await.map_err(|err| {
 			Error::Io(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				format!("Failed to get api storage value: {err:?}"),
@@ -292,7 +287,9 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, crate::Error> {
-		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
+		let addr = tangle::storage()
+			.eth2_client()
+			.finalized_beacon_header(&convert_typed_chain_ids(self.chain));
 		if let Some(header) = self.get_value(&addr).await? {
 			Ok(eth_types::H256::from(header.beacon_block_root.0))
 		} else {
@@ -301,7 +298,9 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
-		let addr = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
+		let addr = tangle::storage()
+			.eth2_client()
+			.finalized_beacon_header(&convert_typed_chain_ids(self.chain));
 		if let Some(header) = self.get_value(&addr).await? {
 			Ok(header.header.slot)
 		} else {
@@ -309,12 +308,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		}
 	}
 
-	async fn send_headers(
-		&mut self,
-		headers: &[BlockHeader],
-		end_slot: u64,
-	) -> Result<(), crate::Error> {
-		self.end_slot = end_slot;
+	async fn send_headers(&mut self, headers: &[BlockHeader]) -> Result<(), crate::Error> {
 		if headers.is_empty() {
 			return Err(crate::Error::from("Tried to submit zero headers"))
 		}
@@ -340,13 +334,19 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn get_light_client_state(
 		&self,
 	) -> Result<eth_types::eth2::LightClientState, crate::Error> {
-		let addr0 = tangle::storage().eth2_client().finalized_beacon_header(&self.chain);
+		let addr0 = tangle::storage()
+			.eth2_client()
+			.finalized_beacon_header(&convert_typed_chain_ids(self.chain));
 		let task0 = self.get_value(&addr0);
 
-		let addr1 = tangle::storage().eth2_client().current_sync_committee(&self.chain);
+		let addr1 = tangle::storage()
+			.eth2_client()
+			.current_sync_committee(&convert_typed_chain_ids(self.chain));
 		let task1 = self.get_value(&addr1);
 
-		let addr2 = tangle::storage().eth2_client().next_sync_committee(&self.chain);
+		let addr2 = tangle::storage()
+			.eth2_client()
+			.next_sync_committee(&convert_typed_chain_ids(self.chain));
 		let task2 = self.get_value(&addr2);
 
 		let (finalized_beacon_header, current_sync_committee, next_sync_committee) =
@@ -375,30 +375,18 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_client_mode(&self) -> Result<ClientMode, crate::Error> {
-		let addr = tangle::storage().eth2_client().client_mode(&self.chain);
-		if let Some(client_mode) = self.get_value(&addr).await? {
-			Ok(client_mode)
-		} else {
-			Err(crate::Error::from("Unable to get value for get_client_mode"))
-		}
+		Err(crate::Error::from("Unable to get value for get_client_mode"))
 	}
 
 	async fn get_last_block_number(&self) -> Result<u64, crate::Error> {
-		let addr = tangle::storage().eth2_client().last_block_number(&self.chain);
-		if let Some(last_block_number) = self.get_value(&addr).await? {
-			Ok(last_block_number)
-		} else {
-			Err(crate::Error::from("Unable to get value for get_last_block_number"))
-		}
+		Err(crate::Error::from("Unable to get value for get_last_block_number"))
 	}
 	async fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, crate::Error> {
-		let addr = tangle::storage().eth2_client().unfinalized_tail_block_number(&self.chain);
-		self.get_value(&addr).await.map_err(|err| {
-			Error::Io(std::io::Error::new(
-				std::io::ErrorKind::Other,
-				format!("Failed to get api storage value: {err:?}"),
-			))
-		})
+		Err(Error::Io(std::io::Error::new(
+			std::io::ErrorKind::Other,
+			format!("Failed to get api storage value"),
+		))
+		.into())
 	}
 }
 
@@ -425,6 +413,3 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, crate::Err
 		}
 	}
 }
-
-#[subxt::subxt(runtime_metadata_path = "../../metadata/eth_light_client_runtime.scale")]
-pub mod tangle {}
