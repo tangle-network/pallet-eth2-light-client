@@ -5,23 +5,28 @@ use crate::{
 	prometheus_metrics::{
 		CHAIN_EXECUTION_BLOCK_HEIGHT_ON_ETH, CHAIN_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE,
 		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH,
-		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE, LAST_ETH_SLOT,
-		LAST_ETH_SLOT_ON_SUBSTRATE, LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE,
+		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE, FAILS_ON_HEADERS_SUBMISSION,
+		FAILS_ON_UPDATES_SUBMISSION, LAST_ETH_SLOT, LAST_ETH_SLOT_ON_SUBSTRATE,
+		LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE,
 	},
 };
-use bitvec::macros::internal::funty::Fundamental;
+use bitvec::{macros::internal::funty::Fundamental, store::BitStore};
+use core::cmp::max;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
 	hand_made_finality_light_client_update::HandMadeFinalityLightClientUpdate,
 };
 use eth_types::{
-	eth2::{Epoch, ForkVersion, LightClientUpdate},
+	eth2::{Epoch, ForkVersion, LightClientUpdate, Slot},
+	pallet::ClientMode,
+	primitives::FinalExecutionStatus,
 	BlockHeader,
 };
 use finality_update_verify::network_config::{Network, NetworkConfig};
 use log::{debug, info, trace, warn};
 use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
+use tokio::time::sleep;
 
 const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
@@ -280,14 +285,14 @@ impl Eth2SubstrateRelay {
 			tokio::time::sleep(Duration::from_secs(12)).await;
 
 			let client_mode: ClientMode = skip_fail!(
-				self.get_client_mode(),
+				self.eth_client_pallet.get_client_mode(),
 				"Fail to get client mode",
 				self.sleep_time_on_sync_secs
 			);
 
 			let submitted_in_this_iteration = match client_mode {
-				ClientMode::SubmitLightClientUpdate => self.submit_light_client_update(),
-				ClientMode::SubmitHeader => self.submit_headers(),
+				ClientMode::SubmitLightClientUpdate => self.submit_light_client_update().await,
+				ClientMode::SubmitHeader => self.submit_headers().await,
 			};
 
 			if !submitted_in_this_iteration {
@@ -316,7 +321,7 @@ impl Eth2SubstrateRelay {
 		}
 	}
 
-	fn submit_headers(&mut self) -> bool {
+	async fn submit_headers(&mut self) -> bool {
 		info!(target: "relay", "Submit Headers mode");
 
 		let min_block_number = return_val_on_fail!(
@@ -329,7 +334,7 @@ impl Eth2SubstrateRelay {
 			info!(target: "relay", "= Creating headers batch =");
 
 			let current_block_number = return_val_on_fail!(
-				self.get_max_block_number(),
+				self.get_max_block_number().await,
 				"Failed to fetch max block number",
 				false
 			);
@@ -339,13 +344,19 @@ impl Eth2SubstrateRelay {
 			info!(target: "relay", "Get headers block_number=[{}, {}]", min_block_number_in_batch, current_block_number);
 
 			let mut headers = skip_fail!(
-				self.get_execution_blocks_between(min_block_number_in_batch, current_block_number,),
+				self.get_execution_blocks_between(min_block_number_in_batch, current_block_number,)
+					.await,
 				"Network problems during fetching execution blocks",
 				self.sleep_time_on_sync_secs
 			);
 			headers.reverse();
 
-			if !self.submit_execution_blocks(headers).await {
+			//todo change params to named var
+			let mut last_eth2_slot_on_substrate = 0u64;
+			if !self
+				.submit_execution_blocks(headers.0, headers.1, &last_eth2_slot_on_substrate)
+				.await
+			{
 				return false
 			}
 
@@ -447,11 +458,12 @@ impl Eth2SubstrateRelay {
 		headers: Vec<BlockHeader>,
 		current_slot: u64,
 		last_eth2_slot_on_substrate: &mut u64,
-	) {
+	) -> bool {
 		info!(target: "relay", "Try submit headers from slot={} to {} to SUBSTRATE", *last_eth2_slot_on_substrate + 1, current_slot - 1);
-		let execution_outcome = return_on_fail!(
+		let execution_outcome = return_val_on_fail!(
 			self.eth_client_pallet.send_headers(&headers).await,
-			"Error on header submission"
+			"Error on header submission",
+			false
 		);
 
 		if let FinalExecutionStatus::Failure(error_message) = execution_outcome.status {
@@ -465,6 +477,7 @@ impl Eth2SubstrateRelay {
 		//                           self.substrate_network_name,
 		// execution_outcome.transaction.hash);
 		tokio::time::sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
+		true
 	}
 
 	async fn verify_bls_signature_for_finality_update(
@@ -694,9 +707,12 @@ impl Eth2SubstrateRelay {
 		}
 	}
 
-	async fn send_specific_light_client_update(&mut self, light_client_update: LightClientUpdate) {
+	async fn send_specific_light_client_update(
+		&mut self,
+		light_client_update: LightClientUpdate,
+	) -> bool {
 		let verification_result = return_val_on_fail!(
-			self.verify_bls_signature_for_finality_update(&light_client_update),
+			self.verify_bls_signature_for_finality_update(&light_client_update).await,
 			"Error on bls verification. Skip sending the light client update",
 			false
 		);
@@ -726,9 +742,11 @@ impl Eth2SubstrateRelay {
 		// 						self.substrate_network_name, execution_outcome.transaction.hash);
 
 		let finalized_block_number = return_val_on_fail!(
-			self.beacon_rpc_client.get_block_number_for_slot(types::Slot::new(
-				light_client_update.finality_update.header_update.beacon_header.slot.as_u64()
-			)),
+			self.beacon_rpc_client
+				.get_block_number_for_slot(Slot::new(
+					light_client_update.finality_update.header_update.beacon_header.slot.as_u64()
+				))
+				.await,
 			"Fail on getting finalized block number",
 			false
 		);

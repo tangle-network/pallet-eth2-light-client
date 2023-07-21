@@ -30,10 +30,7 @@ pub trait EthClientPalletTrait<A = AccountId32>: Send + Sync + 'static {
 	/// # Arguments
 	///
 	/// * `headers` - the list of headers for submission to Eth Client
-	async fn send_headers(
-		&mut self,
-		headers: &[BlockHeader],
-	) -> Result<(), crate::Error>;
+	async fn send_headers(&mut self, headers: &[BlockHeader]) -> Result<(), crate::Error>;
 
 	async fn get_client_mode(&self) -> Result<ClientMode, crate::Error>;
 
