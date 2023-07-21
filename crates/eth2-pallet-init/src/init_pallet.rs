@@ -7,8 +7,8 @@ use eth_rpc_client::{
 };
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
-use webb::substrate::subxt::utils::AccountId32;
 use tree_hash::TreeHash;
+use webb::substrate::subxt::utils::AccountId32;
 use webb_proposals::TypedChainId;
 
 const CURRENT_SYNC_COMMITTEE_INDEX: u32 = 54;
