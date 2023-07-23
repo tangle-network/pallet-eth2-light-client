@@ -162,7 +162,7 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub networks: Vec<(TypedChainId, [u8; 32], ForkVersion, u64)>,
+		pub networks: Vec<(TypedChainId, NetworkConfig)>,
 		pub phantom: PhantomData<T>,
 	}
 
@@ -865,7 +865,7 @@ impl<T: Config> Pallet<T> {
 					&branch,
 					SYNC_COMMITTEE_TREE_DEPTH.try_into().unwrap(),
 					SYNC_COMMITTEE_TREE_INDEX.try_into().unwrap(),
-					active_header.state_root.0
+					update.attested_beacon_header.state_root.0
 				),
 				// Invalid next sync committee proof
 				Error::<T>::InvalidNextSyncCommitteeProof
@@ -931,10 +931,8 @@ impl<T: Config> Pallet<T> {
 			.map(|x| bls::PublicKey::deserialize(&x.0).unwrap())
 			.collect();
 		ensure!(
-			aggregate_signature.fast_aggregate_verify(
-				signing_root.0 .0.into(),
-				&pubkeys.iter().collect::<Vec<_>>()
-			),
+			aggregate_signature
+				.fast_aggregate_verify(signing_root.0, &pubkeys.iter().collect::<Vec<_>>()),
 			Error::<T>::InvalidBlsSignature
 		);
 

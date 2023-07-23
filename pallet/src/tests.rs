@@ -182,19 +182,17 @@ mod generic_tests {
 				hashes_gc_threshold: 500,
 				trusted_signer: None,
 			}));
-			// After submitting the execution header, it should be present in the execution headers
-			// list but absent in canonical chain blocks (not-finalized)
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].iter().skip(1).collect(),
-			);
-
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[1].clone()
 			));
+
+			submit_and_check_execution_headers(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				headers[0].iter().skip(1).collect(),
+			);
 
 			// Last 500 execution headers are finalized
 			for header in headers[0].iter().skip(1).rev().take(500) {
@@ -207,14 +205,34 @@ mod generic_tests {
 				);
 			}
 
-			assert_eq!(
-				Eth2Client::last_block_number(GOERLI_CHAIN,),
-				headers[0].last().unwrap().number
+			submit_and_check_execution_headers(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				headers[1].iter().skip(1).collect(),
 			);
 
-			// Headers older than last 500 hundred headers are both removed and are not present in
-			// execution header list
-			for header in headers[0].iter().skip(1).rev().skip(500) {
+			assert_eq!(
+				Eth2Client::last_block_number(GOERLI_CHAIN,),
+				headers[1].last().unwrap().number
+			);
+
+			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				updates[2].clone()
+			));
+
+			for header in headers[1].iter().skip(1).rev().take(500) {
+				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
+				assert!(
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
+						header.calculate_hash(),
+					"Execution block hash is not finalized: {:?}",
+					header.calculate_hash()
+				);
+			}
+
+			for header in headers.concat().iter().rev().skip(500 + 2) {
 				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).is_none(),
