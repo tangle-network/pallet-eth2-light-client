@@ -33,20 +33,20 @@ pub fn submit_and_check_execution_headers(
 
 pub fn get_test_context(
 	init_options: Option<InitOptions<[u8; 32]>>,
-) -> (&'static Vec<BlockHeader>, &'static Vec<LightClientUpdate>, InitInput<[u8; 32]>) {
+) -> (&'static Vec<Vec<BlockHeader>>, &'static Vec<LightClientUpdate>, InitInput<[u8; 32]>) {
 	let (headers, updates, init_input_0) = get_test_data(init_options);
 	let init_input = init_input_0.clone().map_into();
 
 	assert_ok!(Eth2Client::init(
 		RuntimeOrigin::signed(ALICE.clone()),
-		KILN_CHAIN,
+		GOERLI_CHAIN,
 		Box::new(init_input)
 	));
 	(headers, updates, init_input_0)
 }
 
-mod kiln_tests {
-	use crate::consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
+mod generic_tests {
+	use consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
 
 	use super::*;
 	use crate::{
@@ -57,10 +57,11 @@ mod kiln_tests {
 
 	#[test]
 	pub fn test_header_root() {
-		let header = read_beacon_header(format!("./src/data/kiln/beacon_header_{}.json", 5000));
+		let header =
+			read_beacon_header(format!("./src/data/goerli/beacon_header_{}.json", 5258752));
 		assert_eq!(
 			H256(header.tree_hash_root()),
-			Vec::from_hex("c613fbf1a8e95c2aa0f76a5d226ee1dc057cce18b235803f50e7a1bde050d290")
+			Vec::from_hex("cd669c0007ab6ff261a02cc3335ba470088e92f0460bf1efac451009efb9ec0a")
 				.unwrap()
 				.into()
 		);
@@ -83,13 +84,13 @@ mod kiln_tests {
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).collect(),
+				GOERLI_CHAIN,
+				headers[0].iter().skip(1).rev().collect(),
 			);
 
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
+				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
@@ -98,22 +99,23 @@ mod kiln_tests {
 			// should be removed from the execution headers list. Meantime, all these
 			// removed execution headers should become a part of the canonical chain blocks
 			// (finalized)
-			for header in headers.iter().skip(1) {
+			for header in headers[0].iter().skip(1) {
 				let header_hash = header.calculate_hash();
-				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
+				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
-					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
 					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
 
-			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers.last().unwrap().number);
+			assert_eq!(
+				Eth2Client::last_block_number(GOERLI_CHAIN),
+				headers[0].last().unwrap().number
+			);
 			assert!(!Eth2Client::is_known_execution_header(
-				KILN_CHAIN,
-				Eth2Client::finalized_beacon_block_header(KILN_CHAIN)
-					.unwrap()
-					.execution_block_hash
+				GOERLI_CHAIN,
+				Eth2Client::finalized_execution_header(GOERLI_CHAIN).unwrap().block_number
 			));
 		})
 	}
@@ -126,45 +128,48 @@ mod kiln_tests {
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).collect(),
+				GOERLI_CHAIN,
+				headers[0].iter().skip(1).collect(),
 			);
 			// Submit execution header with different hash
-			let mut fork_header = headers[5].clone();
+			let mut fork_header = headers[0][5].clone();
 			// Difficulty is modified just in order to get a different header hash. Any other field
 			// would be suitable too
 			fork_header.difficulty = U256::from(ethereum_types::U256::from(99));
 			assert_ok!(Eth2Client::submit_execution_header(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
+				GOERLI_CHAIN,
 				fork_header.clone()
 			));
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
+				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
-			for header in headers.iter().skip(1) {
+			for header in headers[0].iter().skip(1) {
 				let header_hash = header.calculate_hash();
-				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
+				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
-					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
 					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
 
 			// Check that forked execution header was not finalized
-			assert!(Eth2Client::is_known_execution_header(KILN_CHAIN, fork_header.number));
+			assert!(Eth2Client::is_known_execution_header(GOERLI_CHAIN, fork_header.number));
 			assert!(
-				Eth2Client::block_hash_safe(KILN_CHAIN, fork_header.number).unwrap_or_default()
+				Eth2Client::block_hash_safe(GOERLI_CHAIN, fork_header.number).unwrap_or_default()
 				!= fork_header.calculate_hash(),
 				"The fork's execution block header {:?} is expected not to be finalized, but it is finalized",
 				fork_header.calculate_hash()
 			);
 
-			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers.last().unwrap().number);
+			assert_eq!(
+				Eth2Client::last_block_number(GOERLI_CHAIN),
+				headers[0].last().unwrap().number
+			);
 		});
 	}
 
@@ -181,35 +186,38 @@ mod kiln_tests {
 			// list but absent in canonical chain blocks (not-finalized)
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).collect(),
+				GOERLI_CHAIN,
+				headers[0].iter().skip(1).collect(),
 			);
 
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
+				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
 			// Last 500 execution headers are finalized
-			for header in headers.iter().skip(1).rev().take(500) {
-				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
+			for header in headers[0].iter().skip(1).rev().take(500) {
+				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
-					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).unwrap_or_default() ==
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
 						header.calculate_hash(),
 					"Execution block hash is not finalized: {:?}",
 					header.calculate_hash()
 				);
 			}
 
-			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN,), headers.last().unwrap().number);
+			assert_eq!(
+				Eth2Client::last_block_number(GOERLI_CHAIN,),
+				headers[0].last().unwrap().number
+			);
 
 			// Headers older than last 500 hundred headers are both removed and are not present in
 			// execution header list
-			for header in headers.iter().skip(1).rev().skip(500) {
-				assert!(!Eth2Client::is_known_execution_header(KILN_CHAIN, header.number));
+			for header in headers[0].iter().skip(1).rev().skip(500) {
+				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
-					Eth2Client::block_hash_safe(KILN_CHAIN, header.number).is_none(),
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).is_none(),
 					"Execution block hash was not removed: {:?}",
 					header.calculate_hash()
 				);
@@ -229,7 +237,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					updates[1].clone()
 				),
 				Error::<Test>::NotTrustedSigner,
@@ -249,7 +257,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::InvalidFinalityProof,
@@ -266,7 +274,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::InvalidFinalityProof,
@@ -286,7 +294,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::InvalidExecutionBlockHashProof
@@ -303,7 +311,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::InvalidExecutionBlockHashProof
@@ -321,7 +329,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::InvalidUpdatePeriod
@@ -335,13 +343,13 @@ mod kiln_tests {
 			let (headers, updates, _init_input) = get_test_context(None);
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers.iter().skip(1).take(5).collect(),
+				GOERLI_CHAIN,
+				headers[0].iter().skip(1).take(5).collect(),
 			);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					updates[1].clone()
 				),
 				Error::<Test>::FinalizedExecutionHeaderNotPresent
@@ -352,17 +360,22 @@ mod kiln_tests {
 	#[test]
 	pub fn test_panic_on_submit_same_execution_blocks() {
 		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(None);
+			let (headers, updates, _init_input) = get_test_context(None);
+			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				updates[1].clone()
+			));
 			assert_ok!(Eth2Client::submit_execution_header(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers[1].clone()
+				GOERLI_CHAIN,
+				headers[0].last().unwrap().clone()
 			));
 			assert_err!(
 				Eth2Client::submit_execution_header(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
-					headers[1].clone()
+					GOERLI_CHAIN,
+					headers[0].last().unwrap().clone()
 				),
 				Error::<Test>::BlockAlreadySubmitted
 			);
@@ -373,11 +386,11 @@ mod kiln_tests {
 	pub fn test_panic_on_submit_update_paused() {
 		new_test_ext().execute_with(|| {
 			let (_headers, updates, _init_input) = get_test_context(None);
-			Paused::<Test>::insert(KILN_CHAIN, true);
+			Paused::<Test>::insert(GOERLI_CHAIN, true);
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					updates[1].clone()
 				),
 				Error::<Test>::LightClientUpdateNotAllowed
@@ -392,7 +405,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					updates[0].clone()
 				),
 				Error::<Test>::ActiveHeaderSlotLessThanFinalizedSlot,
@@ -403,21 +416,45 @@ mod kiln_tests {
 	#[test]
 	pub fn test_panic_on_submit_blocks_with_unknown_parent() {
 		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_eq!(Eth2Client::last_block_number(KILN_CHAIN), headers[0].number);
+			let (headers, updates, _init_input) = get_test_context(None);
+			assert_eq!(Eth2Client::last_block_number(GOERLI_CHAIN), headers[0][0].number);
+			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				updates[1].clone()
+			));
+
+			let headers: Vec<_> = headers.iter().skip(1).rev().collect();
 			assert_ok!(Eth2Client::submit_execution_header(
 				RuntimeOrigin::signed(ALICE),
-				KILN_CHAIN,
-				headers[1].clone()
+				GOERLI_CHAIN,
+				headers[0][0].clone()
 			));
 			// Skip 2th block
 			assert_err!(
 				Eth2Client::submit_execution_header(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
-					headers[3].clone()
+					GOERLI_CHAIN,
+					headers[0][3].clone()
 				),
 				Error::<Test>::UnknownParentHeader
+			);
+		});
+	}
+
+	#[test]
+	// test_panic_on_submit_headers_in_worng_mode
+	pub fn test_panic_on_submit_headers_in_wrong_mode() {
+		new_test_ext().execute_with(|| {
+			let (headers, _updates, _init_input) = get_test_context(None);
+			assert_eq!(Eth2Client::last_block_number(GOERLI_CHAIN), headers[0][0].number);
+			assert_err!(
+				Eth2Client::submit_execution_header(
+					RuntimeOrigin::signed(ALICE),
+					GOERLI_CHAIN,
+					headers[0][1].clone()
+				),
+				Error::<Test>::InvalidClientMode
 			);
 		});
 	}
@@ -443,7 +480,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::SyncCommitteeBitsSumLessThanThreshold,
@@ -461,7 +498,7 @@ mod kiln_tests {
 			assert_err!(
 				Eth2Client::submit_beacon_chain_light_client_update(
 					RuntimeOrigin::signed(ALICE),
-					KILN_CHAIN,
+					GOERLI_CHAIN,
 					update
 				),
 				Error::<Test>::SyncCommitteeUpdateNotPresent

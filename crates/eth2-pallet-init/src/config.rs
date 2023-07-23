@@ -25,7 +25,7 @@ pub struct Config {
 	// Account id for eth client contract on Substrate
 	pub contract_account_id: String,
 
-	// The Ethereum network name (mainnet, kiln, ropsten, goerli)
+	// The Ethereum network name (mainnet, goerli)
 	pub ethereum_network: EthNetwork,
 
 	// Substrate network name (mainnet, testnet)

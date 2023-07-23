@@ -23,8 +23,6 @@ use webb_proposals::TypedChainId;
 pub fn get_typed_chain_id(config: &ConfigForTests) -> TypedChainId {
 	match config.network_name {
 		EthNetwork::Mainnet => TypedChainId::Evm(1),
-		EthNetwork::Kiln => TypedChainId::Evm(1337802),
-		EthNetwork::Ropsten => TypedChainId::Evm(3),
 		EthNetwork::Goerli => TypedChainId::Evm(5),
 	}
 }
@@ -84,8 +82,6 @@ pub async fn init_pallet_from_files(
 
 	let typed_chain_id = match config_for_test.network_name.clone() {
 		EthNetwork::Mainnet => TypedChainId::Evm(1),
-		EthNetwork::Kiln => TypedChainId::Evm(1337802),
-		EthNetwork::Ropsten => TypedChainId::Evm(3),
 		EthNetwork::Goerli => TypedChainId::Evm(5),
 	};
 

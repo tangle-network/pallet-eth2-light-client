@@ -9,8 +9,6 @@ use std::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EthNetwork {
 	Mainnet,
-	Kiln,
-	Ropsten,
 	Goerli,
 }
 
@@ -19,10 +17,7 @@ pub struct IncorrectEthNetwork;
 
 impl Display for IncorrectEthNetwork {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(
-			f,
-			"Unknown Ethereum network. Possible networks: 'Mainnet', 'Kiln', 'Goerli', 'Ropsten'"
-		)
+		write!(f, "Unknown Ethereum network. Possible networks: 'Mainnet', 'Goerli'")
 	}
 }
 
@@ -38,9 +33,7 @@ impl EthNetwork {
 	pub fn as_str(&self) -> &str {
 		match self {
 			EthNetwork::Mainnet => "mainnet",
-			EthNetwork::Kiln => "kiln",
 			EthNetwork::Goerli => "goerli",
-			EthNetwork::Ropsten => "ropsten",
 		}
 	}
 }
@@ -51,9 +44,7 @@ impl FromStr for EthNetwork {
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		match s.to_lowercase().as_str() {
 			"mainnet" => Ok(EthNetwork::Mainnet),
-			"kiln" => Ok(EthNetwork::Kiln),
 			"goerli" => Ok(EthNetwork::Goerli),
-			"ropsten" => Ok(EthNetwork::Ropsten),
 			_ => Err(IncorrectEthNetwork),
 		}
 	}

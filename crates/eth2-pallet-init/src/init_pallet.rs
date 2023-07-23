@@ -42,8 +42,6 @@ pub fn verify_light_client_snapshot(
 pub fn get_typed_chain_id(config: &Config) -> TypedChainId {
 	match config.ethereum_network {
 		crate::eth_network::EthNetwork::Mainnet => TypedChainId::Evm(1),
-		crate::eth_network::EthNetwork::Kiln => TypedChainId::Evm(1337802),
-		crate::eth_network::EthNetwork::Ropsten => TypedChainId::Evm(3),
 		crate::eth_network::EthNetwork::Goerli => TypedChainId::Evm(5),
 	}
 }
@@ -208,6 +206,7 @@ mod tests {
 
 		let last_finalized_slot_eth_client = eth_client_pallet
 			.get_finalized_beacon_block_slot()
+			.await
 			.expect("Error on getting last finalized beacon block slot(Eth client)");
 
 		let beacon_rpc_client = BeaconRPCClient::new(
@@ -226,7 +225,7 @@ mod tests {
 		assert!(
 			last_finalized_slot_eth_client +
 				ONE_EPOCH_IN_SLOTS * MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS >=
-				last_finalized_slot_eth_network
+				last_finalized_slot_eth_network.as_u64()
 		);
 	}
 }

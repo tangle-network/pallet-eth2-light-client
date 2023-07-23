@@ -459,16 +459,14 @@ impl Eth2SubstrateRelay {
 			return
 		}
 
-		if self.get_light_client_update_by_epoch {
-			if self
-				.send_regular_light_client_update_by_epoch(
-					last_finalized_slot_on_eth,
-					last_finalized_slot_on_near,
-				)
-				.await
-			{
-				return
-			}
+		if self.get_light_client_update_by_epoch &&
+			self.send_regular_light_client_update_by_epoch(
+				last_finalized_slot_on_eth,
+				last_finalized_slot_on_near,
+			)
+			.await
+		{
+			return
 		}
 
 		if last_finalized_slot_on_eth >=

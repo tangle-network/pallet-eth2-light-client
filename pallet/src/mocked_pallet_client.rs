@@ -9,7 +9,7 @@ use crate::{
 use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
 use eth_types::{
 	self,
-	eth2::{ExtendedBeaconBlockHeader, LightClientState},
+	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate},
 	pallet::ClientMode,
 	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
 	BlockHeader, H256,
@@ -43,47 +43,47 @@ impl MockEthClientPallet {
 
 #[async_trait]
 impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
-	fn send_light_client_update(
+	async fn send_light_client_update(
 		&mut self,
 		light_client_update: LightClientUpdate,
 	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::NotStarted,
-			transaction_hash: H256::zero(),
+			transaction_hash: Some(H256::from([0u8; 32])),
 		})
 	}
 
-	fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn Error>> {
-		Ok(H256::zero())
+	async fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn Error>> {
+		Ok(H256::from([0u8; 32]))
 	}
 
-	fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn Error>> {
 		Ok(0)
 	}
 
-	fn send_headers(
+	async fn send_headers(
 		&mut self,
 		headers: &[BlockHeader],
 	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::NotStarted,
-			transaction_hash: H256::zero(),
+			transaction_hash: Some(H256::from([0u8; 32])),
 		})
 	}
 
-	fn get_client_mode(&self) -> Result<ClientMode, Box<dyn Error>> {
+	async fn get_client_mode(&self) -> Result<ClientMode, Box<dyn Error>> {
 		Ok(ClientMode::default())
 	}
 
-	fn get_light_client_state(&self) -> Result<LightClientState, Box<dyn Error>> {
+	async fn get_light_client_state(&self) -> Result<LightClientState, Box<dyn Error>> {
 		Ok(LightClientState::default())
 	}
 
-	fn get_last_block_number(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_last_block_number(&self) -> Result<u64, Box<dyn Error>> {
 		Ok(0)
 	}
 
-	fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, Box<dyn Error>> {
+	async fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, Box<dyn Error>> {
 		Ok(None)
 	}
 }
