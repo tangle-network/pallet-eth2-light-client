@@ -8,6 +8,4 @@ pub mod init_pallet;
 pub mod misc;
 pub mod substrate_network;
 pub mod substrate_pallet_client;
-
-pub use eth_rpc_client::Error;
 pub use webb::substrate::tangle_runtime::api as tangle;

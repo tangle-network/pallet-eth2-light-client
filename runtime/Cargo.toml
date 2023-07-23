@@ -25,6 +25,7 @@ frame-system = { version = "4.0.0-dev", default-features = false, git = "https:/
 frame-try-runtime = { version = "0.10.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v0.9.43" }
 pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
+pallet-utility = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 frame-executive = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 sp-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 sp-block-builder = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
@@ -48,29 +49,7 @@ frame-benchmarking = { version = "4.0.0-dev", default-features = false, git = "h
 frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v0.9.43" }
 
 # Local Dependencies
-bls = { package = "webb-bls", path = "../crates/bls", default-features = false }
-consensus-types = { package = "webb-consensus-types", path = "../crates/consensus-types", default-features = false }
-eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
-eth2-hashing = { package = "webb-eth2-hashing", path = "../crates/eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
-eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz", default-features = false }
-eth2-ssz-derive = { package = "webb-eth2-ssz-derive", path = "../crates/ssz-derive", default-features = false }
-tree-hash = { package = "webb-tree-hash", path = "../crates/tree-hash", default-features = false }
-tree-hash-derive = { package = "webb-tree-hash-derive", path = "../crates/tree-hash-derive", default-features = false }
-merkle-proof = { package = "webb-merkle-proof", path = "../crates/merkle-proof", default-features = false }
-eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../crates/serde-utils", default-features = false }
-ethereum-types = { version = "0.14.1", default-features = false }
-
-# Other Dependencies (ONE OF THESE IS NOT COMPATIBLE)
-serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
-# webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm", "substrate"] }
-derive_more = { version = "^0.99.2", default-features = false }
-rlp = { version = "0.5.0", default-features = false }
-rlp-derive = { version = "0.1.0", default-features = false }
-tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
-bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
-hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
-
-# pallet-eth2-light-client = { path = "../pallet", default-features = false }
+pallet-eth2-light-client = { path = "../pallet", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v0.9.43" }
@@ -95,6 +74,7 @@ std = [
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
+	"pallet-utility/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -109,26 +89,8 @@ std = [
 	"sp-version/std",
 	"substrate-wasm-builder",
 
-	# Other dependencies (ONE OF THESE IS NOT COMPATIBLE)
-	"serde",
-	# "webb-proposals/std",
-	"rlp/std",
-	"bitvec/std",
-	"hex/std",
-
-	# Local dependencies
-	"bls/std",
-	"consensus-types/std",
-	"eth-types/std",
-	"eth2-hashing/std",
-	"eth2-ssz/std",
-	"tree-hash/std",
-	"merkle-proof/std",
-	"eth2-serde-utils/std",
-	"ethereum-types/std",
-
 	# Local pallets
-	# "pallet-eth2-light-client/std",
+	"pallet-eth2-light-client/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

@@ -43,8 +43,6 @@ pub struct Config {
 
 	pub hashes_gc_threshold: Option<u64>,
 
-	pub max_submitted_blocks_by_account: Option<u32>,
-
 	pub trusted_signer_account_id: Option<String>,
 
 	/// The trusted block root for checkpoint for contract initialization

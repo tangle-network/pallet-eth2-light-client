@@ -14,7 +14,6 @@ eth_requests_timeout_seconds = 30
 validate_updates = true
 verify_bls_signature = true
 hashes_gc_threshold = 51000
-max_submitted_blocks_by_account = 8000
 beacon_rpc_version = "V1_2"
 headers_batch_size = 33
 interval_between_light_client_updates_submission_in_epochs = 1

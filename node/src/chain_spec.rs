@@ -152,5 +152,6 @@ fn testnet_genesis(
 			key: Some(root_key),
 		},
 		transaction_payment: Default::default(),
+		eth_2_client: Default::default(),
 	}
 }

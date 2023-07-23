@@ -626,16 +626,6 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn calculate_min_storage_balance_for_submitter(
-		max_submitted_blocks_by_account: u32,
-	) -> BalanceOf<T> {
-		const STORAGE_BYTES_PER_BLOCK: u32 = 105; // prefix: 3B + key: 32B + HeaderInfo 70B
-		const STORAGE_BYTES_PER_ACCOUNT: u32 = 39; // prefix: 3B + account_id: 32B + counter 4B
-		let storage_bytes_per_account =
-			(STORAGE_BYTES_PER_BLOCK * max_submitted_blocks_by_account) + STORAGE_BYTES_PER_ACCOUNT;
-		T::StoragePricePerByte::get().saturating_mul(storage_bytes_per_account.into())
-	}
-
 	/// We consider the system initialized if any block is finalized for that chain.
 	pub fn initialized(typed_chain_id: TypedChainId) -> bool {
 		FinalizedBeaconHeader::<T>::contains_key(typed_chain_id)

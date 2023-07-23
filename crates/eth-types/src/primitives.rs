@@ -1,5 +1,7 @@
 use codec::{Decode, Encode};
 
+use crate::H256;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode)]
 pub enum FinalExecutionStatus<E> {
 	/// The execution has not yet started.
@@ -18,8 +20,10 @@ impl<E> Default for FinalExecutionStatus<E> {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub struct FinalExecutionOutcomeView<E> {
 	/// Execution status. Contains the result in case of successful execution.
 	pub status: FinalExecutionStatus<E>,
+	/// Transaction hash,
+	pub transaction_hash: H256,
 }

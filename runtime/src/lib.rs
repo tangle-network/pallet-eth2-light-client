@@ -6,6 +6,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use frame_support::PalletId;
 use pallet_grandpa::AuthorityId as GrandpaId;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -265,6 +266,25 @@ impl pallet_sudo::Config for Runtime {
 	type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
 }
 
+impl pallet_utility::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type PalletsOrigin = OriginCaller;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const StoragePricePerByte: u128 = 100;
+	pub const Eth2ClientPalletId: PalletId = PalletId(*b"py/eth2c");
+}
+
+impl pallet_eth2_light_client::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type StoragePricePerByte = StoragePricePerByte;
+	type PalletId = Eth2ClientPalletId;
+	type Currency = Balances;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub struct Runtime
@@ -280,6 +300,8 @@ construct_runtime!(
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
+		Utility: pallet_utility,
+		Eth2Client: pallet_eth2_light_client,
 	}
 );
 

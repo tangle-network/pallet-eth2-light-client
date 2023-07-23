@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-features = false }
 merkle-proof = { package = "webb-merkle-proof",  path = "../merkle-proof", default-features = false }
+
 consensus-types = { package = "webb-consensus-types", path = "../consensus-types" }
 eth-rpc-client = { package = "webb-eth-rpc-client", path = "../eth-rpc-client" }
 eth-types = { path = "../eth-types/", default-features = false, features = ["eth2", "eip1559"]}
@@ -17,7 +19,7 @@ serde = { version = "1.0", default-features = false, features = ["derive"] }
 toml = "0.5.9"
 async-trait = "0.1.72"
 sp-keyring = { version = "24.0.0", default-features = false }
-
+subxt = "0.29.0"
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 webb-relayer-types = { git = "https://github.com/webb-tools/relayer.git" }
 webb = { version = "0.7.3", default-features = false, features = [

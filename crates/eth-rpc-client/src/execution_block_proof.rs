@@ -1,11 +1,11 @@
 use crate::{
 	beacon_block_body_merkle_tree::{BeaconBlockBodyMerkleTree, ExecutionPayloadMerkleTree},
-	errors::MissExecutionPayload,
+	errors::{MerkleTreeError, MissExecutionPayload},
 };
 use eth2_hashing;
 use ethereum_types::H256;
 use std::{error::Error, fmt, fmt::Display};
-use types::{BeaconBlockBody, MainnetEthSpec};
+use types::{BeaconBlockBody, ExecutionPayload, MainnetEthSpec};
 
 /// `ExecutionBlockProof` contains a `block_hash` (execution block) and
 /// a proof of its inclusion in the `BeaconBlockBody` tree hash.
@@ -40,41 +40,31 @@ impl ExecutionBlockProof {
 		let beacon_block_merkle_tree = &BeaconBlockBodyMerkleTree::new(beacon_block_body);
 
 		let execution_payload_merkle_tree = &ExecutionPayloadMerkleTree::new(
-			&beacon_block_body
-				.execution_payload()
-				.map_err(|_| MissExecutionPayload)?
-				.execution_payload_ref()
-				.to_owned(),
+			&beacon_block_body.execution_payload().map_err(|_| MissExecutionPayload)?.into(),
 		);
 
-		// TODO: Handle unwrap error
 		let l1_execution_payload_proof = beacon_block_merkle_tree
 			.0
 			.generate_proof(
 				Self::L1_BEACON_BLOCK_BODY_TREE_EXECUTION_PAYLOAD_INDEX,
 				Self::L1_BEACON_BLOCK_BODY_PROOF_SIZE,
 			)
-			.unwrap()
+			.map_err(MerkleTreeError)?
 			.1;
-
-		// TODO: Handle unwrap error
 		let mut block_proof = execution_payload_merkle_tree
 			.0
 			.generate_proof(
 				Self::L2_EXECUTION_PAYLOAD_TREE_EXECUTION_BLOCK_INDEX,
 				Self::L2_EXECUTION_PAYLOAD_PROOF_SIZE,
 			)
-			.unwrap()
+			.map_err(MerkleTreeError)?
 			.1;
 		block_proof.extend(&l1_execution_payload_proof);
 
+		let execution_payload: ExecutionPayload<MainnetEthSpec> =
+			beacon_block_body.execution_payload().map_err(|_| MissExecutionPayload)?.into();
 		Ok(Self {
-			block_hash: beacon_block_body
-				.execution_payload()
-				.map_err(|_| MissExecutionPayload)?
-				.execution_payload_ref()
-				.block_hash()
-				.into_root(),
+			block_hash: execution_payload.block_hash().into_root(),
 			proof: block_proof.as_slice().try_into()?,
 		})
 	}
@@ -152,7 +142,7 @@ impl Error for IncorrectBranchLength {}
 #[cfg(test)]
 mod tests {
 	use crate::{config_for_tests::ConfigForTests, utils::read_json_file_from_data_dir};
-	use types::{BeaconBlockBody, MainnetEthSpec};
+	use types::{BeaconBlockBody, ExecutionPayload, MainnetEthSpec};
 
 	const TIMEOUT_SECONDS: u64 = 30;
 	const TIMEOUT_STATE_SECONDS: u64 = 1000;
@@ -164,7 +154,7 @@ mod tests {
 	#[test]
 	fn test_beacon_block_body_root_verification() {
 		let beacon_block_body_json_str =
-			read_json_file_from_data_dir("beacon_block_body_kiln_slot_741888.json");
+			read_json_file_from_data_dir("beacon_block_body_goerli_slot_5262172.json");
 
 		let beacon_block_body: BeaconBlockBody<MainnetEthSpec> =
 			serde_json::from_str(&beacon_block_body_json_str).unwrap();
@@ -176,7 +166,7 @@ mod tests {
 
 		assert_eq!(
 			format!("{:?}", beacon_block_body_merkle_tree.0.hash()),
-			"0xd7f1c80baaceb9a1d3301e4f740fe8b5de9970153dc2ab254a4be39fe054addc"
+			"0x5f3a9eda5c6d2f5c30e4ad2f9c5221334deec7ea2e3ba2b21b78cf10c7f9b1fe"
 		);
 
 		let execution_block_proof =
@@ -185,12 +175,10 @@ mod tests {
 			)
 			.unwrap();
 
+		let execution_payload: ExecutionPayload<MainnetEthSpec> =
+			beacon_block_body.execution_payload().unwrap().into();
 		assert_eq!(
-			beacon_block_body
-				.execution_payload()
-				.unwrap()
-				.execution_payload_ref()
-				.block_hash(),
+			execution_payload.block_hash(),
 			types::ExecutionBlockHash::from_root(execution_block_proof.get_execution_block_hash())
 		);
 
@@ -208,8 +196,8 @@ mod tests {
 			.unwrap());
 	}
 
-	#[tokio::test]
-	async fn test_beacon_block_body_root_matches_body_root_in_header() {
+	#[test]
+	fn test_beacon_block_body_root_matches_body_root_in_header() {
 		let config = get_test_config();
 
 		let beacon_rpc_client = crate::beacon_rpc_client::BeaconRPCClient::new(
@@ -221,11 +209,9 @@ mod tests {
 
 		let beacon_block_body = beacon_rpc_client
 			.get_beacon_block_body_for_block_id(&format!("{}", config.first_slot))
-			.await
 			.unwrap();
 		let beacon_block_header = beacon_rpc_client
 			.get_beacon_block_header_for_block_id(&format!("{}", config.first_slot))
-			.await
 			.unwrap();
 
 		let beacon_block_body_merkle_tree =
@@ -233,6 +219,6 @@ mod tests {
 				&beacon_block_body,
 			)
 			.0;
-		assert_eq!(beacon_block_body_merkle_tree.hash().0, beacon_block_header.body_root.0 .0);
+		assert_eq!(beacon_block_body_merkle_tree.hash(), beacon_block_header.body_root);
 	}
 }

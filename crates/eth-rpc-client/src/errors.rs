@@ -45,7 +45,7 @@ impl Display for MissSyncAggregationError {
 
 impl Error for MissSyncAggregationError {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NoBlockForSlotError;
 
 impl Display for NoBlockForSlotError {
@@ -110,3 +110,14 @@ impl Display for MissExecutionPayload {
 }
 
 impl Error for MissExecutionPayload {}
+
+#[derive(Debug)]
+pub struct MerkleTreeError(pub merkle_proof::MerkleTreeError);
+
+impl Display for MerkleTreeError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "Merkle Tree Error: {:?}", self.0)
+	}
+}
+
+impl Error for MerkleTreeError {}

@@ -2,14 +2,10 @@ use async_trait::async_trait;
 use sp_runtime::AccountId32;
 
 use crate::{
-	mock::RuntimeOrigin,
+	mock::{Eth2Client, RuntimeOrigin},
 	test_utils::{get_test_data, InitOptions},
 	tests::ALICE,
 };
-use frame_support::assert_ok;
-use webb_proposals::TypedChainId;
-
-use crate::mock::Eth2Client;
 use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
 use eth_types::{
 	self,
@@ -18,6 +14,9 @@ use eth_types::{
 	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
 	H256,
 };
+use frame_support::assert_ok;
+use std::error::Error;
+use webb_proposals::TypedChainId;
 
 pub struct MockEthClientPallet {
 	network: TypedChainId,
@@ -34,7 +33,7 @@ impl MockEthClientPallet {
 		));
 	}
 
-	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, crate::Error> {
+	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, Box<dyn Error>> {
 		Eth2Client::finalized_beacon_header(self.network)
 	}
 }
@@ -44,38 +43,38 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 	fn send_light_client_update(
 		&mut self,
 		light_client_update: LightClientUpdate,
-	) -> Result<FinalExecutionOutcomeView<crate::Error>, crate::Error> {
+	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
 		Ok(FinalExecutionOutcomeView { status: FinalExecutionStatus::NotStarted })
 	}
 
-	fn get_finalized_beacon_block_hash(&self) -> Result<H256, crate::Error> {
+	fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn Error>> {
 		Ok(H256::zero())
 	}
 
-	fn get_finalized_beacon_block_slot(&self) -> Result<u64, crate::Error> {
+	fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn Error>> {
 		Ok(0)
 	}
 
 	fn send_headers(
 		&mut self,
 		headers: &[BlockHeader],
-	) -> Result<FinalExecutionOutcomeView<crate::Error>, crate::Error> {
+	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
 		Ok(FinalExecutionOutcomeView { status: FinalExecutionStatus::NotStarted })
 	}
 
-	fn get_client_mode(&self) -> Result<ClientMode, crate::Error> {
+	fn get_client_mode(&self) -> Result<ClientMode, Box<dyn Error>> {
 		Ok(ClientMode::default())
 	}
 
-	fn get_light_client_state(&self) -> Result<LightClientState, crate::Error> {
+	fn get_light_client_state(&self) -> Result<LightClientState, Box<dyn Error>> {
 		Ok(LightClientState::default())
 	}
 
-	fn get_last_block_number(&self) -> Result<u64, crate::Error> {
+	fn get_last_block_number(&self) -> Result<u64, Box<dyn Error>> {
 		Ok(0)
 	}
 
-	fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, crate::Error> {
+	fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, Box<dyn Error>> {
 		Ok(None)
 	}
 }
