@@ -94,6 +94,7 @@ pub struct Eth2SubstrateRelay {
 	next_light_client_update: Option<LightClientUpdate>,
 	sleep_time_on_sync_secs: u64,
 	sleep_time_after_submission_secs: u64,
+	get_light_client_update_by_epoch: bool,
 }
 
 impl Eth2SubstrateRelay {
@@ -128,6 +129,9 @@ impl Eth2SubstrateRelay {
 			bellatrix_fork_epoch: eth2_network.bellatrix_fork_epoch,
 			bellatrix_fork_version: eth2_network.bellatrix_fork_version,
 			genesis_validators_root: eth2_network.genesis_validators_root,
+			get_light_client_update_by_epoch: config
+				.get_light_client_update_by_epoch
+				.unwrap_or(false),
 		};
 
 		if let Some(port) = config.prometheus_metrics_port {
@@ -444,7 +448,7 @@ impl Eth2SubstrateRelay {
 
 	async fn send_light_client_updates(
 		&mut self,
-		last_finalized_slot_on_substrate: u64,
+		last_finalized_slot_on_near: u64,
 		last_finalized_slot_on_eth: u64,
 	) {
 		info!(target: "relay", "= Sending light client update =");
@@ -455,15 +459,27 @@ impl Eth2SubstrateRelay {
 			return
 		}
 
+		if self.get_light_client_update_by_epoch {
+			if self
+				.send_regular_light_client_update_by_epoch(
+					last_finalized_slot_on_eth,
+					last_finalized_slot_on_near,
+				)
+				.await
+			{
+				return
+			}
+		}
+
 		if last_finalized_slot_on_eth >=
-			last_finalized_slot_on_substrate + self.max_blocks_for_finalization
+			last_finalized_slot_on_near + self.max_blocks_for_finalization
 		{
-			info!(target: "relay", "Too big gap between slot of finalized block on SUBSTRATE and ETH. Sending hand made light client update");
-			self.send_hand_made_light_client_update(last_finalized_slot_on_substrate).await;
+			info!(target: "relay", "Too big gap between slot of finalized block on NEAR and ETH. Sending hand made light client update");
+			self.send_hand_made_light_client_update(last_finalized_slot_on_near).await;
 		} else {
 			self.send_regular_light_client_update(
 				last_finalized_slot_on_eth,
-				last_finalized_slot_on_substrate,
+				last_finalized_slot_on_near,
 			)
 			.await;
 		}
@@ -471,7 +487,7 @@ impl Eth2SubstrateRelay {
 
 	async fn send_light_client_update_from_file(&mut self) {
 		if let Some(light_client_update) = self.next_light_client_update.clone() {
-			self.send_specific_light_client_update(light_client_update);
+			self.send_specific_light_client_update(light_client_update).await;
 			self.terminate = true;
 		}
 	}
