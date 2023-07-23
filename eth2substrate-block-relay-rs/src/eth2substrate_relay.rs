@@ -271,10 +271,7 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn wait_for_synchronization(&self) -> Result<(), Box<dyn Error>> {
-		while self.beacon_rpc_client.is_syncing()? ||
-			self.eth1_rpc_client.is_syncing()? ||
-			self.eth_client_pallet.is_syncing().await?
-		{
+		while self.beacon_rpc_client.is_syncing()? || self.eth1_rpc_client.is_syncing()? {
 			info!(target: "relay", "Waiting for sync...");
 			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 		}

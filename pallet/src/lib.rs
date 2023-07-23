@@ -472,7 +472,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(2)]
+		#[pallet::weight(0)]
 		#[pallet::call_index(2)]
 		pub fn submit_beacon_chain_light_client_update(
 			origin: OriginFor<T>,

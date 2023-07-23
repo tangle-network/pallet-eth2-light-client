@@ -234,10 +234,6 @@ impl EthClientPallet {
 
 #[async_trait]
 impl EthClientPalletTrait for EthClientPallet {
-	async fn is_syncing(&self) -> Result<bool, Box<dyn Error>> {
-		Ok(false)
-	}
-
 	async fn send_light_client_update(
 		&mut self,
 		light_client_update: LightClientUpdate,
@@ -250,7 +246,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		let tx_hash = self.submit(&call).await?;
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::Success,
-			transaction_hash: tx_hash,
+			transaction_hash: Some(tx_hash),
 		})
 	}
 
@@ -310,7 +306,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		let tx_hash = self.submit(&batch_call).await?;
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::Success,
-			transaction_hash: tx_hash,
+			transaction_hash: Some(tx_hash),
 		})
 	}
 

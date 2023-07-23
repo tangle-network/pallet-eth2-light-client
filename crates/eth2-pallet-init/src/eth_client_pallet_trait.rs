@@ -45,6 +45,4 @@ pub trait EthClientPalletTrait<A = AccountId32>: Send + Sync + 'static {
 	async fn get_last_block_number(&self) -> Result<u64, Box<dyn Error>>;
 
 	async fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, Box<dyn Error>>;
-
-	async fn is_syncing(&self) -> Result<bool, Box<dyn Error>>;
 }

@@ -25,5 +25,5 @@ pub struct FinalExecutionOutcomeView<E> {
 	/// Execution status. Contains the result in case of successful execution.
 	pub status: FinalExecutionStatus<E>,
 	/// Transaction hash,
-	pub transaction_hash: H256,
+	pub transaction_hash: Option<H256>,
 }

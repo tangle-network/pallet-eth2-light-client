@@ -12,7 +12,7 @@ use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
 
 pub const MAINNET_CHAIN: TypedChainId = TypedChainId::Evm(1);
-pub const KILN_CHAIN: TypedChainId = TypedChainId::Evm(1337802);
+pub const GOERLI_CHAIN: TypedChainId = TypedChainId::Evm(5);
 pub const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
 
 pub fn submit_and_check_execution_headers(

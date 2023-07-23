@@ -12,7 +12,7 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState},
 	pallet::ClientMode,
 	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
-	H256,
+	BlockHeader, H256,
 };
 use frame_support::assert_ok;
 use std::error::Error;
@@ -34,7 +34,10 @@ impl MockEthClientPallet {
 	}
 
 	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, Box<dyn Error>> {
-		Eth2Client::finalized_beacon_header(self.network)
+		match Eth2Client::finalized_beacon_header(self.network) {
+			Some(header) => Ok(header),
+			None => Err("No finalized header found".into()),
+		}
 	}
 }
 
@@ -44,7 +47,10 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 		&mut self,
 		light_client_update: LightClientUpdate,
 	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
-		Ok(FinalExecutionOutcomeView { status: FinalExecutionStatus::NotStarted })
+		Ok(FinalExecutionOutcomeView {
+			status: FinalExecutionStatus::NotStarted,
+			transaction_hash: H256::zero(),
+		})
 	}
 
 	fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn Error>> {
@@ -59,7 +65,10 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 		&mut self,
 		headers: &[BlockHeader],
 	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
-		Ok(FinalExecutionOutcomeView { status: FinalExecutionStatus::NotStarted })
+		Ok(FinalExecutionOutcomeView {
+			status: FinalExecutionStatus::NotStarted,
+			transaction_hash: H256::zero(),
+		})
 	}
 
 	fn get_client_mode(&self) -> Result<ClientMode, Box<dyn Error>> {
