@@ -134,8 +134,8 @@ pub use traits::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use consensus::network_config_for_chain::NetworkConfig;
-use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
+	use consensus::network_config::NetworkConfig;
+	use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::{OptionQuery, ValueQuery, *},
@@ -336,7 +336,7 @@ use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
 		TrustlessModeError,
 		InvalidSyncCommitteeBitsSum,
 		SyncCommitteeBitsSumLessThanThreshold,
-		NetworkConfigNotFound,
+		InvalidNetworkConfig,
 		/// Failed to verify the bls signature
 		InvalidBlsSignature,
 		InvalidExecutionBlock,
@@ -884,14 +884,18 @@ impl<T: Config> Pallet<T> {
 			get_participant_pubkeys(sync_committee.pubkeys.0.as_slice(), &sync_committee_bits);
 		ensure!(
 			Self::network_config_for_chain(typed_chain_id).is_some(),
-			Error::<T>::NetworkConfigNotFound
+			Error::<T>::InvalidNetworkConfig
 		);
 		let network_config = Self::network_config_for_chain(typed_chain_id).unwrap();
-		let fork_version = network_config.compute_fork_version_by_slot(update.signature_slot)
-
+		let maybe_fork_version = network_config.compute_fork_version_by_slot(update.signature_slot);
+		ensure!(
+			maybe_fork_version.is_some(),
+			// The fork version should be present
+			Error::<T>::InvalidNetworkConfig
+		);
 		let domain = compute_domain(
 			DOMAIN_SYNC_COMMITTEE,
-			fork_version,
+			maybe_fork_version.unwrap(),
 			H256::from(network_config.genesis_validators_root),
 		);
 		let signing_root =
