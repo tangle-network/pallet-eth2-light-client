@@ -134,8 +134,8 @@ pub use traits::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use consensus::network_config_for_chain::NetworkConfig;
-use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
+	use consensus::network_config::NetworkConfig;
+	use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::{OptionQuery, ValueQuery, *},
@@ -887,7 +887,9 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::NetworkConfigNotFound
 		);
 		let network_config = Self::network_config_for_chain(typed_chain_id).unwrap();
-		let fork_version = network_config.compute_fork_version_by_slot(update.signature_slot)
+		let fork_version = network_config
+			.compute_fork_version_by_slot(update.signature_slot)
+			.unwrap_or_default();
 
 		let domain = compute_domain(
 			DOMAIN_SYNC_COMMITTEE,

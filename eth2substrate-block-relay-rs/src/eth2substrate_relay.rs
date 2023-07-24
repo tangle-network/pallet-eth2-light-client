@@ -8,7 +8,10 @@ use crate::{
 	},
 };
 use bitvec::store::BitStore;
-use consensus_types::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
+use consensus_types::{
+	network_config::{Network, NetworkConfig},
+	EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH,
+};
 use core::cmp::max;
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_rpc_client::{
@@ -21,7 +24,6 @@ use eth_types::{
 	primitives::FinalExecutionStatus,
 	BlockHeader,
 };
-use finality_update_verify::network_config::{Network, NetworkConfig};
 use log::{debug, info, trace, warn};
 use std::{cmp, error::Error, str::FromStr, thread, time::Duration, vec::Vec};
 use tokio::time::sleep;

@@ -1,8 +1,7 @@
 use bitvec::{order::Lsb0, prelude::BitVec};
 use consensus_types::{
-	network_config,
 	compute_domain, compute_fork_version_by_slot, compute_signing_root, get_participant_pubkeys,
-	DOMAIN_SYNC_COMMITTEE, MIN_SYNC_COMMITTEE_PARTICIPANTS,
+	network_config, DOMAIN_SYNC_COMMITTEE, MIN_SYNC_COMMITTEE_PARTICIPANTS,
 };
 use eth_types::{
 	eth2::{BeaconBlockHeader, Epoch, ForkVersion, LightClientUpdate, SyncCommittee},
