@@ -25,7 +25,7 @@ webb = { version = "0.5.17", features = [
     "evm-runtime",
     "substrate-runtime"
 ]}
-webb-proposals = { version = "0.5.4" }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 
 funty = "2.0.0"
 sp-keyring = { version = "18.0.0", default-features = false }

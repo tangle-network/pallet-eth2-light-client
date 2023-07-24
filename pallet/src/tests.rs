@@ -176,10 +176,11 @@ mod generic_tests {
 	#[test]
 	pub fn test_gc_headers() {
 		new_test_ext().execute_with(|| {
+			let hashes_gc_threshold: usize = 9500;
 			let (headers, updates, _init_input) = get_test_context(Some(InitOptions {
 				validate_updates: true,
 				verify_bls_signatures: true,
-				hashes_gc_threshold: 500,
+				hashes_gc_threshold: hashes_gc_threshold as u64,
 				trusted_signer: None,
 			}));
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
@@ -191,11 +192,11 @@ mod generic_tests {
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
-				headers[0].iter().skip(1).collect(),
+				headers[0].iter().skip(1).rev().collect(),
 			);
 
 			// Last 500 execution headers are finalized
-			for header in headers[0].iter().skip(1).rev().take(500) {
+			for header in headers[0].iter().skip(1) {
 				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
@@ -204,17 +205,6 @@ mod generic_tests {
 					header.calculate_hash()
 				);
 			}
-
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[1].iter().skip(1).collect(),
-			);
-
-			assert_eq!(
-				Eth2Client::last_block_number(GOERLI_CHAIN,),
-				headers[1].last().unwrap().number
-			);
 
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
@@ -222,7 +212,18 @@ mod generic_tests {
 				updates[2].clone()
 			));
 
-			for header in headers[1].iter().skip(1).rev().take(500) {
+			submit_and_check_execution_headers(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				headers[1].iter().rev().collect(),
+			);
+
+			assert_eq!(
+				Eth2Client::last_block_number(GOERLI_CHAIN,),
+				headers[1].last().unwrap().number
+			);
+
+			for header in headers[1].iter() {
 				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
@@ -232,7 +233,7 @@ mod generic_tests {
 				);
 			}
 
-			for header in headers.concat().iter().rev().skip(500 + 2) {
+			for header in headers.concat().iter().rev().skip(hashes_gc_threshold + 2) {
 				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).is_none(),

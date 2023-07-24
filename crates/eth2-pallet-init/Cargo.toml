@@ -28,5 +28,5 @@ webb = { version = "0.7.3", default-features = false, features = [
 ]}
 scale = { package = "parity-scale-codec", version = "3", default-features = false }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-webb-proposals = { version = "0.5.4" }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 tokio = { version = "1.1", default-features = false, features = ["macros", "rt", "time"] }

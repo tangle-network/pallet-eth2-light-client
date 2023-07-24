@@ -496,6 +496,11 @@ pub mod pallet {
 						.unwrap_or_default()
 				});
 
+			#[cfg(feature = "std")]
+			println!(
+				"The expected block hash is {:#?} but got {:#?}.",
+				expected_block_hash, block_hash
+			);
 			ensure!(block_hash == expected_block_hash, Error::<T>::BlockHashesDoNotMatch,);
 
 			ensure!(

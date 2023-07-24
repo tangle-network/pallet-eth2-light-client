@@ -75,7 +75,7 @@ macro_rules! return_val_on_fail_and_sleep {
             Err(e) => {
                 warn!(target: "relay", "{}. Error: {}", $msg, e);
                 trace!(target: "relay", "Sleep {} secs before next loop", $sleep_time);
-                thread::sleep(Duration::from_secs($sleep_time));
+                sleep(Duration::from_secs($sleep_time)).await;
                 return $val;
             }
         }
@@ -213,7 +213,7 @@ impl Eth2SubstrateRelay {
 
 			if !submitted_in_this_iteration {
 				info!(target: "relay", "Sync with ETH network. Sleep {} secs", self.sleep_time_on_sync_secs);
-				thread::sleep(Duration::from_secs(self.sleep_time_on_sync_secs));
+				sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 			}
 		}
 	}
@@ -342,7 +342,7 @@ impl Eth2SubstrateRelay {
 			false
 		);
 
-		thread::sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
+		sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 
 		if let FinalExecutionStatus::Failure(_error_message) = execution_outcome.status {
 			FAILS_ON_HEADERS_SUBMISSION.inc();
@@ -562,7 +562,7 @@ impl Eth2SubstrateRelay {
 			}
 
 			warn!(target: "relay", "Error: {}", res.unwrap_err());
-			thread::sleep(Duration::from_secs(5));
+			sleep(Duration::from_secs(5)).await;
 
 			update_epoch -= 1;
 		};
@@ -675,7 +675,7 @@ impl Eth2SubstrateRelay {
 		);
 
 		info!(target: "relay", "Finalized block number from light client update = {}", finalized_block_number);
-		sleep(Duration::from_secs(self.sleep_time_after_submission_secs));
+		sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 		true
 	}
 }

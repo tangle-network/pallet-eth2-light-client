@@ -44,6 +44,7 @@ pub fn convert_typed_chain_ids(
 			tangle::runtime_types::webb_proposals::header::TypedChainId::Solana(id),
 		TypedChainId::Ink(id) =>
 			tangle::runtime_types::webb_proposals::header::TypedChainId::Ink(id),
+		_ => panic!("Unsupported chain id"),
 	}
 }
 
