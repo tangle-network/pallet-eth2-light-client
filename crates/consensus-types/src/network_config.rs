@@ -26,8 +26,8 @@ impl FromStr for Network {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq, Encode, Decode)]
-#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize, scale_info::TypeInfo))]
+#[derive(Clone, Debug, PartialEq, Encode, Decode, scale_info::TypeInfo)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct NetworkConfig {
 	pub genesis_validators_root: [u8; 32],
 	pub bellatrix_fork_version: ForkVersion,
