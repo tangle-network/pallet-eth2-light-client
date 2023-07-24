@@ -1,7 +1,7 @@
 use bitvec::{order::Lsb0, prelude::BitVec};
 use consensus_types::{
 	compute_domain, compute_fork_version_by_slot, compute_signing_root, get_participant_pubkeys,
-	network_config, DOMAIN_SYNC_COMMITTEE, MIN_SYNC_COMMITTEE_PARTICIPANTS,
+	DOMAIN_SYNC_COMMITTEE, MIN_SYNC_COMMITTEE_PARTICIPANTS,
 };
 use eth_types::{
 	eth2::{BeaconBlockHeader, Epoch, ForkVersion, LightClientUpdate, SyncCommittee},
@@ -90,11 +90,8 @@ pub fn is_correct_finality_update(
 mod tests {
 	use std::str::FromStr;
 
-	use crate::{
-		config_for_tests::ConfigForTests,
-		is_correct_finality_update,
-		network_config::{Network, NetworkConfig},
-	};
+	use crate::{config_for_tests::ConfigForTests, is_correct_finality_update};
+	use consensus_types::network_config::{Network, NetworkConfig};
 	use eth_types::eth2::{LightClientUpdate, SyncCommittee};
 
 	fn get_config() -> ConfigForTests {

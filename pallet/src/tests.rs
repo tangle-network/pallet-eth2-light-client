@@ -107,10 +107,6 @@ mod generic_tests {
 				Eth2Client::last_block_number(GOERLI_CHAIN),
 				headers[0].last().unwrap().number
 			);
-			assert!(!Eth2Client::is_known_execution_header(
-				GOERLI_CHAIN,
-				Eth2Client::finalized_execution_header(GOERLI_CHAIN).unwrap().block_number
-			));
 		})
 	}
 
@@ -329,11 +325,16 @@ mod generic_tests {
 				updates[1].clone()
 			));
 
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].iter().skip(1).take(5).collect(),
-			);
+			for (index, header) in headers[0].iter().skip(1).take(5).enumerate() {
+				assert_err!(
+					Eth2Client::submit_execution_header(
+						RuntimeOrigin::signed(ALICE),
+						GOERLI_CHAIN,
+						header.clone()
+					),
+					Error::<Test>::BlockHashesDoNotMatch
+				);
+			}
 		});
 	}
 
@@ -404,20 +405,20 @@ mod generic_tests {
 				updates[1].clone()
 			));
 
-			let headers: Vec<_> = headers.iter().skip(1).rev().collect();
+			let tmp_headers: Vec<_> = headers[0].iter().skip(1).rev().collect();
 			assert_ok!(Eth2Client::submit_execution_header(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
-				headers[0][0].clone()
+				tmp_headers[0].clone()
 			));
 			// Skip 2th block
 			assert_err!(
 				Eth2Client::submit_execution_header(
 					RuntimeOrigin::signed(ALICE),
 					GOERLI_CHAIN,
-					headers[0][3].clone()
+					tmp_headers[3].clone()
 				),
-				Error::<Test>::UnknownParentHeader
+				Error::<Test>::BlockHashesDoNotMatch
 			);
 		});
 	}

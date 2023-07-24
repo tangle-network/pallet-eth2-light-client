@@ -4,9 +4,6 @@ use codec::{Decode, Encode};
 use core::str::FromStr;
 use eth_types::eth2::{Epoch, ForkVersion, Slot};
 
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
-
 #[derive(Clone, Debug, PartialEq, Encode, Decode, scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum Network {
@@ -20,7 +17,7 @@ impl FromStr for Network {
 		match input.to_lowercase().as_str() {
 			"mainnet" => Ok(Network::Mainnet),
 			"goerli" => Ok(Network::Goerli),
-			_ => Err(alloc::format!("Unknown network: {}", input)),
+			_ => Err(alloc::format!("Unknown network: {input}")),
 		}
 	}
 }

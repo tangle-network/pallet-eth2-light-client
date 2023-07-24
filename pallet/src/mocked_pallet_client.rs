@@ -32,13 +32,6 @@ impl MockEthClientPallet {
 			Box::new(init_input.map_into())
 		));
 	}
-
-	fn get_header(&self) -> Result<ExtendedBeaconBlockHeader, Box<dyn Error>> {
-		match Eth2Client::finalized_beacon_header(self.network) {
-			Some(header) => Ok(header),
-			None => Err("No finalized header found".into()),
-		}
-	}
 }
 
 #[async_trait]
