@@ -308,7 +308,7 @@ pub mod pallet {
 		},
 		SubmitExecutionHeader {
 			typed_chain_id: TypedChainId,
-			header_info: ExecutionHeaderInfo<T::AccountId>,
+			header_info: BlockHeader,
 		},
 		UpdateTrustedSigner {
 			trusted_signer: T::AccountId,
@@ -494,17 +494,6 @@ pub mod pallet {
 						.unwrap_or_default()
 				});
 
-			// #[cfg(feature = "std")] {
-			// 	println!(
-			// 		"The expected block header {:#?}.",
-			// 		block_header,
-			// 	);
-			// 	println!(
-			// 		"The expected block hash is {:#?} but got {:#?}.",
-			// 		expected_block_hash, block_hash
-			// 	);
-			// }
-
 			ensure!(block_hash == expected_block_hash, Error::<T>::BlockHashesDoNotMatch,);
 
 			// Ensure that the block header is not already submitted then insert it.
@@ -577,7 +566,7 @@ pub mod pallet {
 				if UnfinalizedHeadExecutionHeader::<T>::get(typed_chain_id).is_none() {
 					UnfinalizedHeadExecutionHeader::<T>::insert(typed_chain_id, block_info.clone());
 				}
-				UnfinalizedHeadExecutionHeader::<T>::insert(typed_chain_id, block_info.clone());
+				UnfinalizedTailExecutionHeader::<T>::insert(typed_chain_id, block_info.clone());
 			}
 
 			frame_support::log::debug!(
@@ -586,11 +575,9 @@ pub mod pallet {
 				block_header.number, block_hash
 			);
 
-			let block_info = UnfinalizedHeadExecutionHeader::<T>::get(typed_chain_id)
-				.ok_or(Error::<T>::UnfinalizedHeaderNotPresent)?;
 			Self::deposit_event(Event::SubmitExecutionHeader {
 				typed_chain_id,
-				header_info: block_info,
+				header_info: block_header,
 			});
 
 			Ok(().into())

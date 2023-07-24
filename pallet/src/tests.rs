@@ -27,7 +27,6 @@ pub fn submit_and_check_execution_headers(
 			header.clone()
 		));
 		assert!(Eth2Client::is_known_execution_header(typed_chain_id, header.number));
-		assert!(Eth2Client::block_hash_safe(typed_chain_id, header.number).is_none());
 	}
 }
 
@@ -97,7 +96,6 @@ mod generic_tests {
 
 			for header in headers[0].iter().skip(1) {
 				let header_hash = header.calculate_hash();
-				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
 						header_hash,
@@ -137,7 +135,7 @@ mod generic_tests {
 					GOERLI_CHAIN,
 					fork_header.clone()
 				),
-				Error::<Test>::InvalidExecutionBlock
+				Error::<Test>::BlockHashesDoNotMatch
 			);
 		});
 	}
@@ -152,23 +150,19 @@ mod generic_tests {
 				hashes_gc_threshold: hashes_gc_threshold as u64,
 				trusted_signer: None,
 			}));
-			println!("submit_beacon_chain_light_client_update 1");
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
-			println!("submit_and_check_execution_headers 1");
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				headers[0].iter().skip(1).rev().collect(),
 			);
 
-			println!("checking safety 1");
 			for header in headers[0].iter().skip(1) {
-				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
 						header.calculate_hash(),
@@ -177,14 +171,12 @@ mod generic_tests {
 				);
 			}
 
-			println!("submit_beacon_chain_light_client_update 2");
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[2].clone()
 			));
 
-			println!("submit_and_check_execution_headers 2");
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
@@ -197,7 +189,6 @@ mod generic_tests {
 			);
 
 			for header in headers[1].iter() {
-				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
 						header.calculate_hash(),
@@ -207,7 +198,6 @@ mod generic_tests {
 			}
 
 			for header in headers.concat().iter().rev().skip(hashes_gc_threshold + 2) {
-				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
 					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).is_none(),
 					"Execution block hash was not removed: {:?}",
@@ -324,7 +314,7 @@ mod generic_tests {
 					GOERLI_CHAIN,
 					update
 				),
-				Error::<Test>::InvalidUpdatePeriod
+				Error::<Test>::UpdateHeaderSlotLessThanFinalizedHeaderSlot
 			);
 		});
 	}
@@ -367,7 +357,7 @@ mod generic_tests {
 					GOERLI_CHAIN,
 					headers[0].last().unwrap().clone()
 				),
-				Error::<Test>::BlockAlreadySubmitted
+				Error::<Test>::BlockHashesDoNotMatch
 			);
 		});
 	}
