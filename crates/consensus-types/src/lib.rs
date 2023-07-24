@@ -13,6 +13,8 @@ use eth_types::{
 };
 use tree_hash::TreeHash;
 
+pub mod network_config;
+
 pub const EPOCHS_PER_SYNC_COMMITTEE_PERIOD: u64 = 256;
 pub const MIN_SYNC_COMMITTEE_PARTICIPANTS: u64 = 1;
 pub const SLOTS_PER_EPOCH: u64 = 32;
@@ -31,7 +33,7 @@ pub const L2_EXECUTION_PAYLOAD_TREE_EXECUTION_BLOCK_INDEX: usize = 12;
 pub const L1_BEACON_BLOCK_BODY_PROOF_SIZE: usize = 4;
 pub const L2_EXECUTION_PAYLOAD_PROOF_SIZE: usize = 4;
 pub const EXECUTION_PROOF_SIZE: usize =
-	L1_BEACON_BLOCK_BODY_PROOF_SIZE + L2_EXECUTION_PAYLOAD_PROOF_SIZE;
+    L1_BEACON_BLOCK_BODY_PROOF_SIZE + L2_EXECUTION_PAYLOAD_PROOF_SIZE;
 
 pub const fn compute_epoch_at_slot(slot: Slot) -> u64 {
 	slot / SLOTS_PER_EPOCH

@@ -1,5 +1,6 @@
 use bitvec::{order::Lsb0, prelude::BitVec};
 use consensus_types::{
+	network_config,
 	compute_domain, compute_fork_version_by_slot, compute_signing_root, get_participant_pubkeys,
 	DOMAIN_SYNC_COMMITTEE, MIN_SYNC_COMMITTEE_PARTICIPANTS,
 };
@@ -9,8 +10,6 @@ use eth_types::{
 };
 use std::error::Error;
 use tree_hash::Hash256;
-
-pub mod network_config;
 
 #[cfg(test)]
 pub mod config_for_tests;

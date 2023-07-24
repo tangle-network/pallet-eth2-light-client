@@ -134,7 +134,8 @@ pub use traits::*;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
+	use consensus::network_config_for_chain::NetworkConfig;
+use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
 	use frame_support::{
 		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::{OptionQuery, ValueQuery, *},
@@ -183,9 +184,7 @@ pub mod pallet {
 						panic!("Unsupported network type, ETH2 chains are only supported on EVM networks");
 					},
 				}
-				GenesisValidatorsRoot::<T>::insert(n.0, n.1);
-				BellatrixForkVersion::<T>::insert(n.0, n.2);
-				BellatrixForkEpoch::<T>::insert(n.0, n.3);
+				<NetworkConfigForChain<T>>::insert(n.0, n.1);
 			}
 		}
 	}
@@ -291,29 +290,9 @@ pub mod pallet {
 		StorageMap<_, Blake2_128Concat, TypedChainId, ClientMode, OptionQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn genesis_validators_root)]
-	pub(super) type GenesisValidatorsRoot<T: Config> =
-		StorageMap<_, Blake2_128Concat, TypedChainId, [u8; 32], OptionQuery>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn bellatrix_fork_version)]
-	pub(super) type BellatrixForkVersion<T: Config> =
-		StorageMap<_, Blake2_128Concat, TypedChainId, ForkVersion, OptionQuery>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn bellatrix_fork_epoch)]
-	pub(super) type BellatrixForkEpoch<T: Config> =
-		StorageMap<_, Blake2_128Concat, TypedChainId, u64, OptionQuery>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn capella_fork_version)]
-	pub(super) type CapellaForkVersion<T: Config> =
-		StorageMap<_, Blake2_128Concat, TypedChainId, ForkVersion, OptionQuery>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn capella_fork_epoch)]
-	pub(super) type CapellaForkEpoch<T: Config> =
-		StorageMap<_, Blake2_128Concat, TypedChainId, u64, OptionQuery>;
+	#[pallet::getter(fn network_config_for_chain)]
+	pub(super) type NetworkConfigForChain<T: Config> =
+		StorageMap<_, Blake2_128Concat, TypedChainId, NetworkConfig, OptionQuery>;
 
 	/************* STORAGE ************ */
 
@@ -357,9 +336,7 @@ pub mod pallet {
 		TrustlessModeError,
 		InvalidSyncCommitteeBitsSum,
 		SyncCommitteeBitsSumLessThanThreshold,
-		ForkVersionNotFound,
-		ForkEpochNotFound,
-		GenesisValidatorsRootNotFound,
+		NetworkConfigNotFound,
 		/// Failed to verify the bls signature
 		InvalidBlsSignature,
 		InvalidExecutionBlock,
@@ -906,19 +883,16 @@ impl<T: Config> Pallet<T> {
 		let participant_pubkeys =
 			get_participant_pubkeys(sync_committee.pubkeys.0.as_slice(), &sync_committee_bits);
 		ensure!(
-			Self::bellatrix_fork_version(typed_chain_id).is_some(),
-			Error::<T>::ForkVersionNotFound
+			Self::network_config_for_chain(typed_chain_id).is_some(),
+			Error::<T>::NetworkConfigNotFound
 		);
-		ensure!(
-			Self::genesis_validators_root(typed_chain_id).is_some(),
-			Error::<T>::GenesisValidatorsRootNotFound
-		);
-		let fork_version = Self::bellatrix_fork_version(typed_chain_id).unwrap();
-		let genesis_validators_root = Self::genesis_validators_root(typed_chain_id).unwrap();
+		let network_config = Self::network_config_for_chain(typed_chain_id).unwrap();
+		let fork_version = network_config.compute_fork_version_by_slot(update.signature_slot)
+
 		let domain = compute_domain(
 			DOMAIN_SYNC_COMMITTEE,
 			fork_version,
-			H256::from(genesis_validators_root),
+			H256::from(network_config.genesis_validators_root),
 		);
 		let signing_root =
 			compute_signing_root(H256(update.attested_beacon_header.tree_hash_root()), domain);

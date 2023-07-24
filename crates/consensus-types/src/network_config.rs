@@ -1,10 +1,14 @@
-use std::str::FromStr;
+use core::str::FromStr;
 
-use consensus_types::compute_epoch_at_slot;
+use crate::compute_epoch_at_slot;
 use eth_types::eth2::{Epoch, ForkVersion, Slot};
+use codec::{Encode, Decode};
+
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum Network {
 	Mainnet,
 	Goerli,
@@ -22,6 +26,7 @@ impl FromStr for Network {
 }
 
 #[derive(Clone, Debug, PartialEq, Encode, Decode)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct NetworkConfig {
 	pub genesis_validators_root: [u8; 32],
 	pub bellatrix_fork_version: ForkVersion,
@@ -58,13 +63,17 @@ impl NetworkConfig {
 		}
 	}
 
-	pub fn compute_fork_version(&self, epoch: Epoch) -> Option<ForkVersion> {
-		if epoch >= self.bellatrix_fork_epoch {
-			return Some(self.bellatrix_fork_version)
-		}
+    pub fn compute_fork_version(&self, epoch: Epoch) -> Option<ForkVersion> {
+        if epoch >= self.capella_fork_epoch {
+            return Some(self.capella_fork_version);
+        }
 
-		None
-	}
+        if epoch >= self.bellatrix_fork_epoch {
+            return Some(self.bellatrix_fork_version);
+        }
+
+        None
+    }
 
 	pub fn compute_fork_version_by_slot(&self, slot: Slot) -> Option<ForkVersion> {
 		self.compute_fork_version(compute_epoch_at_slot(slot))
