@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "eip1559"] }
+eth-types = { path = "../eth-types", default-features = false, features = ["eth2"] }
 consensus-types = { package = "webb-consensus-types",  path = "../consensus-types" }
 bls = { package = "webb-bls", path = "../bls" }
 tree-hash = { package = "webb-tree-hash",  path = "../tree-hash" }

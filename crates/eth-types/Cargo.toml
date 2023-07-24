@@ -21,7 +21,7 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 
 [features]
-default = ["eip1559", "eth2", "std"]
+default = ["eth2", "std"]
 std = [
     "serde/std",
     "codec/std",
@@ -30,7 +30,6 @@ std = [
     "eth2-serde-utils/std",
     "ethereum-types/serialize"
 ]
-eip1559 = []
 eth2 = []
 arbitrary = [
     "ethereum-types/arbitrary",

@@ -59,8 +59,6 @@
 //! * `verify_bls_signatures` - Verify the BLS signatures for a given chain, update, and sync
 //!   committee bits.
 //! * `verify_finality_branch` - Verify the finality branch of a light client update.
-//! * `compute_fork_version` - Compute the fork version for an epoch.
-//! * `compute_fork_version_by_slot` - Compute the fork version for a slot.
 //! * `update_finalized_header` - Update the finalized header for a given chain.
 //! * `commit_light_client_update` - Commit a light client update for a given chain.
 //! * `account_id` - Get the account ID.
@@ -496,17 +494,25 @@ pub mod pallet {
 						.unwrap_or_default()
 				});
 
-			#[cfg(feature = "std")]
-			println!(
-				"The expected block hash is {:#?} but got {:#?}.",
-				expected_block_hash, block_hash
-			);
+			// #[cfg(feature = "std")] {
+			// 	println!(
+			// 		"The expected block header {:#?}.",
+			// 		block_header,
+			// 	);
+			// 	println!(
+			// 		"The expected block hash is {:#?} but got {:#?}.",
+			// 		expected_block_hash, block_hash
+			// 	);
+			// }
+
 			ensure!(block_hash == expected_block_hash, Error::<T>::BlockHashesDoNotMatch,);
 
+			// Ensure that the block header is not already submitted then insert it.
 			ensure!(
 				!FinalizedExecutionBlocks::<T>::contains_key(typed_chain_id, block_header.number),
 				Error::<T>::BlockAlreadySubmitted
 			);
+			FinalizedExecutionBlocks::<T>::insert(typed_chain_id, block_header.number, block_hash);
 
 			let finalized_execution_header = FinalizedExecutionHeader::<T>::get(typed_chain_id)
 				.ok_or(Error::<T>::FinalizedExecutionHeaderNotPresent)?;
@@ -920,26 +926,6 @@ impl<T: Config> Pallet<T> {
 		);
 
 		Ok(())
-	}
-
-	pub fn compute_fork_version(
-		fork_epoch: Epoch,
-		epoch: Epoch,
-		fork_version: ForkVersion,
-	) -> Option<ForkVersion> {
-		if epoch >= fork_epoch {
-			return Some(fork_version)
-		}
-
-		None
-	}
-
-	pub fn compute_fork_version_by_slot(
-		fork_epoch: Epoch,
-		slot: Slot,
-		fork_version: ForkVersion,
-	) -> Option<ForkVersion> {
-		Self::compute_fork_version(fork_epoch, compute_epoch_at_slot(slot), fork_version)
 	}
 
 	fn commit_light_client_update(

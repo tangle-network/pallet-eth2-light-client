@@ -18,7 +18,7 @@ rlp-derive = { version = "0.1.0", default-features = false }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
-eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "eip1559"] }
+eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2"] }
 eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz", default-features = false }
 merkle-proof = { package = "webb-merkle-proof", path = "../crates/merkle-proof", default-features = false }
 bls = { package = "webb-bls", path = "../crates/bls", default-features = false }

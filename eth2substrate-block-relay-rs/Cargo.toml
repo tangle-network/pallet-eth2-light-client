@@ -11,7 +11,7 @@ eth2_hashing =  { git = "https://github.com/webb-tools/lighthouse.git", branch =
 eth2_ssz =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
-eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"] }
+eth-types = { path = "../crates/eth-types", features = ["eth2"] }
 tree-hash = { package = "webb-tree-hash",  path = "../crates/tree-hash" }
 merkle-proof = { package = "webb-merkle-proof",  path = "../crates/merkle-proof" }
 consensus-types = { package = "webb-consensus-types", path = "../crates/consensus-types" }

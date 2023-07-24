@@ -10,7 +10,7 @@ merkle-proof = { package = "webb-merkle-proof",  path = "../merkle-proof", defau
 
 consensus-types = { package = "webb-consensus-types", path = "../consensus-types" }
 eth-rpc-client = { package = "webb-eth-rpc-client", path = "../eth-rpc-client" }
-eth-types = { path = "../eth-types/", default-features = false, features = ["eth2", "eip1559"]}
+eth-types = { path = "../eth-types/", default-features = false, features = ["eth2"]}
 log = { version = "0.4", features = ["std", "serde"] }
 clap = { version = "3.1.6", features = ["derive"] }
 reqwest = { version = "0.11", features = ["blocking"] }

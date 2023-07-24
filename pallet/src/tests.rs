@@ -42,6 +42,9 @@ pub fn get_test_context(
 		GOERLI_CHAIN,
 		Box::new(init_input)
 	));
+
+	assert_eq!(Eth2Client::last_block_number(GOERLI_CHAIN), headers[0][0].number);
+
 	(headers, updates, init_input_0)
 }
 
@@ -80,25 +83,18 @@ mod generic_tests {
 	pub fn test_submit_update_two_periods() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			// After submitting the execution header, it should be present in the execution headers
-			// list but absent in canonical chain blocks (not-finalized)
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].iter().skip(1).rev().collect(),
-			);
-
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
-			// After Beacon Chain `LightClientUpdate` is submitted,
-			// all execution headers having a height lower than the update's height,
-			// should be removed from the execution headers list. Meantime, all these
-			// removed execution headers should become a part of the canonical chain blocks
-			// (finalized)
+			submit_and_check_execution_headers(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				headers[0].iter().skip(1).rev().collect(),
+			);
+
 			for header in headers[0].iter().skip(1) {
 				let header_hash = header.calculate_hash();
 				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
@@ -121,54 +117,27 @@ mod generic_tests {
 	}
 
 	#[test]
-	pub fn test_submit_execution_block_from_fork_chain() {
+	pub fn test_panic_on_submit_execution_block_from_fork_chain() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			// After submitting the execution header, it should be present in the execution headers
-			// list but absent in canonical chain blocks (not-finalized)
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].iter().skip(1).collect(),
-			);
-			// Submit execution header with different hash
-			let mut fork_header = headers[0][5].clone();
-			// Difficulty is modified just in order to get a different header hash. Any other field
-			// would be suitable too
-			fork_header.difficulty = U256::from(ethereum_types::U256::from(99));
-			assert_ok!(Eth2Client::submit_execution_header(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				fork_header.clone()
-			));
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
-			for header in headers[0].iter().skip(1) {
-				let header_hash = header.calculate_hash();
-				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
-				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header_hash,
-					"Execution block hash is not finalized: {header_hash:?}"
-				);
-			}
-
-			// Check that forked execution header was not finalized
-			assert!(Eth2Client::is_known_execution_header(GOERLI_CHAIN, fork_header.number));
-			assert!(
-				Eth2Client::block_hash_safe(GOERLI_CHAIN, fork_header.number).unwrap_or_default()
-				!= fork_header.calculate_hash(),
-				"The fork's execution block header {:?} is expected not to be finalized, but it is finalized",
-				fork_header.calculate_hash()
-			);
-
-			assert_eq!(
-				Eth2Client::last_block_number(GOERLI_CHAIN),
-				headers[0].last().unwrap().number
+			// Submit execution header with different hash
+			let mut fork_header = headers[0][1].clone();
+			// Difficulty is modified just in order to get a different header hash. Any other field
+			// would be suitable too
+			fork_header.difficulty = U256::from(ethereum_types::U256::from(99));
+			assert_err!(
+				Eth2Client::submit_execution_header(
+					RuntimeOrigin::signed(ALICE),
+					GOERLI_CHAIN,
+					fork_header.clone()
+				),
+				Error::<Test>::InvalidExecutionBlock
 			);
 		});
 	}
@@ -183,19 +152,21 @@ mod generic_tests {
 				hashes_gc_threshold: hashes_gc_threshold as u64,
 				trusted_signer: None,
 			}));
+			println!("submit_beacon_chain_light_client_update 1");
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[1].clone()
 			));
 
+			println!("submit_and_check_execution_headers 1");
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				headers[0].iter().skip(1).rev().collect(),
 			);
 
-			// Last 500 execution headers are finalized
+			println!("checking safety 1");
 			for header in headers[0].iter().skip(1) {
 				assert!(!Eth2Client::is_known_execution_header(GOERLI_CHAIN, header.number));
 				assert!(
@@ -206,12 +177,14 @@ mod generic_tests {
 				);
 			}
 
+			println!("submit_beacon_chain_light_client_update 2");
 			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[2].clone()
 			));
 
+			println!("submit_and_check_execution_headers 2");
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
@@ -219,7 +192,7 @@ mod generic_tests {
 			);
 
 			assert_eq!(
-				Eth2Client::last_block_number(GOERLI_CHAIN,),
+				Eth2Client::last_block_number(GOERLI_CHAIN),
 				headers[1].last().unwrap().number
 			);
 
@@ -360,18 +333,16 @@ mod generic_tests {
 	pub fn test_panic_on_submit_update_with_missing_execution_blocks() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
+			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				updates[1].clone()
+			));
+
 			submit_and_check_execution_headers(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				headers[0].iter().skip(1).take(5).collect(),
-			);
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					updates[1].clone()
-				),
-				Error::<Test>::FinalizedExecutionHeaderNotPresent
 			);
 		});
 	}
