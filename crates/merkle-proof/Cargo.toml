@@ -1,6 +1,6 @@
 [package]
 name = "webb-merkle-proof"
-version = "0.2.0"
+version = "0.4.0"
 authors = ["Michael Sproul <michael@sigmaprime.io>", "Webb Developers <hello@webb.tools>"]
 edition = "2021"
 

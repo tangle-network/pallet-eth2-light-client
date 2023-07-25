@@ -1,6 +1,6 @@
 [package]
 name = "webb-eth2-ssz-derive"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Paul Hauner <paul@sigmaprime.io>"]
 edition = "2021"
 description = "Procedural derive macros to accompany the eth2_ssz crate."
