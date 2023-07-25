@@ -20,12 +20,14 @@ jobs:
           components: clippy
           override: true
 
+    - name: Install protobuf-compiler
+      run: sudo apt-get install protobuf-compiler
+
     - name: Check workspace
       run: cargo check --tests
 
     - name: Test workspace
-      run: sudo apt-get install protobuf-compiler &&
-        cargo test --package pallet-eth2-light-client
+      run: cargo test --package pallet-eth2-light-client
 
     - name: Clippy
       run: cargo clippy --package pallet-eth2-light-client -- -D warnings
