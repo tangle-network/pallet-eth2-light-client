@@ -1,40 +1,46 @@
 [package]
-name = "eth2_to_substrate_relay"
+name = "eth2-to-substrate-relay"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "develop" }
+types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+# tree_hash =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+# merkle_proof =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+eth2_hashing =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+eth2_ssz =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
-eth-types = { path = "../crates/eth-types", features = ["eth2", "eip1559"] }
-tree_hash = { path = "../crates/tree_hash" }
-merkle_proof = { path = "../crates/merkle_proof" }
-eth2_hashing = { path = "../crates/eth2_hashing" }
-eth2_ssz = { path = "../crates/ssz" }
-eth_rpc_client = { path = "../crates/eth_rpc_client" }
-eth2-pallet-init = { path = "../crates/eth2-pallet-init" }
-finality-update-verify = { path = "../crates/finality-update-verify" }
+eth-types = { path = "../crates/eth-types", features = ["eth2"] }
+tree-hash = { package = "webb-tree-hash",  path = "../crates/tree-hash" }
+merkle-proof = { package = "webb-merkle-proof",  path = "../crates/merkle-proof" }
+consensus-types = { package = "webb-consensus-types", path = "../crates/consensus-types" }
+# eth2-hashing = { package = "webb-eth2-hashing", path = "../crates/eth2-hashing" }
+# eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz" }
+eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-client" }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
+finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
 
 webb = { version = "0.5.17", features = [
     "evm-runtime",
     "substrate-runtime"
 ]}
-webb-proposals = { version = "0.5.4" }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 
+funty = "2.0.0"
 sp-keyring = { version = "18.0.0", default-features = false }
 sp-core = { version = "16.0.0" }
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = "1.0.74"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-ethereum-types = { version = "0.14.0" }
+ethereum-types = { version = "0.14.1" }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "3.1.6", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time"] }
 env_logger = "0.9.0"
 futures = { version = "0.3.21", default-features = false }
 async-std ={ version = "1.12.0", default-features = false }
-async-trait = "0.1.58"
+async-trait = "0.1.72"
 hex = "*"
 toml = "0.5.9"
 atomic_refcell = "0.1.8"

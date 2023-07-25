@@ -1,7 +1,6 @@
 use eth2_pallet_init::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
 use serde::{Deserialize, Serialize};
 use std::{env, io::Read, path::PathBuf};
-use webb_proposals::TypedChainId;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigForTests {
@@ -12,9 +11,7 @@ pub struct ConfigForTests {
 	pub path_to_execution_blocks_headers: String,
 	pub path_to_light_client_updates: String,
 	pub path_to_attested_state: String,
-	pub path_to_finality_state: String,
 	pub network_name: EthNetwork,
-	pub type_chain_id: TypedChainId,
 	pub substrate_network_id: SubstrateNetwork,
 	pub first_slot: u64,
 	pub slot_without_block: u64,

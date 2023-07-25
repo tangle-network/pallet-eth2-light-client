@@ -1,4 +1,5 @@
 use super::*;
+use alloc::string::String;
 use core::cmp::Ordering;
 use smallvec::{smallvec, SmallVec};
 
@@ -6,10 +7,9 @@ type SmallVec8<T> = SmallVec<[T; 8]>;
 
 pub mod impls;
 pub mod try_from_iter;
-use alloc::{format, string::String, vec::Vec};
 
 /// Returned when SSZ decoding fails.
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum DecodeError {
 	/// The bytes supplied were too short to be decoded into the specified type.
 	InvalidByteLength { len: usize, expected: usize },

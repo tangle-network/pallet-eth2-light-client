@@ -127,7 +127,6 @@ pub fn read_four_byte_union_selector(bytes: &[u8]) -> Result<usize, DecodeError>
 mod test {
 	use super::*;
 	use crate as ssz;
-	use alloc::{format, vec, vec::Vec};
 	use ssz_derive::{Decode, Encode};
 
 	type VecU16 = Vec<u16>;

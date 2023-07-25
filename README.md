@@ -21,10 +21,13 @@
 
 ## Running the eth2-subtrate-relay on tangle
 
-1. Compile (via `cargo build -p tangle-standalone --release`) then run the tangle network via `./scripts/run-standalone-local.sh` (branch: `thomas/eth-light-client`)
+1. Compile (via `cargo build -p tangle-standalone --release`) then run the tangle network via `./scripts/run-standalone-local.sh` (branch: `develop`)
 2. Run `echo "gown surprise mirror hotel cash alarm raccoon you frog rose midnight enter//webb//0" &> /tmp/empty/secret_key`
 4. Checkout the relayer repo (working branch: `thomas/eth_light_client`)
 5. Edit the file (as needed) in `./services/light-client-relayer/config_relayer.toml`
 6. run `cp ./services/light-client-relayer/config_relayer.toml /tmp/empty/`
 7. Set the ETH1_INFURA_API_KEY environment variable (i.e., `export ETH1_INFURA_API_KEY="abc123"`)
 8. finally, run the relayer: `cargo r --bin webb-light-client-relayer --features cli -- -c /tmp/empty --tmp -vvvv`
+
+### Goal
+In this develop target this version of [**rainbow-bridge**](https://github.com/aurora-is-near/rainbow-bridge/tree/319cc61afeb1dbf3692e280dfa18e7b455542b16).

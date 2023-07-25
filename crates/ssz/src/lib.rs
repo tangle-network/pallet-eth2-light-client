@@ -38,13 +38,12 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
-
 mod decode;
 mod encode;
 pub mod legacy;
 mod union_selector;
 
+use alloc::vec::Vec;
 pub use decode::{
 	impls::decode_list_of_variable_length_items, read_offset, split_union_bytes,
 	try_from_iter::TryFromIter, Decode, DecodeError, SszDecoder, SszDecoderBuilder,

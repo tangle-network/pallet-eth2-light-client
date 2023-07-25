@@ -16,12 +16,23 @@ jobs:
 
     - uses: actions-rs/toolchain@v1
       with:
-          toolchain: nightly
+          toolchain: nightly-2022-12-26
           components: clippy
           override: true
+    
+    - name: Install toolchain
+      id: toolchain
+      uses: actions-rs/toolchain@master
+      with:
+        profile: minimal
+        toolchain: nightly-2022-12-26
+        target: wasm32-unknown-unknown
 
-    - name: Check workspace
-      run: cargo check --tests
+    - name: Install protobuf-compiler
+      run: sudo apt-get install protobuf-compiler
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v1.3.0
 
     - name: Test workspace
       run: cargo test --package pallet-eth2-light-client

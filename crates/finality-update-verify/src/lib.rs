@@ -10,8 +10,6 @@ use eth_types::{
 use std::error::Error;
 use tree_hash::Hash256;
 
-pub mod network_config;
-
 #[cfg(test)]
 pub mod config_for_tests;
 
@@ -92,11 +90,8 @@ pub fn is_correct_finality_update(
 mod tests {
 	use std::str::FromStr;
 
-	use crate::{
-		config_for_tests::ConfigForTests,
-		is_correct_finality_update,
-		network_config::{Network, NetworkConfig},
-	};
+	use crate::{config_for_tests::ConfigForTests, is_correct_finality_update};
+	use consensus_types::network_config::{Network, NetworkConfig};
 	use eth_types::eth2::{LightClientUpdate, SyncCommittee};
 
 	fn get_config() -> ConfigForTests {
