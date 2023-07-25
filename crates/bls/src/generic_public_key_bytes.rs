@@ -37,7 +37,7 @@ impl<Pub> Copy for GenericPublicKeyBytes<Pub> {}
 
 impl<Pub> Clone for GenericPublicKeyBytes<Pub> {
 	fn clone(&self) -> Self {
-		Self { bytes: self.bytes, _phantom: PhantomData }
+		*self 
 	}
 }
 
