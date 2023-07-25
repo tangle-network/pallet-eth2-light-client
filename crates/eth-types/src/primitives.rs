@@ -2,7 +2,7 @@ use codec::{Decode, Encode};
 
 use crate::H256;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode, Default)]
 pub enum FinalExecutionStatus<E> {
 	/// The execution has not yet started.
 	NotStarted,
@@ -11,13 +11,8 @@ pub enum FinalExecutionStatus<E> {
 	/// The execution has failed with the given error.
 	Failure(E),
 	/// The execution has succeeded
+	#[default]
 	Success,
-}
-
-impl<E> Default for FinalExecutionStatus<E> {
-	fn default() -> Self {
-		FinalExecutionStatus::NotStarted
-	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
