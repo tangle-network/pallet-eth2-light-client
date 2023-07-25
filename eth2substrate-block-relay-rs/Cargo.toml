@@ -4,11 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
-# tree_hash =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
-# merkle_proof =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
-eth2_hashing =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
-eth2_ssz =  { git = "https://github.com/webb-tools/lighthouse.git", branch = "drew/update-to-stable" }
+types =  { git = "https://github.com/webb-tools/lighthouse.git" }
+eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
+eth2_ssz =  { package = "ethereum_ssz", version = "0.5.0", features = ["arbitrary"] }
 
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 eth-types = { path = "../crates/eth-types", features = ["eth2"] }
