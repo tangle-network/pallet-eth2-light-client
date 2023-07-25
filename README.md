@@ -30,4 +30,4 @@
 8. finally, run the relayer: `cargo r --bin webb-light-client-relayer --features cli -- -c /tmp/empty --tmp -vvvv`
 
 ### Goal
-In this develop target this version of [**rainbow-bridge**](https://github.com/aurora-is-near/rainbow-bridge/tree/319cc61afeb1dbf3692e280dfa18e7b455542b16).
+In this develop target this version of [**rainbow-bridge**](https://github.com/webb-tools/rainbow-bridge/tree/c0d3986941dbf7f730cc3978c8b27e7e292d41fd).
