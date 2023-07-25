@@ -24,7 +24,8 @@ jobs:
       run: cargo check --tests
 
     - name: Test workspace
-      run: cargo test --package pallet-eth2-light-client
+      run: sudo apt-get install protobuf-compiler &&
+        cargo test --package pallet-eth2-light-client
 
     - name: Clippy
       run: cargo clippy --package pallet-eth2-light-client -- -D warnings
