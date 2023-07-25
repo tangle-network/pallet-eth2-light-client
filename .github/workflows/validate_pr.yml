@@ -31,6 +31,8 @@ jobs:
     - name: Install protobuf-compiler
       run: sudo apt-get install protobuf-compiler
 
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v1.3.0
 
     - name: Check workspace
       run: cargo check --tests

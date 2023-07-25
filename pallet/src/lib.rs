@@ -79,10 +79,7 @@
 #![feature(slice_pattern)]
 
 use eth_types::{
-	eth2::{
-		ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate,
-		SyncCommittee,
-	},
+	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	pallet::{ClientMode, ExecutionHeaderInfo, InitInput},
 	BlockHeader, H256,
 };
@@ -118,10 +115,10 @@ mod test_utils;
 
 // pub mod consensus;
 use consensus::{
-	compute_domain, compute_signing_root, compute_sync_committee_period,
-	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
-	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
-	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
+	compute_domain, compute_signing_root, compute_sync_committee_period, convert_branch,
+	get_participant_pubkeys, validate_beacon_block_header_update, DOMAIN_SYNC_COMMITTEE,
+	FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX, MIN_SYNC_COMMITTEE_PARTICIPANTS,
+	SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
 };
 
 pub mod traits;
@@ -307,7 +304,7 @@ pub mod pallet {
 		},
 		SubmitExecutionHeader {
 			typed_chain_id: TypedChainId,
-			header_info: BlockHeader,
+			header_info: Box<BlockHeader>,
 		},
 		UpdateTrustedSigner {
 			trusted_signer: T::AccountId,
@@ -510,7 +507,8 @@ pub mod pallet {
 				Self::get_diff_between_unfinalized_head_and_tail(typed_chain_id)
 			{
 				let header_number_to_remove = (finalized_execution_header.block_number +
-					diff_between_unfinalized_head_and_tail ).saturating_sub(HashesGcThreshold::<T>::get(typed_chain_id));
+					diff_between_unfinalized_head_and_tail)
+					.saturating_sub(HashesGcThreshold::<T>::get(typed_chain_id));
 
 				ensure!(
 					header_number_to_remove < finalized_execution_header.block_number,
@@ -574,7 +572,7 @@ pub mod pallet {
 
 			Self::deposit_event(Event::SubmitExecutionHeader {
 				typed_chain_id,
-				header_info: block_header,
+				header_info: Box::new(block_header),
 			});
 
 			Ok(().into())

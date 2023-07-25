@@ -9,7 +9,7 @@ use crate::{
 use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_types::{
 	self,
-	eth2::{ LightClientState, LightClientUpdate},
+	eth2::{LightClientState, LightClientUpdate},
 	pallet::ClientMode,
 	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
 	BlockHeader, H256,

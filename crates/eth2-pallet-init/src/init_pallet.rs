@@ -138,17 +138,19 @@ pub async fn init_pallet(
 
 	let typed_chain_id = get_typed_chain_id(config);
 
-	eth_client_pallet.init(
-		typed_chain_id,
-		finalized_execution_header,
-		finalized_header,
-		light_client_snapshot.current_sync_committee,
-		next_sync_committee,
-		config.validate_updates,
-		config.verify_bls_signature,
-		config.hashes_gc_threshold,
-		trusted_signature,
-	).await?;
+	eth_client_pallet
+		.init(
+			typed_chain_id,
+			finalized_execution_header,
+			finalized_header,
+			light_client_snapshot.current_sync_committee,
+			next_sync_committee,
+			config.validate_updates,
+			config.verify_bls_signature,
+			config.hashes_gc_threshold,
+			trusted_signature,
+		)
+		.await?;
 
 	// thread::sleep(time::Duration::from_secs(30));
 	Ok(())
