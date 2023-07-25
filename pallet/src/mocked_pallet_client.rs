@@ -6,10 +6,10 @@ use crate::{
 	test_utils::{get_test_data, InitOptions},
 	tests::ALICE,
 };
-use eth2_pallet_init::eth_client_pallet_trait::{Balance, EthClientPalletTrait};
+use eth2_pallet_init::eth_client_pallet_trait::EthClientPalletTrait;
 use eth_types::{
 	self,
-	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate},
+	eth2::{ LightClientState, LightClientUpdate},
 	pallet::ClientMode,
 	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
 	BlockHeader, H256,
@@ -38,7 +38,7 @@ impl MockEthClientPallet {
 impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 	async fn send_light_client_update(
 		&mut self,
-		light_client_update: LightClientUpdate,
+		_light_client_update: LightClientUpdate,
 	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::NotStarted,
@@ -56,7 +56,7 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 
 	async fn send_headers(
 		&mut self,
-		headers: &[BlockHeader],
+		_headers: &[BlockHeader],
 	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::NotStarted,

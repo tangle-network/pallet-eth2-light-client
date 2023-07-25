@@ -80,7 +80,7 @@
 
 use eth_types::{
 	eth2::{
-		Epoch, ExtendedBeaconBlockHeader, ForkVersion, LightClientState, LightClientUpdate, Slot,
+		ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate,
 		SyncCommittee,
 	},
 	pallet::{ClientMode, ExecutionHeaderInfo, InitInput},
@@ -88,7 +88,6 @@ use eth_types::{
 };
 use frame_support::{
 	pallet_prelude::{ensure, DispatchError},
-	sp_runtime::traits::Saturating,
 	traits::Get,
 	PalletId,
 };
@@ -119,7 +118,7 @@ mod test_utils;
 
 // pub mod consensus;
 use consensus::{
-	compute_domain, compute_epoch_at_slot, compute_signing_root, compute_sync_committee_period,
+	compute_domain, compute_signing_root, compute_sync_committee_period,
 	convert_branch, get_participant_pubkeys, validate_beacon_block_header_update,
 	DOMAIN_SYNC_COMMITTEE, FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX,
 	MIN_SYNC_COMMITTEE_PARTICIPANTS, SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
@@ -447,7 +446,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		#[pallet::weight(0)]
+		#[pallet::weight({0})]
 		#[pallet::call_index(2)]
 		pub fn submit_beacon_chain_light_client_update(
 			origin: OriginFor<T>,
@@ -511,9 +510,7 @@ pub mod pallet {
 				Self::get_diff_between_unfinalized_head_and_tail(typed_chain_id)
 			{
 				let header_number_to_remove = (finalized_execution_header.block_number +
-					diff_between_unfinalized_head_and_tail)
-					.checked_sub(HashesGcThreshold::<T>::get(typed_chain_id))
-					.unwrap_or(0);
+					diff_between_unfinalized_head_and_tail ).saturating_sub(HashesGcThreshold::<T>::get(typed_chain_id));
 
 				ensure!(
 					header_number_to_remove < finalized_execution_header.block_number,
@@ -566,7 +563,7 @@ pub mod pallet {
 				if UnfinalizedHeadExecutionHeader::<T>::get(typed_chain_id).is_none() {
 					UnfinalizedHeadExecutionHeader::<T>::insert(typed_chain_id, block_info.clone());
 				}
-				UnfinalizedTailExecutionHeader::<T>::insert(typed_chain_id, block_info.clone());
+				UnfinalizedTailExecutionHeader::<T>::insert(typed_chain_id, block_info);
 			}
 
 			frame_support::log::debug!(

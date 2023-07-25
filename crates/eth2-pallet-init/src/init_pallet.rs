@@ -148,7 +148,7 @@ pub async fn init_pallet(
 		config.verify_bls_signature,
 		config.hashes_gc_threshold,
 		trusted_signature,
-	);
+	).await?;
 
 	// thread::sleep(time::Duration::from_secs(30));
 	Ok(())

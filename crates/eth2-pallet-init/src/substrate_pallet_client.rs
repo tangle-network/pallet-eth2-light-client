@@ -53,6 +53,7 @@ pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Box<dyn Error>>
 	Ok(api)
 }
 
+#[allow(dead_code)]
 pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
 	signer: PairSigner<PolkadotConfig, Pair>,
@@ -147,6 +148,7 @@ impl EthClientPallet {
 		Ok(())
 	}
 
+	#[allow(dead_code)]
 	async fn get_value_or_default<'a, Address: StorageAddress>(
 		&self,
 		key_addr: &Address,

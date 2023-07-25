@@ -325,7 +325,7 @@ mod generic_tests {
 				updates[1].clone()
 			));
 
-			for (index, header) in headers[0].iter().skip(1).take(5).enumerate() {
+			for (_index, header) in headers[0].iter().skip(1).take(5).enumerate() {
 				assert_err!(
 					Eth2Client::submit_execution_header(
 						RuntimeOrigin::signed(ALICE),

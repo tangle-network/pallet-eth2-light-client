@@ -20,8 +20,6 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use tiny_keccak::{Hasher, Keccak};
 
-use core::slice::SlicePattern;
-
 #[cfg(feature = "eth2")]
 use tree_hash::{Hash256, PackedEncoding, TreeHash, TreeHashType};
 

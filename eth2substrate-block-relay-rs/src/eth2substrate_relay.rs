@@ -7,7 +7,7 @@ use crate::{
 		FAILS_ON_UPDATES_SUBMISSION, LAST_FINALIZED_ETH_SLOT, LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE,
 	},
 };
-use bitvec::store::BitStore;
+
 use consensus_types::{
 	network_config::{Network, NetworkConfig},
 	EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH,
@@ -387,6 +387,7 @@ impl Eth2SubstrateRelay {
 	}
 }
 
+#[allow(dead_code)]
 fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
 	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{t:?}")))
 }

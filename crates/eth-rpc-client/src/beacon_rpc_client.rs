@@ -338,7 +338,7 @@ impl BeaconRPCClient {
 	fn get_json_from_client(client: &Client, url: &str) -> Result<String, Box<dyn Error>> {
 		trace!(target: "relay", "Beacon chain request: {}", url);
 		let json_str = client.get(url).send()?.text()?;
-		if let Err(_) = serde_json::from_str::<Value>(&json_str) {
+		if serde_json::from_str::<Value>(&json_str).is_err() {
 			return Err(Box::new(FailOnGettingJson { response: json_str }))
 		}
 
