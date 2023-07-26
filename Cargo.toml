@@ -1,8 +1,10 @@
 [workspace]
 members = [
-    "pallet",
+    "pallets/*",
     "crates/*",
     "eth2substrate-block-relay-rs",
+    "gadget",
+    "gadget/cli",
     "node",
     "runtime",
 ]

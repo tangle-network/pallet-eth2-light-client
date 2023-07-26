@@ -57,6 +57,8 @@ pallet-transaction-payment-rpc = { version = "4.0.0-dev", git = "https://github.
 
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 webb-consensus-types = { path = "../crates/consensus-types" }
+pallet-eth2-light-client-relayer-gadget = { path = "../gadget" }
+pallet-eth2-light-client-relayer-gadget-cli = { path = "../gadget/cli" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
