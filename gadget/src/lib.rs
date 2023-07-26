@@ -35,6 +35,9 @@ pub struct Eth2LightClientParams {
 }
 
 pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
+	///                                                              ///
+	/// ------------------ Event Watching Relayer ------------------ ///
+	///                                                              ///
 	let mut relayer_config = match relayer_params.ew_config_dir.as_ref() {
 		Some(p) => loads_event_listening_relayer_config(p).expect("failed to load relayer config"),
 		None => {
@@ -50,17 +53,13 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 		.expect("failed to post process relayer config");
 
 	let store = create_store(relayer_params.database_path).expect("failed to create relayer store");
-	let ctx = RelayerContext::new(relayer_config, store.clone())
+	// Inject the ctx into an event watching relayer service
+	let _ctx = RelayerContext::new(relayer_config, store.clone())
 		.expect("failed to build relayer context");
 
-	// Start the web server:
-	service::build_web_services(ctx.clone())
-		.await
-		.expect("failed to build relayer web services");
-	service::ignite(ctx, Arc::new(store))
-		.await
-		.expect("failed to ignite relayer services");
-
+	///                                                            ///
+	/// ------------------ Light Client Relayer ------------------ ///
+	///                                                            ///
 	let light_client_config = match relayer_params.lc_config_dir.as_ref() {
 		Some(p) =>
 			loads_light_client_relayer_config(p).expect("failed to load light client config"),
