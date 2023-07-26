@@ -220,7 +220,6 @@ fn get_init_config(
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		signer_account_id: "alice".to_string(),
 		path_to_signer_secret_key: "NaN".to_string(),
-		contract_account_id: "NaN".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
 		output_dir: None,
 		eth_requests_timeout_seconds: Some(30),
@@ -231,7 +230,6 @@ fn get_init_config(
 		init_block_root: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
-		substrate_network_id: config_for_test.substrate_network_id.clone(),
 	}
 }
 

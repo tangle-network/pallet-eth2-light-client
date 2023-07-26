@@ -1,7 +1,6 @@
 use eth_types::BlockHeader;
 use reqwest::blocking::Client;
 use serde_json::{json, Value};
-use std::error::Error;
 
 pub struct Eth1RPCClient {
 	endpoint_url: String,
@@ -13,7 +12,7 @@ impl Eth1RPCClient {
 		Self { endpoint_url: endpoint_url.to_string(), client: reqwest::blocking::Client::new() }
 	}
 
-	pub fn get_block_header_by_number(&self, number: u64) -> Result<BlockHeader, Box<dyn Error>> {
+	pub fn get_block_header_by_number(&self, number: u64) -> anyhow::Result<BlockHeader> {
 		let hex_str_number = format!("0x{number:x}");
 		let json_value = json!({
 			"id": 0,
@@ -47,7 +46,7 @@ impl Eth1RPCClient {
 		Ok(block_header)
 	}
 
-	pub fn is_syncing(&self) -> Result<bool, Box<dyn Error>> {
+	pub fn is_syncing(&self) -> anyhow::Result<bool> {
 		let json_value = json!({
             "jsonrpc":"2.0",
             "method":"eth_syncing",

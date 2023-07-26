@@ -61,6 +61,24 @@ pub enum Error {
 	InvalidZeroSecretKey,
 }
 
+#[cfg(feature = "std")]
+impl std::fmt::Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Error::MilagroError(_) => write!(f, "MilagroError"),
+			Error::InvalidByteLength { got, expected } =>
+				write!(f, "InvalidByteLength {{ got: {got}, expected: {expected} }}"),
+			Error::InvalidSecretKeyLength { got, expected } =>
+				write!(f, "InvalidSecretKeyLength {{ got: {got}, expected: {expected} }}"),
+			Error::InvalidInfinityPublicKey => write!(f, "InvalidInfinityPublicKey"),
+			Error::InvalidZeroSecretKey => write!(f, "InvalidZeroSecretKey"),
+		}
+	}
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
+
 impl From<AmclError> for Error {
 	fn from(e: AmclError) -> Error {
 		Error::MilagroError(e)

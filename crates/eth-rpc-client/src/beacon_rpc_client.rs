@@ -1,7 +1,7 @@
 use crate::{
 	errors::{
-		ErrorOnJsonParse, ExecutionPayloadError, FailOnGettingJson, MissSyncAggregationError,
-		NoBlockForSlotError, SignatureSlotNotFoundError,
+		EmptyBeaconBlockInRange, ErrorOnJsonParse, ExecutionPayloadError, FailOnGettingJson,
+		MissSyncAggregationError, NoBlockForSlotError, SignatureSlotNotFoundError,
 	},
 	execution_block_proof::ExecutionBlockProof,
 	light_client_snapshot_with_proof::LightClientSnapshotWithProof,
@@ -18,7 +18,7 @@ use log::trace;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::{error::Error, string::String, time::Duration};
+use std::{string::String, time::Duration};
 use types::{BeaconBlockBody, BeaconState, ExecutionPayload, MainnetEthSpec};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -115,7 +115,7 @@ impl BeaconRPCClient {
 	pub fn get_beacon_block_body_for_block_id(
 		&self,
 		block_id: &str,
-	) -> Result<BeaconBlockBody<MainnetEthSpec>, Box<dyn Error>> {
+	) -> anyhow::Result<BeaconBlockBody<MainnetEthSpec>> {
 		let url = format!("{}/{}/{}", self.endpoint_url, self.routes.get_block, block_id);
 
 		let json_str = &self.get_json_from_raw_request(&url)?;
@@ -136,7 +136,7 @@ impl BeaconRPCClient {
 	pub fn get_beacon_block_header_for_block_id(
 		&self,
 		block_id: &str,
-	) -> Result<types::BeaconBlockHeader, Box<dyn Error>> {
+	) -> anyhow::Result<types::BeaconBlockHeader> {
 		let url = format!("{}/{}/{}", self.endpoint_url, self.routes.get_block_header, block_id);
 
 		let json_str = &self.get_json_from_raw_request(&url)?;
@@ -151,10 +151,7 @@ impl BeaconRPCClient {
 	///
 	/// * `period` - period id for which `LightClientUpdate` is fetched.
 	/// On Mainnet, one period consists of 256 epochs, and one epoch consists of 32 slots
-	pub fn get_light_client_update(
-		&self,
-		period: u64,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	pub fn get_light_client_update(&self, period: u64) -> anyhow::Result<LightClientUpdate> {
 		let url = format!(
 			"{}/{}?start_period={}&count=1",
 			self.endpoint_url, self.routes.get_light_client_update, period
@@ -166,7 +163,7 @@ impl BeaconRPCClient {
 	pub fn light_client_update_from_json_str(
 		&self,
 		light_client_update_json_str: String,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientUpdate> {
 		Ok(LightClientUpdate {
 			attested_beacon_header: self.get_attested_header_from_light_client_update_json_str(
 				&light_client_update_json_str,
@@ -189,7 +186,7 @@ impl BeaconRPCClient {
 	pub fn get_light_client_update_by_epoch(
 		&self,
 		epoch: u64,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientUpdate> {
 		let url = format!(
 			"{}/{}?epoch={}",
 			self.endpoint_url, self.routes.get_light_client_update_by_epoch, epoch
@@ -226,7 +223,7 @@ impl BeaconRPCClient {
 	pub fn get_bootstrap(
 		&self,
 		block_root: String,
-	) -> Result<LightClientSnapshotWithProof, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientSnapshotWithProof> {
 		let url = format!("{}/{}/{}", self.endpoint_url, self.routes.get_bootstrap, block_root);
 
 		let light_client_snapshot_json_str = self.get_json_from_raw_request(&url)?;
@@ -248,7 +245,7 @@ impl BeaconRPCClient {
 		})
 	}
 
-	pub fn get_checkpoint_root(&self) -> Result<String, Box<dyn Error>> {
+	pub fn get_checkpoint_root(&self) -> anyhow::Result<String> {
 		let url =
 			format!("{}/eth/v1/beacon/states/finalized/finality_checkpoints", self.endpoint_url);
 		let checkpoint_json_str = self.get_json_from_raw_request(&url)?;
@@ -258,19 +255,16 @@ impl BeaconRPCClient {
 	}
 
 	/// Return the last finalized slot in the Beacon chain
-	pub fn get_last_finalized_slot_number(&self) -> Result<types::Slot, Box<dyn Error>> {
+	pub fn get_last_finalized_slot_number(&self) -> anyhow::Result<types::Slot> {
 		Ok(self.get_beacon_block_header_for_block_id("finalized")?.slot)
 	}
 
 	/// Return the last slot in the Beacon chain
-	pub fn get_last_slot_number(&self) -> Result<types::Slot, Box<dyn Error>> {
+	pub fn get_last_slot_number(&self) -> anyhow::Result<types::Slot> {
 		Ok(self.get_beacon_block_header_for_block_id("head")?.slot)
 	}
 
-	pub fn get_slot_by_beacon_block_root(
-		&self,
-		beacon_block_hash: H256,
-	) -> Result<u64, Box<dyn Error>> {
+	pub fn get_slot_by_beacon_block_root(&self, beacon_block_hash: H256) -> anyhow::Result<u64> {
 		let beacon_block_hash_str: String =
 			utils::trim_quotes(serde_json::to_string(&beacon_block_hash)?);
 
@@ -283,7 +277,7 @@ impl BeaconRPCClient {
 		Ok(slot)
 	}
 
-	pub fn get_block_number_for_slot(&self, slot: types::Slot) -> Result<u64, Box<dyn Error>> {
+	pub fn get_block_number_for_slot(&self, slot: types::Slot) -> anyhow::Result<u64> {
 		let beacon_block_body = self.get_beacon_block_body_for_block_id(&slot.to_string())?;
 		let execution_payload: ExecutionPayload<MainnetEthSpec> =
 			beacon_block_body.execution_payload().map_err(|_| ExecutionPayloadError)?.into();
@@ -291,7 +285,7 @@ impl BeaconRPCClient {
 		Ok(execution_payload.block_number())
 	}
 
-	pub fn get_finality_light_client_update(&self) -> Result<LightClientUpdate, Box<dyn Error>> {
+	pub fn get_finality_light_client_update(&self) -> anyhow::Result<LightClientUpdate> {
 		let url =
 			format!("{}/{}", self.endpoint_url, self.routes.get_light_client_finality_update,);
 
@@ -314,10 +308,7 @@ impl BeaconRPCClient {
 		})
 	}
 
-	pub fn get_beacon_state(
-		&self,
-		state_id: &str,
-	) -> Result<BeaconState<MainnetEthSpec>, Box<dyn Error>> {
+	pub fn get_beacon_state(&self, state_id: &str) -> anyhow::Result<BeaconState<MainnetEthSpec>> {
 		let url_request = format!("{}/{}/{}", self.endpoint_url, self.routes.get_state, state_id);
 		let json_str = Self::get_json_from_client(&self.client_state_request, &url_request)?;
 
@@ -327,39 +318,35 @@ impl BeaconRPCClient {
 		Ok(serde_json::from_str(&state_json_str)?)
 	}
 
-	pub fn is_syncing(&self) -> Result<bool, Box<dyn Error>> {
+	pub fn is_syncing(&self) -> anyhow::Result<bool> {
 		let url_request = format!("{}/eth/v1/node/syncing", self.endpoint_url);
 		let json_str = self.get_json_from_raw_request(&url_request)?;
 
 		let v: Value = serde_json::from_str(&json_str)?;
-		v["data"]["is_syncing"].as_bool().ok_or(Box::new(ErrorOnJsonParse))
+		v["data"]["is_syncing"].as_bool().ok_or(ErrorOnJsonParse.into())
 	}
 
-	fn get_json_from_client(client: &Client, url: &str) -> Result<String, Box<dyn Error>> {
+	fn get_json_from_client(client: &Client, url: &str) -> anyhow::Result<String> {
 		trace!(target: "relay", "Beacon chain request: {}", url);
 		let json_str = client.get(url).send()?.text()?;
 		if serde_json::from_str::<Value>(&json_str).is_err() {
-			return Err(Box::new(FailOnGettingJson { response: json_str }))
+			return Err(FailOnGettingJson { response: json_str }.into())
 		}
 
 		Ok(json_str)
 	}
 
-	fn get_json_from_raw_request(&self, url: &str) -> Result<String, Box<dyn Error>> {
+	fn get_json_from_raw_request(&self, url: &str) -> anyhow::Result<String> {
 		Self::get_json_from_client(&self.client, url)
 	}
 
-	fn get_body_json_from_rpc_result(
-		block_json_str: &str,
-	) -> Result<std::string::String, Box<dyn Error>> {
+	fn get_body_json_from_rpc_result(block_json_str: &str) -> anyhow::Result<std::string::String> {
 		let v: Value = serde_json::from_str(block_json_str)?;
 		let body_json_str = serde_json::to_string(&v["data"]["message"]["body"])?;
 		Ok(body_json_str)
 	}
 
-	fn get_header_json_from_rpc_result(
-		json_str: &str,
-	) -> Result<std::string::String, Box<dyn Error>> {
+	fn get_header_json_from_rpc_result(json_str: &str) -> anyhow::Result<std::string::String> {
 		let v: Value = serde_json::from_str(json_str)?;
 		let hjson_str = serde_json::to_string(&v["data"]["header"]["message"])?;
 		Ok(hjson_str)
@@ -368,7 +355,7 @@ impl BeaconRPCClient {
 	fn get_attested_header_from_light_client_update_json_str(
 		&self,
 		light_client_update_json_str: &str,
-	) -> Result<BeaconBlockHeader, Box<dyn Error>> {
+	) -> anyhow::Result<BeaconBlockHeader> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 		let attested_header_json_str = match self.routes.version {
 			BeaconRPCVersion::V1_5 => {
@@ -387,7 +374,7 @@ impl BeaconRPCClient {
 
 	fn get_sync_aggregate_from_light_client_update_json_str(
 		light_client_update_json_str: &str,
-	) -> Result<SyncAggregate, Box<dyn Error>> {
+	) -> anyhow::Result<SyncAggregate> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 		let mut sync_aggregate_json_str = serde_json::to_string(&v[0]["data"]["sync_aggregate"])?;
 		if sync_aggregate_json_str == "null" {
@@ -401,10 +388,7 @@ impl BeaconRPCClient {
 	// `signature_slot` is not provided in the current API. The slot is brute-forced
 	// until `SyncAggregate` in `BeconBlockBody` in the current slot is equal
 	// to `SyncAggregate` in `LightClientUpdate`
-	fn get_signature_slot(
-		&self,
-		light_client_update_json_str: &str,
-	) -> Result<Slot, Box<dyn Error>> {
+	fn get_signature_slot(&self, light_client_update_json_str: &str) -> anyhow::Result<Slot> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 		match self.routes.version {
 			BeaconRPCVersion::V1_5 => {
@@ -447,7 +431,7 @@ impl BeaconRPCClient {
 
 					signature_slot += 1;
 					if signature_slot - attested_header.slot > CHECK_SLOTS_FORWARD_LIMIT {
-						return Err(Box::new(SignatureSlotNotFoundError))
+						return Err(SignatureSlotNotFoundError.into())
 					}
 				}
 
@@ -459,7 +443,7 @@ impl BeaconRPCClient {
 	fn get_finality_update_from_light_client_update_json_str(
 		&self,
 		light_client_update_json_str: &str,
-	) -> Result<FinalizedHeaderUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<FinalizedHeaderUpdate> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 
 		let finalized_header_json_str = match self.routes.version {
@@ -510,7 +494,7 @@ impl BeaconRPCClient {
 	fn get_sync_committee_update_from_light_client_update_json_str(
 		&self,
 		light_client_update_json_str: &str,
-	) -> Result<SyncCommitteeUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<SyncCommitteeUpdate> {
 		let v: Value = serde_json::from_str(light_client_update_json_str)?;
 		let next_sync_committee_branch_json_str = match self.routes.version {
 			BeaconRPCVersion::V1_5 => {
@@ -550,7 +534,7 @@ impl BeaconRPCClient {
 	pub fn get_non_empty_beacon_block_header(
 		&self,
 		start_slot: u64,
-	) -> Result<types::BeaconBlockHeader, Box<dyn Error>> {
+	) -> anyhow::Result<types::BeaconBlockHeader> {
 		let finalized_slot = self.get_last_finalized_slot_number()?.as_u64();
 
 		for slot in start_slot..finalized_slot {
@@ -563,17 +547,15 @@ impl BeaconRPCClient {
 			}
 		}
 
-		Err(format!(
-			"Unable to get non empty beacon block in range [`{start_slot}`-`{finalized_slot}`)"
-		))?
+		Err(EmptyBeaconBlockInRange { start_slot, finalized_slot })?
 	}
 
-	fn check_block_found_for_slot(&self, json_str: &str) -> Result<(), Box<dyn Error>> {
+	fn check_block_found_for_slot(&self, json_str: &str) -> anyhow::Result<()> {
 		let parse_json: Value = serde_json::from_str(json_str)?;
 		if parse_json.is_object() {
 			if let Some(msg_str) = parse_json["message"].as_str() {
 				if msg_str.contains("No block found for") {
-					return Err(Box::new(NoBlockForSlotError))
+					return Err(NoBlockForSlotError.into())
 				}
 			}
 		}

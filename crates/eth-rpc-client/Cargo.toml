@@ -14,7 +14,7 @@ ethereum_ssz = { version = "0.5.0", features = ["arbitrary"] }
 
 ethereum-types = { version = "0.14.1", features = ["rlp", "serialize"] }
 funty = "2.0.0"
-
+anyhow = "1.0"
 log = { version = "0.4", features = ["std", "serde"] }
 serde_json = { version = "1.0.74", default-features = false }
 serde = { version = "1.0", features = ["derive"] }

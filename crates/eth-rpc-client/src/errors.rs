@@ -121,3 +121,21 @@ impl Display for MerkleTreeError {
 }
 
 impl Error for MerkleTreeError {}
+
+#[derive(Debug)]
+pub struct EmptyBeaconBlockInRange {
+	pub start_slot: u64,
+	pub finalized_slot: u64,
+}
+
+impl Display for EmptyBeaconBlockInRange {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(
+			f,
+			"Unable to get non empty beacon block in range: {} - {}",
+			self.start_slot, self.finalized_slot
+		)
+	}
+}
+
+impl Error for EmptyBeaconBlockInRange {}

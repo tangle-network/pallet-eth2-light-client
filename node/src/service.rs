@@ -11,7 +11,6 @@ use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use std::{sync::Arc, time::Duration};
 use webb_proposals::TypedChainId;
 
-
 // Our native executor instance.
 pub struct ExecutorDispatch;
 
@@ -139,7 +138,10 @@ pub fn new_partial(
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(config: Configuration, relayer_cmd: pallet_eth2_light_client_relayer_gadget_cli::RelayerCmd) -> Result<TaskManager, ServiceError> {
+pub fn new_full(
+	config: Configuration,
+	relayer_cmd: pallet_eth2_light_client_relayer_gadget_cli::RelayerCmd,
+) -> Result<TaskManager, ServiceError> {
 	let sc_service::PartialComponents {
 		client,
 		backend,
@@ -276,33 +278,33 @@ pub fn new_full(config: Configuration, relayer_cmd: pallet_eth2_light_client_rel
 		task_manager.spawn_handle().spawn(
 			"mainnet-relayer-gadget",
 			None,
-			pallet_eth2_light_client_relayer_gadget::start_relayer_gadget(
+			pallet_eth2_light_client_relayer_gadget::start_gadget(
 				pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
 					local_keystore: keystore_container.local_keystore(),
-					config_dir: relayer_cmd.relayer_config_dir.clone(),
+					ew_config_dir: relayer_cmd.relayer_config_dir.clone(),
+					lc_config_dir: relayer_cmd.light_client_config_dir.clone(),
 					database_path: database_path.clone(),
-					rpc_addr: rpc_addr,
+					rpc_addr,
 					eth2_chain_id: TypedChainId::Evm(1),
-				}
+				},
 			),
 		);
 
-		// Start Eth2 Light client Relayer Gadget - (GOERLI TESTNET RELAYER)
-		task_manager.spawn_handle().spawn(
-			"goerli-relayer-gadget",
-			None,
-			pallet_eth2_light_client_relayer_gadget::start_relayer_gadget(
-				pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
-					local_keystore: keystore_container.local_keystore(),
-					config_dir: relayer_cmd.relayer_config_dir,
-					database_path: database_path,
-					rpc_addr: rpc_addr,
-					eth2_chain_id: TypedChainId::Evm(5),
-				}
-			),
-		);
-
-		
+		// // Start Eth2 Light client Relayer Gadget - (GOERLI TESTNET RELAYER)
+		// task_manager.spawn_handle().spawn(
+		// 	"goerli-relayer-gadget",
+		// 	None,
+		// 	pallet_eth2_light_client_relayer_gadget::start_gadget(
+		// 		pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
+		// 			local_keystore: keystore_container.local_keystore(),
+		// 			ew_config_dir: relayer_cmd.relayer_config_dir,
+		// 			lc_config_dir: relayer_cmd.light_client_config_dir,
+		// 			database_path,
+		// 			rpc_addr,
+		// 			eth2_chain_id: TypedChainId::Evm(5),
+		// 		},
+		// 	),
+		// );
 	}
 
 	if enable_grandpa {

@@ -1,6 +1,4 @@
-use crate::{
-	config::Config, substrate_network::SubstrateNetwork, substrate_pallet_client::EthClientPallet,
-};
+use crate::{config::Config, eth_network::EthNetwork, substrate_pallet_client::EthClientPallet};
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
 	light_client_snapshot_with_proof::LightClientSnapshotWithProof,
@@ -46,13 +44,24 @@ pub fn get_typed_chain_id(config: &Config) -> TypedChainId {
 	}
 }
 
+#[derive(Debug)]
+pub struct InvalidLightClientSnapshot;
+
+impl std::fmt::Display for InvalidLightClientSnapshot {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "Invalid light client snapshot")
+	}
+}
+
+impl std::error::Error for InvalidLightClientSnapshot {}
+
 pub async fn init_pallet(
 	config: &Config,
 	eth_client_pallet: &mut EthClientPallet,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> anyhow::Result<()> {
 	info!(target: "relay", "=== Contract initialization ===");
 
-	if let SubstrateNetwork::Mainnet = config.substrate_network_id {
+	if let EthNetwork::Mainnet = config.ethereum_network {
 		assert!(
 			config.validate_updates.unwrap_or(true),
 			"The updates validation can't be disabled for mainnet"
@@ -124,7 +133,7 @@ pub async fn init_pallet(
 	}
 
 	if !verify_light_client_snapshot(init_block_root, &light_client_snapshot) {
-		return Err("Invalid light client snapshot".into())
+		return Err(InvalidLightClientSnapshot.into())
 	}
 
 	let mut trusted_signature: Option<AccountId32> = Option::None;

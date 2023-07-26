@@ -17,7 +17,7 @@ use eth_types::{
 use log::trace;
 use serde_json::Value;
 use ssz::Encode;
-use std::error::Error;
+
 use tree_hash::TreeHash;
 use types::{BeaconBlockBody, BeaconBlockHeader, BeaconState, MainnetEthSpec};
 
@@ -28,7 +28,7 @@ impl HandMadeFinalityLightClientUpdate {
 		beacon_rpc_client: &BeaconRPCClient,
 		attested_slot: u64,
 		include_next_sync_committee: bool,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientUpdate> {
 		let (attested_slot, signature_slot) =
 			Self::get_attested_slot_with_enough_sync_committee_bits_sum(
 				beacon_rpc_client,
@@ -49,7 +49,7 @@ impl HandMadeFinalityLightClientUpdate {
 	pub fn get_finality_light_client_update_from_file(
 		beacon_rpc_client: &BeaconRPCClient,
 		file_name: &str,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientUpdate> {
 		let beacon_state = Self::get_state_from_file(file_name)?;
 		let attested_slot = beacon_state.slot().as_u64();
 
@@ -70,7 +70,7 @@ impl HandMadeFinalityLightClientUpdate {
 	pub fn get_light_client_update_from_file_with_next_sync_committee(
 		beacon_rpc_client: &BeaconRPCClient,
 		attested_state_file_name: &str,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientUpdate> {
 		let attested_beacon_state = Self::get_state_from_file(attested_state_file_name)?;
 		let attested_slot = attested_beacon_state.slot().as_u64();
 		let signature_slot = beacon_rpc_client
@@ -92,7 +92,7 @@ impl HandMadeFinalityLightClientUpdate {
 	fn get_attested_slot_with_enough_sync_committee_bits_sum(
 		beacon_rpc_client: &BeaconRPCClient,
 		attested_slot: u64,
-	) -> Result<(u64, u64), Box<dyn Error>> {
+	) -> anyhow::Result<(u64, u64)> {
 		let mut current_attested_slot = attested_slot;
 		loop {
 			let signature_slot = beacon_rpc_client
@@ -145,7 +145,7 @@ impl HandMadeFinalityLightClientUpdate {
 		}
 	}
 
-	fn get_state_from_file(file_name: &str) -> Result<BeaconState<MainnetEthSpec>, Box<dyn Error>> {
+	fn get_state_from_file(file_name: &str) -> anyhow::Result<BeaconState<MainnetEthSpec>> {
 		let beacon_state_json: String =
 			std::fs::read_to_string(file_name).expect("Unable to read file");
 
@@ -161,7 +161,7 @@ impl HandMadeFinalityLightClientUpdate {
 		signature_slot: u64,
 		beacon_state: BeaconState<MainnetEthSpec>,
 		include_next_sync_committee: bool,
-	) -> Result<LightClientUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<LightClientUpdate> {
 		let signature_beacon_body =
 			beacon_rpc_client.get_beacon_block_body_for_block_id(&format!("{signature_slot}"))?;
 		let sync_aggregate =
@@ -202,7 +202,7 @@ impl HandMadeFinalityLightClientUpdate {
 
 	fn get_next_sync_committee(
 		beacon_state: &BeaconState<MainnetEthSpec>,
-	) -> Result<SyncCommitteeUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<SyncCommitteeUpdate> {
 		let next_sync_committee =
 			beacon_state.next_sync_committee().map_err(|_| MissNextSyncCommittee)?;
 
@@ -253,16 +253,16 @@ impl HandMadeFinalityLightClientUpdate {
 
 	fn get_sync_committee_bits(
 		sync_committee_signature: &types::SyncAggregate<MainnetEthSpec>,
-	) -> Result<[u8; 64], Box<dyn Error>> {
+	) -> anyhow::Result<[u8; 64]> {
 		match sync_committee_signature.clone().sync_committee_bits.as_ssz_bytes().try_into() {
 			Ok(ba) => Ok(ba),
-			Err(_) => Err(Box::new(ErrorOnUnwrapSignatureBit)),
+			Err(_) => Err(ErrorOnUnwrapSignatureBit.into()),
 		}
 	}
 
 	fn get_finality_branch(
 		beacon_state: &BeaconState<MainnetEthSpec>,
-	) -> Result<Vec<H256>, Box<dyn Error>> {
+	) -> anyhow::Result<Vec<H256>> {
 		const BEACON_STATE_MERKLE_TREE_DEPTH: usize = 5;
 		const BEACON_STATE_FINALIZED_CHECKPOINT_INDEX: usize = 20;
 
@@ -285,7 +285,7 @@ impl HandMadeFinalityLightClientUpdate {
 		finality_header: &BeaconBlockHeader,
 		beacon_state: &BeaconState<MainnetEthSpec>,
 		finalized_block_body: &BeaconBlockBody<MainnetEthSpec>,
-	) -> Result<FinalizedHeaderUpdate, Box<dyn Error>> {
+	) -> anyhow::Result<FinalizedHeaderUpdate> {
 		let finality_branch = Self::get_finality_branch(beacon_state)?;
 		let finalized_block_eth1data_proof =
 			ExecutionBlockProof::construct_from_beacon_block_body(finalized_block_body)?;

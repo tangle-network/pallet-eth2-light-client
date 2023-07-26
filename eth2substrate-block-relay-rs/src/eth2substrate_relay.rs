@@ -25,7 +25,7 @@ use eth_types::{
 	BlockHeader,
 };
 use log::{debug, info, trace, warn};
-use std::{cmp, error::Error, str::FromStr, thread, time::Duration, vec::Vec};
+use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
 use tokio::time::sleep;
 
 const ONE_EPOCH_IN_SLOTS: u64 = 32;
@@ -143,7 +143,7 @@ impl Eth2SubstrateRelay {
 		eth2substrate_relayer
 	}
 
-	async fn get_last_finalized_slot_on_substrate(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_last_finalized_slot_on_substrate(&self) -> anyhow::Result<u64> {
 		let last_finalized_slot_on_substrate =
 			self.eth_client_pallet.get_finalized_beacon_block_slot().await?;
 		LAST_FINALIZED_ETH_SLOT_ON_SUBSTRATE.inc_by(cmp::max(
@@ -165,7 +165,7 @@ impl Eth2SubstrateRelay {
 		Ok(last_finalized_slot_on_substrate)
 	}
 
-	fn get_last_finalized_slot_on_eth(&self) -> Result<u64, Box<dyn Error>> {
+	fn get_last_finalized_slot_on_eth(&self) -> anyhow::Result<u64> {
 		let last_finalized_slot_on_eth =
 			self.beacon_rpc_client.get_last_finalized_slot_number()?.as_u64();
 
@@ -223,7 +223,7 @@ impl Eth2SubstrateRelay {
 		self.send_light_client_updates_with_checks().await
 	}
 
-	async fn get_max_block_number(&mut self) -> Result<u64, Box<dyn Error>> {
+	async fn get_max_block_number(&mut self) -> anyhow::Result<u64> {
 		if let Some(tail_block_number) =
 			self.eth_client_pallet.get_unfinalized_tail_block_number().await?
 		{
@@ -276,7 +276,7 @@ impl Eth2SubstrateRelay {
 		true
 	}
 
-	async fn wait_for_synchronization(&self) -> Result<(), Box<dyn Error>> {
+	async fn wait_for_synchronization(&self) -> anyhow::Result<()> {
 		while self.beacon_rpc_client.is_syncing()? || self.eth1_rpc_client.is_syncing()? {
 			info!(target: "relay", "Waiting for sync...");
 			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
@@ -287,7 +287,7 @@ impl Eth2SubstrateRelay {
 	fn get_light_client_update_from_file(
 		config: &Config,
 		beacon_rpc_client: &BeaconRPCClient,
-	) -> Result<Option<LightClientUpdate>, Box<dyn Error>> {
+	) -> anyhow::Result<Option<LightClientUpdate>> {
 		let mut next_light_client_update: Option<LightClientUpdate> = None;
 		if let Some(path_to_attested_state) = config.clone().path_to_attested_state {
 			if config.clone().include_next_sync_committee_to_light_client {
@@ -323,7 +323,7 @@ impl Eth2SubstrateRelay {
 		&self,
 		min_block_number: u64,
 		max_block_number: u64,
-	) -> Result<Vec<BlockHeader>, Box<dyn Error>> {
+	) -> anyhow::Result<Vec<BlockHeader>> {
 		let mut headers: Vec<BlockHeader> = vec![];
 
 		for current_block_number in min_block_number..=max_block_number {
@@ -344,7 +344,7 @@ impl Eth2SubstrateRelay {
 
 		sleep(Duration::from_secs(self.sleep_time_after_submission_secs)).await;
 
-		if let FinalExecutionStatus::Failure(_error_message) = execution_outcome.status {
+		if let FinalExecutionStatus::Failure = execution_outcome.status {
 			FAILS_ON_HEADERS_SUBMISSION.inc();
 			// warn!(target: "relay", "FAIL status on Headers submission. Error: {:?}. Transaction URL: https://explorer.{}.near.org/transactions/{}",
 			//     error_message, self.substrate_network_name, execution_outcome.transaction.hash);
@@ -362,7 +362,7 @@ impl Eth2SubstrateRelay {
 	async fn verify_bls_signature_for_finality_update(
 		&mut self,
 		light_client_update: &LightClientUpdate,
-	) -> Result<bool, Box<dyn Error>> {
+	) -> anyhow::Result<bool> {
 		let signature_slot_period =
 			BeaconRPCClient::get_period_for_slot(light_client_update.signature_slot);
 		let finalized_slot_period = BeaconRPCClient::get_period_for_slot(
@@ -385,11 +385,6 @@ impl Eth2SubstrateRelay {
 			sync_committee,
 		)
 	}
-}
-
-#[allow(dead_code)]
-fn to_error<T: std::fmt::Debug>(t: T) -> Box<dyn std::error::Error> {
-	Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{t:?}")))
 }
 
 // Implementation of functions for submitting light client updates
@@ -571,10 +566,7 @@ impl Eth2SubstrateRelay {
 		self.send_specific_light_client_update(light_client_update).await
 	}
 
-	fn get_attested_slot(
-		&mut self,
-		last_finalized_slot_on_substrate: u64,
-	) -> Result<u64, Box<dyn Error>> {
+	fn get_attested_slot(&mut self, last_finalized_slot_on_substrate: u64) -> anyhow::Result<u64> {
 		const EXPECTED_EPOCHS_BETWEEN_HEAD_AND_FINALIZED_BLOCKS: u64 = 2;
 		let next_finalized_slot = last_finalized_slot_on_substrate +
 			self.interval_between_light_client_updates_submission_in_epochs * ONE_EPOCH_IN_SLOTS;
@@ -659,9 +651,9 @@ impl Eth2SubstrateRelay {
 
 		info!(target: "relay", "Sending light client update");
 
-		if let FinalExecutionStatus::Failure(error_message) = execution_outcome.status {
+		if let FinalExecutionStatus::Failure = execution_outcome.status {
 			FAILS_ON_UPDATES_SUBMISSION.inc();
-			warn!(target: "relay", "FAIL status on Light Client Update submission. Error: {:?}", error_message);
+			warn!(target: "relay", "FAIL status on Light Client Update submission.");
 		}
 
 		// info!(target: "relay", "Successful light client update submission! Transaction URL: https://explorer.{}.near.org/transactions/{}",

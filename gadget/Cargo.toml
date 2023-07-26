@@ -6,8 +6,11 @@ license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0"
 tracing = "0.1.37"
 ethereum-types = { version = "0.14.1" }
+subxt = "0.29.0"
+tokio = { version = "1.1", features = ["macros", "rt", "time"] }
 
 # Substrate
 sp-application-crypto = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
@@ -23,6 +26,8 @@ webb-relayer-types = { git = "https://github.com/webb-tools/relayer", tag = "v0.
 
 # Eth2 Light Client
 pallet-eth2-light-client-relayer-gadget-cli = { path = "./cli" }
+eth2-to-substrate-relay = { path = "../eth2substrate-block-relay-rs" }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 
 # DKG
 dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", tag = "v0.3.5" }

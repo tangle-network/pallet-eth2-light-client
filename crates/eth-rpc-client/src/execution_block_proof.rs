@@ -36,7 +36,7 @@ impl ExecutionBlockProof {
 
 	pub fn construct_from_beacon_block_body(
 		beacon_block_body: &BeaconBlockBody<MainnetEthSpec>,
-	) -> Result<Self, Box<dyn Error>> {
+	) -> anyhow::Result<Self> {
 		let beacon_block_merkle_tree = &BeaconBlockBodyMerkleTree::new(beacon_block_body);
 
 		let execution_payload_merkle_tree = &ExecutionPayloadMerkleTree::new(

@@ -3,7 +3,7 @@ use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
-use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
+use crate::eth_network::EthNetwork;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -22,14 +22,8 @@ pub struct Config {
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
-	// Account id for eth client contract on Substrate
-	pub contract_account_id: String,
-
 	// The Ethereum network name (mainnet, goerli)
 	pub ethereum_network: EthNetwork,
-
-	// Substrate network name (mainnet, testnet)
-	pub substrate_network_id: SubstrateNetwork,
 
 	// Path to dir for output submitted light client updates and execution blocks
 	pub output_dir: Option<String>,

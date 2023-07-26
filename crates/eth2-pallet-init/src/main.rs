@@ -40,7 +40,7 @@ struct Arguments {
 // }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> anyhow::Result<()> {
 	let args = Arguments::parse();
 	let config =
 		Config::load_from_toml(args.config.clone().try_into().expect("Incorrect config path"));

@@ -22,7 +22,7 @@ zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features =
 [features]
 default = ["std"]
 std = [
-    "serde/std",
+    "serde",
     "rand/std",
     "rand_chacha/std",
     "hex/std",

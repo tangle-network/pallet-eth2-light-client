@@ -7,7 +7,9 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use frame_support::PalletId;
-use pallet_eth2_light_client_runtime_api::runtime_decl_for_eth_2_light_client_api::{LightClientState, TypedChainId, ClientMode};
+use pallet_eth2_light_client_runtime_api::runtime_decl_for_eth_2_light_client_api::{
+	ClientMode, LightClientState, TypedChainId,
+};
 use pallet_grandpa::AuthorityId as GrandpaId;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -355,26 +357,26 @@ mod benches {
 
 impl_runtime_apis! {
 	impl pallet_eth2_light_client_runtime_api::Eth2LightClientApi<Block, AccountId> for Runtime {
-        /// Gets finalized beacon block hash from Ethereum Light Client on Substrate
-        fn get_finalized_beacon_block_hash(typed_chain_id: TypedChainId) -> pallet_eth2_light_client_runtime_api::H256 {
+		/// Gets finalized beacon block hash from Ethereum Light Client on Substrate
+		fn get_finalized_beacon_block_hash(typed_chain_id: TypedChainId) -> pallet_eth2_light_client_runtime_api::H256 {
 			Eth2Client::finalized_beacon_header(typed_chain_id).map(|header| header.beacon_block_root).unwrap_or_default()
 		}
 
-        /// Gets finalized beacon block slot from Ethereum Light Client on Substrate
-        fn get_finalized_beacon_block_slot(typed_chain_id: TypedChainId) -> u64 {
+		/// Gets finalized beacon block slot from Ethereum Light Client on Substrate
+		fn get_finalized_beacon_block_slot(typed_chain_id: TypedChainId) -> u64 {
 			Eth2Client::finalized_beacon_header(typed_chain_id).map(|header| header.header.slot).unwrap_or_default()
 		}
 
-        /// Gets the current client mode of the Ethereum Light Client on Substrate
-        fn get_client_mode(typed_chain_id: TypedChainId) -> ClientMode {
+		/// Gets the current client mode of the Ethereum Light Client on Substrate
+		fn get_client_mode(typed_chain_id: TypedChainId) -> ClientMode {
 			match Eth2Client::client_mode(typed_chain_id) {
 				Some(mode) => mode,
 				None => ClientMode::default(),
 			}
 		}
 
-        /// Gets the Light Client State of the Ethereum Light Client on Substrate
-        fn get_light_client_state(typed_chain_id: TypedChainId) -> LightClientState {
+		/// Gets the Light Client State of the Ethereum Light Client on Substrate
+		fn get_light_client_state(typed_chain_id: TypedChainId) -> LightClientState {
 			let finalized_beacon_header = Eth2Client::finalized_beacon_header(typed_chain_id).unwrap_or_default();
 			let current_sync_committee = Eth2Client::current_sync_committee(typed_chain_id).unwrap_or_default();
 			let next_sync_committee = Eth2Client::next_sync_committee(typed_chain_id).unwrap_or_default();
@@ -385,11 +387,11 @@ impl_runtime_apis! {
 			}
 		}
 
-        fn get_last_block_number(typed_chain_id: TypedChainId) -> u64 {
+		fn get_last_block_number(typed_chain_id: TypedChainId) -> u64 {
 			Eth2Client::last_block_number(typed_chain_id)
 		}
 
-        fn get_unfinalized_tail_block_number(typed_chain_id: TypedChainId) -> Option<u64> {
+		fn get_unfinalized_tail_block_number(typed_chain_id: TypedChainId) -> Option<u64> {
 			match Eth2Client::unfinalized_tail_execution_header(typed_chain_id) {
 				Some(header) => Some(header.block_number),
 				None => None,

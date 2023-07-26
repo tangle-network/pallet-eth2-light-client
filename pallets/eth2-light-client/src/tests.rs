@@ -129,7 +129,7 @@ mod generic_tests {
 				Eth2Client::submit_execution_header(
 					RuntimeOrigin::signed(ALICE),
 					GOERLI_CHAIN,
-					fork_header.clone()
+					fork_header
 				),
 				Error::<Test>::BlockHashesDoNotMatch
 			);

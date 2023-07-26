@@ -25,6 +25,7 @@ webb = { version = "0.5.17", features = [
 ]}
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 
+anyhow = "1.0"
 funty = "2.0.0"
 sp-keyring = { version = "18.0.0", default-features = false }
 sp-core = { version = "16.0.0" }

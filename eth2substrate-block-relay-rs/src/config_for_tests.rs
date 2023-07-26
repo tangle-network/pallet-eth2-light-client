@@ -1,4 +1,4 @@
-use eth2_pallet_init::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
+use eth2_pallet_init::eth_network::EthNetwork;
 use serde::{Deserialize, Serialize};
 use std::{env, io::Read, path::PathBuf};
 
@@ -12,7 +12,6 @@ pub struct ConfigForTests {
 	pub path_to_light_client_updates: String,
 	pub path_to_attested_state: String,
 	pub network_name: EthNetwork,
-	pub substrate_network_id: SubstrateNetwork,
 	pub first_slot: u64,
 	pub slot_without_block: u64,
 	pub right_bound_in_slot_search: u64,

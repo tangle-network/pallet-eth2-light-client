@@ -23,25 +23,25 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use eth_types::{H256, pallet::ClientMode, eth2::LightClientState};
+pub use eth_types::{eth2::LightClientState, pallet::ClientMode, H256};
 pub use webb_proposals::TypedChainId;
 
 sp_api::decl_runtime_apis! {
 	pub trait Eth2LightClientApi<AccountId: codec::Codec> {
-        /// Gets finalized beacon block hash from Ethereum Light Client on Substrate
-        fn get_finalized_beacon_block_hash(typed_chain_id: TypedChainId) -> H256;
+		/// Gets finalized beacon block hash from Ethereum Light Client on Substrate
+		fn get_finalized_beacon_block_hash(typed_chain_id: TypedChainId) -> H256;
 
-        /// Gets finalized beacon block slot from Ethereum Light Client on Substrate
-        fn get_finalized_beacon_block_slot(typed_chain_id: TypedChainId) -> u64;
+		/// Gets finalized beacon block slot from Ethereum Light Client on Substrate
+		fn get_finalized_beacon_block_slot(typed_chain_id: TypedChainId) -> u64;
 
-        /// Gets the current client mode of the Ethereum Light Client on Substrate
-        fn get_client_mode(typed_chain_id: TypedChainId) -> ClientMode;
+		/// Gets the current client mode of the Ethereum Light Client on Substrate
+		fn get_client_mode(typed_chain_id: TypedChainId) -> ClientMode;
 
-        /// Gets the Light Client State of the Ethereum Light Client on Substrate
-        fn get_light_client_state(typed_chain_id: TypedChainId) -> LightClientState;
+		/// Gets the Light Client State of the Ethereum Light Client on Substrate
+		fn get_light_client_state(typed_chain_id: TypedChainId) -> LightClientState;
 
-        fn get_last_block_number(typed_chain_id: TypedChainId) -> u64;
+		fn get_last_block_number(typed_chain_id: TypedChainId) -> u64;
 
-        fn get_unfinalized_tail_block_number(typed_chain_id: TypedChainId) -> Option<u64>;
+		fn get_unfinalized_tail_block_number(typed_chain_id: TypedChainId) -> Option<u64>;
 	}
 }
