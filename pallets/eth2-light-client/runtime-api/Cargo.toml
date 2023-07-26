@@ -21,8 +21,8 @@ eth-types = { path = "../../../crates/eth-types", default-features = false }
 [features]
 default = ["std"]
 std = [
-	"codec/std",
-	"sp-api/std",
+    "codec/std",
+    "sp-api/std",
     "eth-types/std",
     "webb-proposals/std"
 ]
