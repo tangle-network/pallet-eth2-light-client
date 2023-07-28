@@ -35,28 +35,6 @@ pub struct Eth2LightClientParams {
 }
 
 pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
-	///                                                              ///
-	/// ------------------ Event Watching Relayer ------------------ ///
-	///                                                              ///
-	let mut relayer_config = match relayer_params.ew_config_dir.as_ref() {
-		Some(p) => loads_event_listening_relayer_config(p).expect("failed to load relayer config"),
-		None => {
-			tracing::error!(
-				target: "relayer-gadget",
-				"Error: Not Starting Webb Relayer Gadget. No Config Directory Specified"
-			);
-			return
-		},
-	};
-
-	post_process_config(&mut relayer_config, &relayer_params)
-		.expect("failed to post process relayer config");
-
-	let store = create_store(relayer_params.database_path).expect("failed to create relayer store");
-	// Inject the ctx into an event watching relayer service
-	let _ctx = RelayerContext::new(relayer_config, store.clone())
-		.expect("failed to build relayer context");
-
 	///                                                            ///
 	/// ------------------ Light Client Relayer ------------------ ///
 	///                                                            ///
@@ -83,23 +61,13 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 		Eth2SubstrateRelay::init(&light_client_config, Box::new(eth_pallet.clone())).await;
 
 	tracing::info!(target: "relay", "=== Initializing relay ===");
-	match init_pallet::init_pallet(&light_client_config.clone().into(), &mut eth_pallet)
-		.await
-	{
+	match init_pallet::init_pallet(&light_client_config.clone().into(), &mut eth_pallet).await {
 		Ok(_) => tracing::info!(target: "relay", "=== Pallet initialized ==="),
-		Err(e) =>
-			tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
+		Err(e) => tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
 	};
 
-	let task = async move {
-		loop {
-			tracing::info!(target: "relay", "=== Relay initialized ===");
-			relay.run(None).await;
-			tracing::warn!(target: "relay", "=== Relay terminated, restarting ===");
-		}
-	};
-
-	tokio::spawn(task);
+	tracing::info!(target: "relay", "=== Relay initialized ===");
+	relay.run(None).await;
 }
 
 /// Loads the configuration from the given directory.

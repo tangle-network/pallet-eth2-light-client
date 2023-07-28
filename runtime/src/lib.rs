@@ -743,7 +743,7 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		Utility: pallet_utility,
 		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
-		VoterList: pallet_bags_list::<Instance1>,
+		VoterList: pallet_bags_list<Instance1>,
 		Staking: pallet_staking,
 		Session: pallet_session,
 		Historical: pallet_session_historical,
