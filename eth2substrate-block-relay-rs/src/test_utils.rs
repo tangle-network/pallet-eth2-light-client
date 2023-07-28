@@ -193,7 +193,6 @@ pub fn get_config(config_for_test: &ConfigForTests) -> Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,
-		signer_account_id: "5Dqf9U5dgQ9GLqdfaxXGjpZf9af1sCV8UrnpRgqJPbe3wCwX".to_string(),
 		path_to_signer_secret_key: "/tmp/empty/secret_key".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
 		interval_between_light_client_updates_submission_in_epochs: 1,
@@ -221,7 +220,6 @@ fn get_init_config(
 	eth2_pallet_init::config::Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
-		signer_account_id: "alice".to_string(),
 		path_to_signer_secret_key: "NaN".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
 		output_dir: None,
@@ -245,7 +243,6 @@ pub async fn get_client_pallet(
 	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
 
 	let mut config = get_init_config(config_for_test, &eth_client_pallet);
-	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
 
 	match from_file {
 		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test).await,

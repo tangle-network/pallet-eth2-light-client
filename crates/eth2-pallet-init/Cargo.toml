@@ -31,3 +31,4 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 tokio = { version = "1.1", default-features = false, features = ["macros", "rt", "time"] }
+dotenvy = "0.15.7"

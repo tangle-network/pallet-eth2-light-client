@@ -66,7 +66,7 @@ pub async fn init_pallet(
 			config.validate_updates.unwrap_or(true),
 			"The updates validation can't be disabled for mainnet"
 		);
-		assert!(config.verify_bls_signature.unwrap_or(false) || config.trusted_signer_account_id.is_some(), "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet");
+		assert!(config.verify_bls_signature.unwrap_or(true) || config.trusted_signer_account_id.is_some(), "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet");
 	}
 
 	let beacon_rpc_client = BeaconRPCClient::new(

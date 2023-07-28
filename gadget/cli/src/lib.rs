@@ -8,7 +8,11 @@ pub struct RelayerCmd {
 	#[arg(long, value_name = "PATH")]
 	pub relayer_config_dir: Option<PathBuf>,
 
-	/// Light client configuration directory.
+	/// Light client relayer configuration directory.
 	#[arg(long, value_name = "PATH")]
-	pub light_client_config_path: Option<PathBuf>,
+	pub light_client_relay_config_path: Option<PathBuf>,
+
+	/// Light client init pallet configuration directory.
+	#[arg(long, value_name = "PATH")]
+	pub light_client_init_pallet_config_path: Option<PathBuf>,
 }

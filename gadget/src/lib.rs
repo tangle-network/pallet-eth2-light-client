@@ -25,7 +25,9 @@ pub struct Eth2LightClientParams {
 	/// Event watching relayer configuration directory
 	pub ew_config_dir: Option<PathBuf>,
 	/// Light client relayer configuration path
-	pub lc_config_path: Option<PathBuf>,
+	pub lc_relay_config_path: Option<PathBuf>,
+	/// Light client init pallet configuration path
+	pub lc_init_config_path: Option<PathBuf>,
 	/// Database path
 	pub database_path: Option<PathBuf>,
 	/// RPC address, `None` if disabled.
@@ -38,7 +40,7 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 	///                                                            ///
 	/// ------------------ Light Client Relayer ------------------ ///
 	///                                                            ///
-	let light_client_config = match relayer_params.lc_config_path.as_ref() {
+	let lc_relay_config = match relayer_params.lc_relay_config_path.as_ref() {
 		Some(p) =>
 			loads_light_client_relayer_config(p).expect("failed to load light client config"),
 		None => {
@@ -50,18 +52,30 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 		},
 	};
 
-	let api = OnlineClient::from_url(light_client_config.substrate_endpoint.clone())
+	let lc_init_config = match relayer_params.lc_init_config_path.as_ref() {
+		Some(p) => loads_light_client_pallet_init_config(p)
+			.expect("failed to load light client init pallet config"),
+		None => {
+			tracing::error!(
+				target: "light-client-gadget",
+				"Error: Not Starting ETH2 Light Client Relayer Gadget. No Config Directory Specified"
+			);
+			return
+		},
+	};
+
+	let api = OnlineClient::from_url(lc_relay_config.substrate_endpoint.clone())
 		.await
 		.expect("failed to connect to substrate node");
 
 	let mut eth_pallet =
-		EthClientPallet::new(api, light_client_config.ethereum_network.as_typed_chain_id());
+		EthClientPallet::new(api, lc_relay_config.ethereum_network.as_typed_chain_id());
 
-	let mut relay =
-		Eth2SubstrateRelay::init(&light_client_config, Box::new(eth_pallet.clone())).await;
+	let mut relay = Eth2SubstrateRelay::init(&lc_relay_config, Box::new(eth_pallet.clone())).await;
 
 	tracing::info!(target: "relay", "=== Initializing relay ===");
-	match init_pallet::init_pallet(&light_client_config.clone().into(), &mut eth_pallet).await {
+	// TODO: Prevent double initialization
+	match init_pallet::init_pallet(&lc_init_config, &mut eth_pallet).await {
 		Ok(_) => tracing::info!(target: "relay", "=== Pallet initialized ==="),
 		Err(e) => tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
 	};
@@ -86,6 +100,13 @@ fn loads_light_client_relayer_config(
 	config_path: &PathBuf,
 ) -> anyhow::Result<eth2_to_substrate_relay::config::Config> {
 	Ok(eth2_to_substrate_relay::config::Config::load_from_toml(config_path.clone()))
+}
+
+/// Loads the configuration for the light client
+fn loads_light_client_pallet_init_config(
+	config_path: &PathBuf,
+) -> anyhow::Result<eth2_pallet_init::config::Config> {
+	Ok(eth2_pallet_init::config::Config::load_from_toml(config_path.clone()))
 }
 
 /// Creates a database store for the relayer based on the configuration passed in.

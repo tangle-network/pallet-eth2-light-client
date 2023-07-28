@@ -18,9 +18,6 @@ pub struct Config {
 	// endpoint for a full node on the Substrate chain
 	pub substrate_endpoint: String,
 
-	// Account id from which relay make requests
-	pub signer_account_id: String,
-
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
@@ -101,7 +98,6 @@ impl From<Config> for eth2_pallet_init::config::Config {
 			beacon_endpoint: val.beacon_endpoint,
 			eth1_endpoint: val.eth1_endpoint,
 			substrate_endpoint: val.substrate_endpoint,
-			signer_account_id: val.signer_account_id,
 			path_to_signer_secret_key: val.path_to_signer_secret_key,
 			ethereum_network: val.ethereum_network,
 			output_dir: val.output_dir,

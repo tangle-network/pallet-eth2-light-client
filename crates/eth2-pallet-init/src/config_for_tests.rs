@@ -8,7 +8,6 @@ pub struct ConfigForTests {
 	pub beacon_endpoint: String,
 	pub eth1_endpoint: String,
 	pub network_name: EthNetwork,
-	pub signer_account_id: String,
 	pub path_to_signer_secret_key: String,
 }
 
