@@ -185,7 +185,7 @@ pub async fn init_pallet_from_specific_slot(
 	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
-fn get_config(config_for_test: &ConfigForTests) -> Config {
+pub fn get_config(config_for_test: &ConfigForTests) -> Config {
 	Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),

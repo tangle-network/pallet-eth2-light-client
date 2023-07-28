@@ -1,6 +1,6 @@
 use node_template_runtime::{
-	opaque::SessionKeys, AccountId, AuraConfig, Balance, BalancesConfig, DKGConfig, DKGId,
-	Eth2ClientConfig, GenesisConfig, GrandpaConfig, IndicesConfig, MaxNominations, SessionConfig,
+	opaque::SessionKeys, AccountId, Balance, BalancesConfig, DKGConfig, DKGId,
+	Eth2ClientConfig, GenesisConfig, IndicesConfig, MaxNominations, SessionConfig,
 	Signature, StakingConfig, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
 use pallet_staking::StakerStatus;
@@ -160,8 +160,6 @@ fn testnet_genesis(
 			(x.clone(), x.clone(), STASH, StakerStatus::Nominator(nominations))
 		}))
 		.collect::<Vec<_>>();
-
-	let num_endowed_accounts = endowed_accounts.len();
 
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;

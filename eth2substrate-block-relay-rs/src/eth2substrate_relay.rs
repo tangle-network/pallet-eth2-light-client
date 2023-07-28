@@ -109,10 +109,14 @@ impl Eth2SubstrateRelay {
 			config.state_requests_timeout_seconds,
 			Some(config.beacon_rpc_version.clone()),
 		);
+
+		info!(target: "relay", "=== Beacon RPC Instantiated === ");
 		let next_light_client_update =
 			Self::get_light_client_update_from_file(config, &beacon_rpc_client)
 				.expect("Error on parsing light client update");
-
+		
+		info!(target: "relay", "=== Next Light Client Update Parsed === ");
+		
 		let eth2_network: NetworkConfig =
 			NetworkConfig::new(&Network::from_str(&config.ethereum_network.to_string()).unwrap());
 

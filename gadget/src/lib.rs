@@ -24,8 +24,8 @@ pub struct Eth2LightClientParams {
 	pub local_keystore: Arc<LocalKeystore>,
 	/// Event watching relayer configuration directory
 	pub ew_config_dir: Option<PathBuf>,
-	/// Light client relayer configuration directory
-	pub lc_config_dir: Option<PathBuf>,
+	/// Light client relayer configuration path
+	pub lc_config_path: Option<PathBuf>,
 	/// Database path
 	pub database_path: Option<PathBuf>,
 	/// RPC address, `None` if disabled.
@@ -60,7 +60,7 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 	///                                                            ///
 	/// ------------------ Light Client Relayer ------------------ ///
 	///                                                            ///
-	let light_client_config = match relayer_params.lc_config_dir.as_ref() {
+	let light_client_config = match relayer_params.lc_config_path.as_ref() {
 		Some(p) =>
 			loads_light_client_relayer_config(p).expect("failed to load light client config"),
 		None => {
@@ -79,19 +79,20 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 	let mut eth_pallet =
 		EthClientPallet::new(api, light_client_config.ethereum_network.as_typed_chain_id());
 
+	let mut relay =
+		Eth2SubstrateRelay::init(&light_client_config, Box::new(eth_pallet.clone())).await;
+
+	tracing::info!(target: "relay", "=== Initializing relay ===");
+	match init_pallet::init_pallet(&light_client_config.clone().into(), &mut eth_pallet)
+		.await
+	{
+		Ok(_) => tracing::info!(target: "relay", "=== Pallet initialized ==="),
+		Err(e) =>
+			tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
+	};
+
 	let task = async move {
 		loop {
-			let mut relay =
-				Eth2SubstrateRelay::init(&light_client_config, Box::new(eth_pallet.clone())).await;
-
-			tracing::info!(target: "relay", "=== Initializing relay ===");
-			match init_pallet::init_pallet(&light_client_config.clone().into(), &mut eth_pallet)
-				.await
-			{
-				Ok(_) => tracing::info!(target: "relay", "=== Pallet initialized ==="),
-				Err(e) =>
-					tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
-			};
 			tracing::info!(target: "relay", "=== Relay initialized ===");
 			relay.run(None).await;
 			tracing::warn!(target: "relay", "=== Relay terminated, restarting ===");
@@ -114,13 +115,9 @@ fn loads_event_listening_relayer_config(
 
 /// Loads the configuration for the light client
 fn loads_light_client_relayer_config(
-	config_dir: &PathBuf,
+	config_path: &PathBuf,
 ) -> anyhow::Result<eth2_to_substrate_relay::config::Config> {
-	if !config_dir.is_dir() {
-		return Err(InvalidDirectory.into())
-	}
-
-	Ok(eth2_to_substrate_relay::config::Config::load_from_toml(config_dir.clone()))
+	Ok(eth2_to_substrate_relay::config::Config::load_from_toml(config_path.clone()))
 }
 
 /// Creates a database store for the relayer based on the configuration passed in.

@@ -10,5 +10,5 @@ pub struct RelayerCmd {
 
 	/// Light client configuration directory.
 	#[arg(long, value_name = "PATH")]
-	pub light_client_config_dir: Option<PathBuf>,
+	pub light_client_config_path: Option<PathBuf>,
 }
