@@ -1,8 +1,14 @@
 [workspace]
 members = [
-    "pallet",
+    "pallets/*",
     "crates/*",
     "eth2substrate-block-relay-rs",
+    "gadget",
+    "gadget/cli",
     "node",
     "runtime",
 ]
+
+[patch]
+[patch.crates-io]
+arbitrary = { git = "https://github.com/michaelsproul/arbitrary", rev="a572fd8743012a4f1ada5ee5968b1b3619c427ba" }

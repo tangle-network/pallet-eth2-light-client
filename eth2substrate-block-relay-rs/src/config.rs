@@ -18,9 +18,6 @@ pub struct Config {
 	// endpoint for a full node on the Substrate chain
 	pub substrate_endpoint: String,
 
-	// Account id from which relay make requests
-	pub signer_account_id: String,
-
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
@@ -95,25 +92,22 @@ impl Config {
 	}
 }
 
-// impl From<Config> for eth2_pallet_init::config::Config {
-// 	fn from(val: Config) -> Self {
-// 		eth2_pallet_init::config::Config {
-// 			beacon_endpoint: val.beacon_endpoint,
-// 			eth1_endpoint: val.eth1_endpoint,
-// 			substrate_endpoint: val.substrate_endpoint,
-// 			signer_account_id: val.signer_account_id,
-// 			path_to_signer_secret_key: val.path_to_signer_secret_key,
-// 			contract_account_id: val.contract_account_id,
-// 			ethereum_network: std::str::FromStr::from_str(&val.ethereum_network).unwrap(),
-// 			substrate_network_id: val.substrate_network_id,
-// 			output_dir: val.output_dir,
-// 			eth_requests_timeout_seconds: Some(val.eth_requests_timeout_seconds),
-// 			validate_updates: val.validate_updates,
-// 			verify_bls_signature: val.validate_bls_signature,
-// 			hashes_gc_threshold: val.hashes_gc_threshold,
-// 			trusted_signer_account_id: val.trusted_signer_account_id,
-// 			init_block_root: val.init_block_root,
-// 			beacon_rpc_version: val.beacon_rpc_version,
-// 		}
-// 	}
-// }
+impl From<Config> for eth2_pallet_init::config::Config {
+	fn from(val: Config) -> Self {
+		eth2_pallet_init::config::Config {
+			beacon_endpoint: val.beacon_endpoint,
+			eth1_endpoint: val.eth1_endpoint,
+			substrate_endpoint: val.substrate_endpoint,
+			path_to_signer_secret_key: val.path_to_signer_secret_key,
+			ethereum_network: val.ethereum_network,
+			output_dir: val.output_dir,
+			eth_requests_timeout_seconds: Some(val.eth_requests_timeout_seconds),
+			validate_updates: None,
+			verify_bls_signature: None,
+			hashes_gc_threshold: val.hashes_gc_threshold,
+			trusted_signer_account_id: None,
+			init_block_root: None,
+			beacon_rpc_version: val.beacon_rpc_version,
+		}
+	}
+}

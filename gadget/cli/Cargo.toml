@@ -1,0 +1,9 @@
+[package]
+name = "pallet-eth2-light-client-relayer-gadget-cli"
+version = "0.0.1"
+authors = ["Webb Developers <dev@webb.tools>", "Shady Khalifa <dev+github@shadykhalifa.me>"]
+license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.0.32", features = ["derive"] }

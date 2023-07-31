@@ -128,6 +128,7 @@ pub async fn init_pallet_from_specific_slot(
 
 	let finality_header = beacon_rpc_client
 		.get_beacon_block_header_for_block_id(&format!("{finality_slot}"))
+		.await
 		.unwrap();
 
 	let finality_header = eth_types::eth2::BeaconBlockHeader {
@@ -140,6 +141,7 @@ pub async fn init_pallet_from_specific_slot(
 
 	let finalized_body = beacon_rpc_client
 		.get_beacon_block_body_for_block_id(&format!("{finality_slot}"))
+		.await
 		.unwrap();
 
 	let finalized_beacon_header = ExtendedBeaconBlockHeader {
@@ -163,6 +165,7 @@ pub async fn init_pallet_from_specific_slot(
 				.execution_payload_ref()
 				.block_number(),
 		)
+		.await
 		.unwrap();
 
 	let typed_chain_id = get_typed_chain_id(config_for_test);
@@ -185,12 +188,11 @@ pub async fn init_pallet_from_specific_slot(
 	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
-fn get_config(config_for_test: &ConfigForTests) -> Config {
+pub fn get_config(config_for_test: &ConfigForTests) -> Config {
 	Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,
-		signer_account_id: "5Dqf9U5dgQ9GLqdfaxXGjpZf9af1sCV8UrnpRgqJPbe3wCwX".to_string(),
 		path_to_signer_secret_key: "/tmp/empty/secret_key".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
 		interval_between_light_client_updates_submission_in_epochs: 1,
@@ -218,9 +220,7 @@ fn get_init_config(
 	eth2_pallet_init::config::Config {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
-		signer_account_id: "alice".to_string(),
 		path_to_signer_secret_key: "NaN".to_string(),
-		contract_account_id: "NaN".to_string(),
 		ethereum_network: config_for_test.network_name.clone(),
 		output_dir: None,
 		eth_requests_timeout_seconds: Some(30),
@@ -231,7 +231,6 @@ fn get_init_config(
 		init_block_root: None,
 		beacon_rpc_version: BeaconRPCVersion::V1_1,
 		substrate_endpoint: "localhost:9944".to_string(),
-		substrate_network_id: config_for_test.substrate_network_id.clone(),
 	}
 }
 
@@ -244,7 +243,6 @@ pub async fn get_client_pallet(
 	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
 
 	let mut config = get_init_config(config_for_test, &eth_client_pallet);
-	config.signer_account_id = eth_client_pallet.get_signer_account_id().to_string();
 
 	match from_file {
 		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test).await,

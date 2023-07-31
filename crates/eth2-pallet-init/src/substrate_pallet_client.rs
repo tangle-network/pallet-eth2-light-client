@@ -7,7 +7,7 @@ use eth_types::{
 	primitives::{FinalExecutionOutcomeView, FinalExecutionStatus},
 	BlockHeader, H256,
 };
-use std::error::Error;
+
 use subxt::utils::AccountId32;
 use webb::substrate::{
 	scale::{Decode, Encode},
@@ -48,17 +48,16 @@ pub fn convert_typed_chain_ids(
 	}
 }
 
-pub async fn setup_api() -> Result<OnlineClient<PolkadotConfig>, Box<dyn Error>> {
+pub async fn setup_api() -> anyhow::Result<OnlineClient<PolkadotConfig>> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new().await?;
 	Ok(api)
 }
 
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct EthClientPallet {
 	api: OnlineClient<PolkadotConfig>,
-	signer: PairSigner<PolkadotConfig, Pair>,
+	pair: Pair,
 	chain: TypedChainId,
-	end_slot: u64,
 }
 
 impl EthClientPallet {
@@ -71,28 +70,24 @@ impl EthClientPallet {
 		pair: Pair,
 		typed_chain_id: TypedChainId,
 	) -> Self {
-		let signer = PairSigner::new(pair);
-		// set to defaults. These values will change later in init
-		Self { end_slot: 0, api, signer, chain: typed_chain_id }
+		Self { api, pair, chain: typed_chain_id }
 	}
 
 	pub fn new_with_suri_key<T: AsRef<str>>(
 		api: OnlineClient<PolkadotConfig>,
 		suri_key: T,
 		typed_chain_id: TypedChainId,
-	) -> Result<Self, Box<dyn Error>> {
+	) -> anyhow::Result<Self> {
 		let pair = get_sr25519_keys_from_suri(suri_key)?;
 		Ok(Self::new_with_pair(api, pair, typed_chain_id))
 	}
 
 	pub fn get_signer_account_id(&self) -> AccountId32 {
-		(*AsRef::<[u8; 32]>::as_ref(&self.signer.account_id())).into()
+		let signer: PairSigner<PolkadotConfig, Pair> = PairSigner::new(self.pair.clone());
+		(*AsRef::<[u8; 32]>::as_ref(&signer.account_id())).into()
 	}
 
-	pub async fn is_initialized(
-		&self,
-		typed_chain_id: TypedChainId,
-	) -> Result<bool, Box<dyn Error>> {
+	pub async fn is_initialized(&self, typed_chain_id: TypedChainId) -> anyhow::Result<bool> {
 		let address = tangle::storage()
 			.eth2_client()
 			.finalized_beacon_header(convert_typed_chain_ids(typed_chain_id));
@@ -111,7 +106,7 @@ impl EthClientPallet {
 		verify_bls_signatures: Option<bool>,
 		hashes_gc_threshold: Option<u64>,
 		trusted_signer: Option<AccountId32>,
-	) -> Result<(), Box<dyn Error>> {
+	) -> anyhow::Result<()> {
 		self.chain = typed_chain_id;
 
 		let trusted_signer = if let Some(trusted_signer) = trusted_signer {
@@ -152,7 +147,7 @@ impl EthClientPallet {
 	async fn get_value_or_default<'a, Address: StorageAddress>(
 		&self,
 		key_addr: &Address,
-	) -> Result<Address::Target, Box<dyn Error>>
+	) -> anyhow::Result<Address::Target>
 	where
 		Address: StorageAddress<IsFetchable = Yes, IsDefaultable = Yes> + 'a,
 	{
@@ -164,7 +159,7 @@ impl EthClientPallet {
 	async fn get_value<'a, Address: StorageAddress>(
 		&self,
 		key_addr: &Address,
-	) -> Result<Option<Address::Target>, Box<dyn Error>>
+	) -> anyhow::Result<Option<Address::Target>>
 	where
 		Address: StorageAddress<IsFetchable = Yes> + 'a,
 	{
@@ -173,19 +168,20 @@ impl EthClientPallet {
 		Ok(value)
 	}
 
-	async fn submit<Call: TxPayload>(&self, call: &Call) -> Result<H256, Box<dyn Error>> {
-		let mut progress =
-			self.api.tx().sign_and_submit_then_watch_default(call, &self.signer).await?;
+	async fn submit<Call: TxPayload>(&self, call: &Call) -> anyhow::Result<H256> {
+		let signer = PairSigner::new(self.pair.clone());
+		let mut progress = self.api.tx().sign_and_submit_then_watch_default(call, &signer).await?;
 
 		while let Some(event) = progress.next_item().await {
 			let e = match event {
 				Ok(e) => e,
 				Err(err) => {
 					log::error!("failed to watch for tx events {err:?}");
-					return Err(Box::new(std::io::Error::new(
+					return Err(std::io::Error::new(
 						std::io::ErrorKind::Other,
 						format!("Failed to get hash storage value: {err:?}"),
-					)))
+					)
+					.into())
 				},
 			};
 
@@ -214,10 +210,11 @@ impl EthClientPallet {
 						},
 						Err(err) => {
 							log::error!("tx failed {err:?}");
-							return Err(Box::new(std::io::Error::new(
+							return Err(std::io::Error::new(
 								std::io::ErrorKind::Other,
 								format!("Failed to get hash storage value: {err:?}"),
-							)))
+							)
+							.into())
 						},
 					}
 				},
@@ -231,7 +228,7 @@ impl EthClientPallet {
 			}
 		}
 
-		Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Transaction stream ended")))
+		Err(std::io::Error::new(std::io::ErrorKind::Other, "Transaction stream ended").into())
 	}
 }
 
@@ -240,7 +237,7 @@ impl EthClientPalletTrait for EthClientPallet {
 	async fn send_light_client_update(
 		&mut self,
 		light_client_update: LightClientUpdate,
-	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
+	) -> anyhow::Result<FinalExecutionOutcomeView> {
 		let decoded_lcu = Decode::decode(&mut light_client_update.encode().as_slice()).unwrap();
 		let decoded_tcid = Decode::decode(&mut self.chain.encode().as_slice()).unwrap();
 		let call = tangle::tx()
@@ -253,43 +250,46 @@ impl EthClientPalletTrait for EthClientPallet {
 		})
 	}
 
-	async fn get_finalized_beacon_block_hash(&self) -> Result<eth_types::H256, Box<dyn Error>> {
+	async fn get_finalized_beacon_block_hash(&self) -> anyhow::Result<eth_types::H256> {
 		let addr = tangle::storage()
 			.eth2_client()
 			.finalized_beacon_header(convert_typed_chain_ids(self.chain));
 		if let Some(header) = self.get_value(&addr).await? {
 			Ok(eth_types::H256::from(header.beacon_block_root.0))
 		} else {
-			Err(Box::new(std::io::Error::new(
+			Err(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				"Unable to get value for get_finalized_beacon_block_hash".to_string(),
-			)))
+			)
+			.into())
 		}
 	}
 
-	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_finalized_beacon_block_slot(&self) -> anyhow::Result<u64> {
 		let addr = tangle::storage()
 			.eth2_client()
 			.finalized_beacon_header(convert_typed_chain_ids(self.chain));
 		if let Some(header) = self.get_value(&addr).await? {
 			Ok(header.header.slot)
 		} else {
-			Err(Box::new(std::io::Error::new(
+			Err(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				"Unable to get value for get_finalized_beacon_block_slot".to_string(),
-			)))
+			)
+			.into())
 		}
 	}
 
 	async fn send_headers(
 		&mut self,
 		headers: &[BlockHeader],
-	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
+	) -> anyhow::Result<FinalExecutionOutcomeView> {
 		if headers.is_empty() {
-			return Err(Box::new(std::io::Error::new(
+			return Err(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				"Tried to submit empty headers".to_string(),
-			)))
+			)
+			.into())
 		}
 
 		let mut txes = vec![];
@@ -313,9 +313,7 @@ impl EthClientPalletTrait for EthClientPallet {
 		})
 	}
 
-	async fn get_light_client_state(
-		&self,
-	) -> Result<eth_types::eth2::LightClientState, Box<dyn Error>> {
+	async fn get_light_client_state(&self) -> anyhow::Result<eth_types::eth2::LightClientState> {
 		let addr0 = tangle::storage()
 			.eth2_client()
 			.finalized_beacon_header(convert_typed_chain_ids(self.chain));
@@ -349,51 +347,54 @@ impl EthClientPalletTrait for EthClientPallet {
 					.unwrap(),
 			}),
 
-			_ => Err(Box::new(std::io::Error::new(
+			_ => Err(std::io::Error::new(
 				std::io::ErrorKind::Other,
 				"Unable to obtain all three values".to_string(),
-			))),
+			)
+			.into()),
 		}
 	}
 
-	async fn get_client_mode(&self) -> Result<ClientMode, Box<dyn Error>> {
-		Err(Box::new(std::io::Error::new(
+	async fn get_client_mode(&self) -> anyhow::Result<ClientMode> {
+		Err(std::io::Error::new(
 			std::io::ErrorKind::Other,
 			"Unable to get value for get_client_mode".to_string(),
-		)))
+		)
+		.into())
 	}
 
-	async fn get_last_block_number(&self) -> Result<u64, Box<dyn Error>> {
-		Err(Box::new(std::io::Error::new(
+	async fn get_last_block_number(&self) -> anyhow::Result<u64> {
+		Err(std::io::Error::new(
 			std::io::ErrorKind::Other,
 			"Unable to get value for get_last_block_number".to_string(),
-		)))
+		)
+		.into())
 	}
-	async fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, Box<dyn Error>> {
-		Err(Box::new(std::io::Error::new(
+	async fn get_unfinalized_tail_block_number(&self) -> anyhow::Result<Option<u64>> {
+		Err(std::io::Error::new(
 			std::io::ErrorKind::Other,
 			"Unable to get value for get_unfinalized_tail_block_number".to_string(),
-		)))
+		)
+		.into())
 	}
 }
 
-fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, Box<dyn Error>> {
+fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> anyhow::Result<Pair> {
 	let value = suri.as_ref();
 	if value.starts_with('$') {
 		// env
 		let var = value.strip_prefix('$').unwrap_or(value);
 		log::trace!("Reading {} from env", var);
 		let val = std::env::var(var).map_err(|e| {
-			Box::new(std::io::Error::new(
+			std::io::Error::new(
 				std::io::ErrorKind::Other,
 				format!("error while loading this env {var}: {e}"),
-			))
+			)
 		})?;
 		let maybe_pair = Pair::from_string(&val, None);
 		match maybe_pair {
 			Ok(pair) => Ok(pair),
-			Err(e) =>
-				Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{e:?}")))),
+			Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other, format!("{e:?}")).into()),
 		}
 	} else if value.starts_with('>') {
 		todo!("Implement command execution to extract the private key")
@@ -401,8 +402,7 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> Result<Pair, Box<dyn Er
 		let maybe_pair = Pair::from_string(value, None);
 		match maybe_pair {
 			Ok(pair) => Ok(pair),
-			Err(e) =>
-				Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{e:?}")))),
+			Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other, format!("{e:?}")).into()),
 		}
 	}
 }

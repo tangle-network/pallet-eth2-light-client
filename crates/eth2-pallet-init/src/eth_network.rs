@@ -36,6 +36,13 @@ impl EthNetwork {
 			EthNetwork::Goerli => "goerli",
 		}
 	}
+
+	pub fn as_typed_chain_id(&self) -> webb_proposals::TypedChainId {
+		match self {
+			EthNetwork::Mainnet => webb_proposals::TypedChainId::Evm(1),
+			EthNetwork::Goerli => webb_proposals::TypedChainId::Evm(5),
+		}
+	}
 }
 
 impl FromStr for EthNetwork {

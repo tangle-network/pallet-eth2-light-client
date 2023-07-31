@@ -135,7 +135,8 @@ pub struct LightClientUpdate {
 	pub sync_committee_update: Option<SyncCommitteeUpdate>,
 }
 
-#[derive(Default, Clone, Encode, Decode)]
+#[derive(Default, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct LightClientState {
 	pub finalized_beacon_header: ExtendedBeaconBlockHeader,
 	pub current_sync_committee: SyncCommittee,

@@ -1,6 +1,4 @@
-use crate::{
-	config::Config, substrate_network::SubstrateNetwork, substrate_pallet_client::EthClientPallet,
-};
+use crate::{config::Config, eth_network::EthNetwork, substrate_pallet_client::EthClientPallet};
 use eth_rpc_client::{
 	beacon_rpc_client::BeaconRPCClient, eth1_rpc_client::Eth1RPCClient,
 	light_client_snapshot_with_proof::LightClientSnapshotWithProof,
@@ -46,18 +44,29 @@ pub fn get_typed_chain_id(config: &Config) -> TypedChainId {
 	}
 }
 
+#[derive(Debug)]
+pub struct InvalidLightClientSnapshot;
+
+impl std::fmt::Display for InvalidLightClientSnapshot {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "Invalid light client snapshot")
+	}
+}
+
+impl std::error::Error for InvalidLightClientSnapshot {}
+
 pub async fn init_pallet(
 	config: &Config,
 	eth_client_pallet: &mut EthClientPallet,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> anyhow::Result<()> {
 	info!(target: "relay", "=== Contract initialization ===");
-
-	if let SubstrateNetwork::Mainnet = config.substrate_network_id {
+	println!("config: {:?}", config);
+	if let EthNetwork::Mainnet = config.ethereum_network {
 		assert!(
 			config.validate_updates.unwrap_or(true),
 			"The updates validation can't be disabled for mainnet"
 		);
-		assert!(config.verify_bls_signature.unwrap_or(false) || config.trusted_signer_account_id.is_some(), "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet");
+		assert!(config.verify_bls_signature.unwrap_or(true) || config.trusted_signer_account_id.is_some(), "The client can't be executed in the trustless mode without BLS sigs verification on Mainnet");
 	}
 
 	let beacon_rpc_client = BeaconRPCClient::new(
@@ -71,15 +80,18 @@ pub async fn init_pallet(
 	let last_period = BeaconRPCClient::get_period_for_slot(
 		beacon_rpc_client
 			.get_last_slot_number()
+			.await
 			.expect("Error on fetching last slot number")
 			.as_u64(),
 	);
 
 	let light_client_update_with_next_sync_committee = beacon_rpc_client
 		.get_light_client_update(last_period)
+		.await
 		.expect("Error on fetching finality light client update with sync committee update");
 	let finality_light_client_update = beacon_rpc_client
 		.get_finality_light_client_update()
+		.await
 		.expect("Error on fetching finality light client update");
 
 	let finality_slot =
@@ -91,6 +103,7 @@ pub async fn init_pallet(
 		ExtendedBeaconBlockHeader::from(finality_light_client_update.finality_update.header_update);
 	let finalized_body = beacon_rpc_client
 		.get_beacon_block_body_for_block_id(&block_id)
+		.await
 		.expect("Error on fetching finalized body");
 
 	let execution_payload: ExecutionPayload<MainnetEthSpec> = finalized_body
@@ -99,6 +112,7 @@ pub async fn init_pallet(
 		.into();
 	let finalized_execution_header: BlockHeader = eth1_rpc_client
 		.get_block_header_by_number(execution_payload.block_number())
+		.await
 		.expect("Error on fetching finalized execution header");
 
 	let next_sync_committee = light_client_update_with_next_sync_committee
@@ -107,12 +121,16 @@ pub async fn init_pallet(
 		.next_sync_committee;
 
 	let init_block_root = match config.init_block_root.clone() {
-		None => beacon_rpc_client.get_checkpoint_root().expect("Fail to get last checkpoint"),
+		None => beacon_rpc_client
+			.get_checkpoint_root()
+			.await
+			.expect("Fail to get last checkpoint"),
 		Some(init_block_str) => init_block_str,
 	};
 
 	let light_client_snapshot = beacon_rpc_client
 		.get_bootstrap(init_block_root.clone())
+		.await
 		.expect("Unable to fetch bootstrap state");
 
 	info!(target: "relay", "init_block_root: {}", init_block_root);
@@ -124,7 +142,7 @@ pub async fn init_pallet(
 	}
 
 	if !verify_light_client_snapshot(init_block_root, &light_client_snapshot) {
-		return Err("Invalid light client snapshot".into())
+		return Err(InvalidLightClientSnapshot.into())
 	}
 
 	let mut trusted_signature: Option<AccountId32> = Option::None;

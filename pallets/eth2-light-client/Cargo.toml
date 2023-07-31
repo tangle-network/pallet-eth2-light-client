@@ -18,13 +18,13 @@ rlp-derive = { version = "0.1.0", default-features = false }
 tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
 bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
-eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2"] }
-eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz", default-features = false }
-merkle-proof = { package = "webb-merkle-proof", path = "../crates/merkle-proof", default-features = false }
-bls = { package = "webb-bls", path = "../crates/bls", default-features = false }
-tree-hash = { package = "webb-tree-hash", path = "../crates/tree-hash", default-features = false }
-tree-hash-derive = { package = "webb-tree-hash-derive", path = "../crates/tree-hash-derive", default-features = false }
-consensus = { package = "webb-consensus-types", path = "../crates/consensus-types", default-features = false }
+eth-types = { path = "../../crates/eth-types", default-features = false, features = ["eth2"] }
+eth2-ssz = { package = "webb-eth2-ssz", path = "../../crates/ssz", default-features = false }
+merkle-proof = { package = "webb-merkle-proof", path = "../../crates/merkle-proof", default-features = false }
+bls = { package = "webb-bls", path = "../../crates/bls", default-features = false }
+tree-hash = { package = "webb-tree-hash", path = "../../crates/tree-hash", default-features = false }
+tree-hash-derive = { package = "webb-tree-hash-derive", path = "../../crates/tree-hash-derive", default-features = false }
+consensus = { package = "webb-consensus-types", path = "../../crates/consensus-types", default-features = false }
 
 frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
 frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.43" }
@@ -35,9 +35,10 @@ sp-core = { default-features = false, git = "https://github.com/paritytech/subst
 hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
+anyhow = "1.0"
 lazy_static = "1.4.0"
 serde_json = { version = "1.0.58", default-features = false, features = ["alloc"] }
-eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../../crates/eth2-pallet-init" }
 async-trait = "0.1.72"
 
 [features]

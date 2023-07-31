@@ -7,7 +7,7 @@ use eth_types::{
 	eth2::{BeaconBlockHeader, Epoch, ForkVersion, LightClientUpdate, SyncCommittee},
 	H256,
 };
-use std::error::Error;
+
 use tree_hash::Hash256;
 
 #[cfg(test)]
@@ -39,7 +39,7 @@ pub fn is_correct_finality_update(
 	genesis_validators_root: [u8; 32],
 	light_client_update: &LightClientUpdate,
 	sync_committee: SyncCommittee,
-) -> Result<bool, Box<dyn Error>> {
+) -> anyhow::Result<bool> {
 	let sync_committee_bits =
 		BitVec::<u8, Lsb0>::from_slice(&light_client_update.sync_aggregate.sync_committee_bits.0);
 
@@ -70,14 +70,10 @@ pub fn is_correct_finality_update(
 
 	let aggregate_signature = bls::AggregateSignature::deserialize(
 		&light_client_update.sync_aggregate.sync_committee_signature.0,
-	)
-	.map_err(|_err| -> String { "Error on aggregate signature deserialization".to_string() })?;
+	)?;
 	let mut pubkeys: Vec<bls::PublicKey> = vec![];
 	for pubkey in participant_pubkeys {
-		pubkeys.push(
-			bls::PublicKey::deserialize(&pubkey.0)
-				.map_err(|_err| -> String { "Error on public key deserialization".to_string() })?,
-		);
+		pubkeys.push(bls::PublicKey::deserialize(&pubkey.0)?);
 	}
 
 	Ok(aggregate_signature.fast_aggregate_verify(

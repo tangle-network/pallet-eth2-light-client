@@ -15,7 +15,7 @@ use eth_types::{
 	BlockHeader, H256,
 };
 use frame_support::assert_ok;
-use std::error::Error;
+
 use webb_proposals::TypedChainId;
 
 pub struct MockEthClientPallet {
@@ -39,44 +39,44 @@ impl EthClientPalletTrait<AccountId32> for MockEthClientPallet {
 	async fn send_light_client_update(
 		&mut self,
 		_light_client_update: LightClientUpdate,
-	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
+	) -> anyhow::Result<FinalExecutionOutcomeView> {
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::NotStarted,
 			transaction_hash: Some(H256::from([0u8; 32])),
 		})
 	}
 
-	async fn get_finalized_beacon_block_hash(&self) -> Result<H256, Box<dyn Error>> {
+	async fn get_finalized_beacon_block_hash(&self) -> anyhow::Result<H256> {
 		Ok(H256::from([0u8; 32]))
 	}
 
-	async fn get_finalized_beacon_block_slot(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_finalized_beacon_block_slot(&self) -> anyhow::Result<u64> {
 		Ok(0)
 	}
 
 	async fn send_headers(
 		&mut self,
 		_headers: &[BlockHeader],
-	) -> Result<FinalExecutionOutcomeView<Box<dyn Error>>, Box<dyn Error>> {
+	) -> anyhow::Result<FinalExecutionOutcomeView> {
 		Ok(FinalExecutionOutcomeView {
 			status: FinalExecutionStatus::NotStarted,
 			transaction_hash: Some(H256::from([0u8; 32])),
 		})
 	}
 
-	async fn get_client_mode(&self) -> Result<ClientMode, Box<dyn Error>> {
+	async fn get_client_mode(&self) -> anyhow::Result<ClientMode> {
 		Ok(ClientMode::default())
 	}
 
-	async fn get_light_client_state(&self) -> Result<LightClientState, Box<dyn Error>> {
+	async fn get_light_client_state(&self) -> anyhow::Result<LightClientState> {
 		Ok(LightClientState::default())
 	}
 
-	async fn get_last_block_number(&self) -> Result<u64, Box<dyn Error>> {
+	async fn get_last_block_number(&self) -> anyhow::Result<u64> {
 		Ok(0)
 	}
 
-	async fn get_unfinalized_tail_block_number(&self) -> Result<Option<u64>, Box<dyn Error>> {
+	async fn get_unfinalized_tail_block_number(&self) -> anyhow::Result<Option<u64>> {
 		Ok(None)
 	}
 }

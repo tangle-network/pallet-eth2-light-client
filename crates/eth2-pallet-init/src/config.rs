@@ -1,9 +1,10 @@
+use dotenvy::dotenv;
 use eth_rpc_client::beacon_rpc_client;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
-use crate::{eth_network::EthNetwork, substrate_network::SubstrateNetwork};
+use crate::eth_network::EthNetwork;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -16,20 +17,11 @@ pub struct Config {
 	// endpoint for a full node on the Substrate chain
 	pub substrate_endpoint: String,
 
-	// Account id from which relay make requests
-	pub signer_account_id: String,
-
 	// Path to the file with a secret key for signer account
 	pub path_to_signer_secret_key: String,
 
-	// Account id for eth client contract on Substrate
-	pub contract_account_id: String,
-
 	// The Ethereum network name (mainnet, goerli)
 	pub ethereum_network: EthNetwork,
-
-	// Substrate network name (mainnet, testnet)
-	pub substrate_network_id: SubstrateNetwork,
 
 	// Path to dir for output submitted light client updates and execution blocks
 	pub output_dir: Option<String>,
@@ -59,7 +51,7 @@ impl Config {
 		let mut content = String::new();
 		config.read_to_string(&mut content).expect("Error on reading config");
 		let mut config: Config = toml::from_str(content.as_str()).expect("Error on parse config");
-
+		dotenv().ok();
 		let api_key_string = std::env::var("ETH1_INFURA_API_KEY").unwrap();
 		config.eth1_endpoint = config.eth1_endpoint.replace("ETH1_INFURA_API_KEY", &api_key_string);
 
