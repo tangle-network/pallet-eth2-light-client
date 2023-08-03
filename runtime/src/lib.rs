@@ -14,7 +14,8 @@ use dkg_runtime_primitives::{
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
-use frame_support::{dispatch::DispatchClass, traits::U128CurrencyToVote, PalletId};
+use frame_support::{dispatch::DispatchClass, PalletId};
+use sp_staking::currency_to_vote::U128CurrencyToVote;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
@@ -743,7 +744,7 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		Utility: pallet_utility,
 		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
-		VoterList: pallet_bags_list<Instance1>,
+		VoterList: pallet_bags_list::<Instance1>,
 		Staking: pallet_staking,
 		Session: pallet_session,
 		Historical: pallet_session_historical,

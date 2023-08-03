@@ -5,7 +5,7 @@ authors = ["Webb Developers"]
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.116", default-features = false, optional = true, features = ["derive"] }
+serde = { version = "1.0.116", default-features = false, features = ["derive"] }
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 ethereum-types = { version = "0.14.1", features = ["codec", "rlp", "serialize"], default-features = false }
@@ -29,7 +29,7 @@ scale-info = { version = "2.1.1", default-features = false, features = ["derive"
 [features]
 default = ["std"]
 std = [
-    "serde",
+    "serde/std",
     "tree-hash/std",
     "eth-types/std",
     "bitvec/std",
