@@ -26,8 +26,8 @@ use eth2_hashing::{hash32_concat, hash_fixed};
 /// This algorithm has two interesting memory usage properties:
 ///
 /// 1. The maximum memory footprint is roughly `O(V / 2)` memory, where `V` is the number of leaf
-///    chunks with values (i.e., leaves that are not padding). The means adding padding nodes to
-///    the tree does not increase the memory footprint.
+///    chunks with values (i.e., leaves that are not padding). The means adding padding nodes to the
+///    tree does not increase the memory footprint.
 /// 2. At each height of the tree half of the memory is freed until only a single chunk is stored.
 /// 3. The input `bytes` are not copied into another list before processing.
 ///

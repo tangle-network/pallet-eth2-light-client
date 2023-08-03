@@ -1,13 +1,12 @@
 //! Webb Relayer Gadget
 //!
 //! Integrates the Webb Relayer into the Substrate Node.
-
 use dkg_runtime_primitives::crypto;
 use eth2_pallet_init::{init_pallet, substrate_pallet_client::EthClientPallet};
 use eth2_to_substrate_relay::eth2substrate_relay::Eth2SubstrateRelay;
 use ethereum_types::Secret;
 use sc_keystore::LocalKeystore;
-use sp_application_crypto::{ByteArray, Pair};
+use sp_core::crypto::{ByteArray, Pair};
 use sp_keystore::Keystore;
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 use subxt::OnlineClient;
