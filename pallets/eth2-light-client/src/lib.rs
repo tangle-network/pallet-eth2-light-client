@@ -161,7 +161,6 @@ pub mod pallet {
 		pub phantom: PhantomData<T>,
 	}
 
-	#[cfg(feature = "std")]
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self { networks: vec![], phantom: Default::default() }
@@ -169,7 +168,7 @@ pub mod pallet {
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			for n in self.networks.clone() {
 				match n.0 {
