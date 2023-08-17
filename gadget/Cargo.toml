@@ -31,7 +31,7 @@ eth2-to-substrate-relay = { path = "../eth2substrate-block-relay-rs" }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 
 # DKG
-dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "upgrade-v1.0.0" }
+dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", default-features = false  }
 
 # Webb
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs", features = ["scale", "evm"] }
