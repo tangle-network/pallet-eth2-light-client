@@ -16,7 +16,7 @@ jobs:
 
     - uses: actions-rs/toolchain@v1
       with:
-          toolchain: nightly-2022-12-26
+          toolchain: nightly-2023-07-16
           components: clippy
           override: true
     
@@ -25,7 +25,7 @@ jobs:
       uses: actions-rs/toolchain@master
       with:
         profile: minimal
-        toolchain: nightly-2022-12-26
+        toolchain: nightly-2023-07-16
         target: wasm32-unknown-unknown
 
     - name: Install protobuf-compiler
