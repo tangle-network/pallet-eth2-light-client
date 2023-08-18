@@ -1,6 +1,7 @@
 //! Webb Relayer Gadget
 //!
 //! Integrates the Webb Relayer into the Substrate Node.
+#![allow(dead_code)]
 use dkg_runtime_primitives::crypto;
 use eth2_pallet_init::{init_pallet, substrate_pallet_client::EthClientPallet};
 use eth2_to_substrate_relay::eth2substrate_relay::Eth2SubstrateRelay;
@@ -11,9 +12,6 @@ use sp_keystore::Keystore;
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 use subxt::OnlineClient;
 use webb_proposals::TypedChainId;
-use webb_relayer::service;
-use webb_relayer_context::RelayerContext;
-
 pub mod errors;
 use errors::*;
 
@@ -36,9 +34,7 @@ pub struct Eth2LightClientParams {
 }
 
 pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
-	///                                                            ///
-	/// ------------------ Light Client Relayer ------------------ ///
-	///                                                            ///
+	// Light Client Relayer
 	let lc_relay_config = match relayer_params.lc_relay_config_path.as_ref() {
 		Some(p) =>
 			loads_light_client_relayer_config(p).expect("failed to load light client config"),

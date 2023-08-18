@@ -242,7 +242,7 @@ pub async fn get_client_pallet(
 	let typed_chain_id = get_typed_chain_id(config_for_test);
 	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
 
-	let mut config = get_init_config(config_for_test, &eth_client_pallet);
+	let config = get_init_config(config_for_test, &eth_client_pallet);
 
 	match from_file {
 		true => test_utils::init_pallet_from_files(&mut eth_client_pallet, config_for_test).await,

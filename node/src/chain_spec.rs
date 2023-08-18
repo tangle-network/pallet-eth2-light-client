@@ -1,6 +1,6 @@
 use node_template_runtime::{
 	opaque::SessionKeys, AccountId, Balance, BalancesConfig, DKGConfig, DKGId, Eth2ClientConfig,
-	GenesisConfig, IndicesConfig, MaxNominations, SessionConfig, Signature, StakingConfig,
+	IndicesConfig, MaxNominations, RuntimeGenesisConfig, SessionConfig, Signature, StakingConfig,
 	SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
 use pallet_staking::StakerStatus;
@@ -19,7 +19,7 @@ use webb_proposals::TypedChainId;
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
+pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 
 /// Generate a crypto pair from seed.
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -53,7 +53,7 @@ fn session_keys(grandpa: GrandpaId, aura: AuraId, dkg: DKGId) -> SessionKeys {
 	SessionKeys { grandpa, aura, dkg }
 }
 
-fn development_config_genesis() -> GenesisConfig {
+fn development_config_genesis() -> RuntimeGenesisConfig {
 	let wasm_binary = WASM_BINARY.unwrap();
 	testnet_genesis(
 		wasm_binary,
@@ -80,7 +80,7 @@ pub fn development_config() -> ChainSpec {
 	)
 }
 
-fn local_testnet_genesis() -> GenesisConfig {
+fn local_testnet_genesis() -> RuntimeGenesisConfig {
 	let wasm_binary = WASM_BINARY.unwrap();
 	testnet_genesis(
 		wasm_binary,
@@ -114,7 +114,7 @@ fn testnet_genesis(
 	initial_nominators: Vec<AccountId>,
 	root_key: AccountId,
 	endowed_accounts: Option<Vec<AccountId>>,
-) -> GenesisConfig {
+) -> RuntimeGenesisConfig {
 	let mut endowed_accounts: Vec<AccountId> = endowed_accounts.unwrap_or_else(|| {
 		vec![
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -163,7 +163,7 @@ fn testnet_genesis(
 
 	const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
 	const STASH: Balance = ENDOWMENT / 1000;
-	GenesisConfig {
+	RuntimeGenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
