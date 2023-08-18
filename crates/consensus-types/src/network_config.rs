@@ -3,9 +3,9 @@ use alloc::string::String;
 use codec::{Decode, Encode};
 use core::str::FromStr;
 use eth_types::eth2::{Epoch, ForkVersion, Slot};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Encode, Decode, scale_info::TypeInfo)]
-#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, PartialEq, Encode, Decode, scale_info::TypeInfo, Serialize, Deserialize)]
 pub enum Network {
 	Mainnet,
 	Goerli,
@@ -22,8 +22,7 @@ impl FromStr for Network {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq, Encode, Decode, scale_info::TypeInfo)]
-#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, PartialEq, Encode, Decode, scale_info::TypeInfo, Serialize, Deserialize)]
 pub struct NetworkConfig {
 	pub genesis_validators_root: [u8; 32],
 	pub bellatrix_fork_version: ForkVersion,

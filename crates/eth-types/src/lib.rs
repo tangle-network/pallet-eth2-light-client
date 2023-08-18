@@ -16,7 +16,6 @@ use rlp::{
 };
 use rlp_derive::RlpDecodable as RlpDecodableDerive;
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use tiny_keccak::{Hasher, Keccak};
 
@@ -88,8 +87,9 @@ macro_rules! uint_declare_wrapper_and_serde_codec_typeinfo {
 			Encode,
 			Decode,
 			TypeInfo,
+			Serialize,
+			Deserialize,
 		)]
-		#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 		pub struct $name(pub ethereum_types::$name);
 
 		impl RlpEncodable for $name {
@@ -116,8 +116,7 @@ pub type Signature = H520;
 
 // Block Header
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
 pub struct BlockHeader {
 	pub parent_hash: H256,
 	pub uncles_hash: H256,
