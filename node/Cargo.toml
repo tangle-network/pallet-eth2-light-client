@@ -22,6 +22,7 @@ futures = { version = "0.3.21", features = ["thread-pool"]}
 rand = "0.7.2"
 
 sc-cli = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sc-offchain = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sc-executor = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sc-network = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
@@ -57,7 +58,7 @@ sc-basic-authorship = { version = "0.10.0-dev", git = "https://github.com/parity
 substrate-frame-rpc-system = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-transaction-payment-rpc = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", rev="a960eaf", default-features = false, features = ["scale", "evm"] }
 webb-consensus-types = { path = "../crates/consensus-types" }
 pallet-eth2-light-client-relayer-gadget = { path = "../gadget" }
 pallet-eth2-light-client-relayer-gadget-cli = { path = "../gadget/cli" }

@@ -14,7 +14,7 @@ use dkg_runtime_primitives::{
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
-use frame_support::{dispatch::DispatchClass, traits::U128CurrencyToVote, PalletId};
+use frame_support::{dispatch::DispatchClass, PalletId};
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
@@ -34,8 +34,8 @@ use sp_runtime::{
 	generic::Era,
 	impl_opaque_keys,
 	traits::{
-		self, AccountIdLookup, BlakeTwo256, Block as BlockT, Get, IdentifyAccount, NumberFor, One,
-		OpaqueKeys, SaturatedConversion, StaticLookup, Verify,
+		self, BlakeTwo256, Block as BlockT, Get, IdentifyAccount, NumberFor, One, OpaqueKeys,
+		SaturatedConversion, StaticLookup, Verify,
 	},
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature, Percent,
@@ -51,7 +51,8 @@ use pallet_session::historical as pallet_session_historical;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness, StorageInfo,
+		ConstBool, ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness,
+		StorageInfo,
 	},
 	weights::{
 		constants::{
@@ -93,7 +94,7 @@ pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::Account
 pub type Balance = u128;
 
 /// Index of a transaction in the chain.
-pub type Index = u32;
+pub type Nonce = u32;
 
 /// A hash of some data used by the chain.
 pub type Hash = sp_core::H256;
@@ -201,16 +202,12 @@ impl frame_system::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	/// The lookup mechanism to get account ID from whatever is passed in dispatchers.
 	type Lookup = Indices;
-	/// The index type for storing how many extrinsics an account has signed.
-	type Index = Index;
-	/// The index type for blocks.
-	type BlockNumber = BlockNumber;
+	type Block = Block;
+	type Nonce = Nonce;
 	/// The type for hashing blocks and tries.
 	type Hash = Hash;
 	/// The hashing algorithm used.
 	type Hashing = BlakeTwo256;
-	/// The header type.
-	type Header = generic::Header<BlockNumber, BlakeTwo256>;
 	/// The ubiquitous event type.
 	type RuntimeEvent = RuntimeEvent;
 	/// The ubiquitous origin type.
@@ -295,7 +292,7 @@ impl pallet_staking::Config for Runtime {
 	type Currency = Balances;
 	type CurrencyBalance = Balance;
 	type UnixTime = Timestamp;
-	type CurrencyToVote = U128CurrencyToVote;
+	type CurrencyToVote = sp_staking::currency_to_vote::U128CurrencyToVote;
 	type RewardRemainder = ();
 	type RuntimeEvent = RuntimeEvent;
 	type Slash = ();
@@ -316,7 +313,7 @@ impl pallet_staking::Config for Runtime {
 	type TargetList = pallet_staking::UseValidatorsMap<Self>;
 	type MaxUnlockingChunks = ConstU32<32>;
 	type HistoryDepth = HistoryDepth;
-	type OnStakerSlash = ();
+	type EventListeners = ();
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
 	type BenchmarkingConfig = StakingBenchmarkingConfig;
 }
@@ -479,8 +476,7 @@ parameter_types! {
 	pub const BagThresholds: &'static [u64] = &voter_bags::THRESHOLDS;
 }
 
-type VoterBagsListInstance = pallet_bags_list::Instance1;
-impl pallet_bags_list::Config<VoterBagsListInstance> for Runtime {
+impl pallet_bags_list::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	/// The voter bags-list is loosely kept up to date, and the real source of truth for the score
 	/// of each node is the staking pallet.
@@ -494,6 +490,7 @@ impl pallet_aura::Config for Runtime {
 	type AuthorityId = AuraId;
 	type DisabledValidators = ();
 	type MaxAuthorities = ConstU32<32>;
+	type AllowMultipleBlocksPerSlot = ConstBool<false>;
 }
 
 parameter_types! {
@@ -544,7 +541,7 @@ impl pallet_balances::Config for Runtime {
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 	type FreezeIdentifier = ();
 	type MaxFreezes = ();
-	type HoldIdentifier = ();
+	type RuntimeHoldReason = RuntimeHoldReason;
 	type MaxHolds = ();
 }
 
@@ -678,7 +675,7 @@ where
 		call: RuntimeCall,
 		public: <Signature as traits::Verify>::Signer,
 		account: AccountId,
-		nonce: Index,
+		nonce: Nonce,
 	) -> Option<(RuntimeCall, <UncheckedExtrinsic as traits::Extrinsic>::SignaturePayload)> {
 		let tip = 0;
 		// take the biggest period possible.
@@ -727,12 +724,7 @@ where
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
-	pub struct Runtime
-	where
-		Block = Block,
-		NodeBlock = opaque::Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
-	{
+	pub struct Runtime {
 		System: frame_system,
 		Timestamp: pallet_timestamp,
 		Indices: pallet_indices,
@@ -743,7 +735,7 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		Utility: pallet_utility,
 		ElectionProviderMultiPhase: pallet_election_provider_multi_phase,
-		VoterList: pallet_bags_list<Instance1>,
+		VoterList: pallet_bags_list,
 		Staking: pallet_staking,
 		Session: pallet_session,
 		Historical: pallet_session_historical,
@@ -964,8 +956,8 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
-		fn account_nonce(account: AccountId) -> Index {
+	impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce> for Runtime {
+		fn account_nonce(account: AccountId) -> Nonce {
 			System::account_nonce(account)
 		}
 	}
