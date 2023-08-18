@@ -5,7 +5,7 @@ authors = ["Near Inc <hello@nearprotocol.com>", "Webb Developers <hello@webb.too
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
+serde = { version = "1.0.152", default-features = false, features = ["derive"]}
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 ethereum-types = { version = "0.14.1", features = ["codec", "rlp"], default-features = false }
