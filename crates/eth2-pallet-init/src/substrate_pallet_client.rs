@@ -364,18 +364,27 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_last_block_number(&self) -> anyhow::Result<u64> {
-		Err(std::io::Error::new(
-			std::io::ErrorKind::Other,
-			"Unable to get value for get_last_block_number".to_string(),
-		)
-		.into())
+		let addr = tangle::storage()
+			.eth2_client()
+			.finalized_execution_header(convert_typed_chain_ids(self.chain));
+
+		if let Some(head) = self.get_value(&addr).await? {
+			Ok(head.block_number)
+		} else {
+			Ok(0)
+		}
 	}
+
 	async fn get_unfinalized_tail_block_number(&self) -> anyhow::Result<Option<u64>> {
-		Err(std::io::Error::new(
-			std::io::ErrorKind::Other,
-			"Unable to get value for get_unfinalized_tail_block_number".to_string(),
-		)
-		.into())
+		let addr = tangle::storage()
+			.eth2_client()
+			.unfinalized_tail_execution_header(convert_typed_chain_ids(self.chain));
+
+		if let Some(head) = self.get_value(&addr).await? {
+			Ok(Some(head.block_number))
+		} else {
+			Ok(None)
+		}
 	}
 }
 
