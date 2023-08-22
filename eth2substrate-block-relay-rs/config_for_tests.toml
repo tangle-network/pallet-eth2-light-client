@@ -30,4 +30,4 @@ eth_requests_timeout_seconds = 30
 validate_updates = true
 verify_bls_signature = true
 hashes_gc_threshold = 51000
-beacon_rpc_version = "V1_2"
+beacon_rpc_version = "V1_5"

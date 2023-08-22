@@ -300,7 +300,8 @@ impl EthClientPalletTrait for EthClientPallet {
 				typed_chain_id: decoded_tcid,
 				block_header: decoded_header,
 			};
-			let tx = tangle::runtime_types::node_template_runtime::RuntimeCall::Eth2Client(call);
+			let tx =
+				tangle::runtime_types::tangle_standalone_runtime::RuntimeCall::Eth2Client(call);
 			txes.push(tx);
 		}
 
