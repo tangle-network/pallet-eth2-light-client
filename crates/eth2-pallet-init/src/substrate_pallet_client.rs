@@ -48,6 +48,15 @@ pub fn convert_typed_chain_ids(
 	}
 }
 
+pub fn convert_mode(t: tangle::runtime_types::eth_types::pallet::ClientMode) -> ClientMode {
+	match t {
+		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitLightClientUpdate =>
+			ClientMode::SubmitLightClientUpdate,
+		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitHeader =>
+			ClientMode::SubmitHeader,
+	}
+}
+
 pub async fn setup_api() -> anyhow::Result<OnlineClient<PolkadotConfig>> {
 	let api: OnlineClient<PolkadotConfig> = OnlineClient::<PolkadotConfig>::new().await?;
 	Ok(api)
@@ -357,11 +366,15 @@ impl EthClientPalletTrait for EthClientPallet {
 	}
 
 	async fn get_client_mode(&self) -> anyhow::Result<ClientMode> {
-		Err(std::io::Error::new(
-			std::io::ErrorKind::Other,
-			"Unable to get value for get_client_mode".to_string(),
-		)
-		.into())
+		let addr = tangle::storage()
+			.eth2_client()
+			.client_mode_for_chain(convert_typed_chain_ids(self.chain));
+
+		if let Some(mode) = self.get_value(&addr).await? {
+			Ok(convert_mode(mode))
+		} else {
+			Ok(ClientMode::SubmitLightClientUpdate)
+		}
 	}
 
 	async fn get_last_block_number(&self) -> anyhow::Result<u64> {
