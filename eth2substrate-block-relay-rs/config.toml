@@ -1,5 +1,5 @@
 beacon_endpoint = "https://lodestar-mainnet.chainsafe.io"
-eth1_endpoint = "https://mainnet.infura.io/v3/ede484d891c94a2d84f93886ebbf8727"
+eth1_endpoint = "https://mainnet.infura.io/v3/ETH1_INFURA_API_KEY"
 network_name = "Mainnet"
 headers_batch_size = 33
 substrate_endpoint = "ws://127.0.0.1:9944"
