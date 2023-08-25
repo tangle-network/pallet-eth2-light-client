@@ -106,8 +106,8 @@ cargo build --release -p node-template
 ```bash
 ./target/release/node-template --dev \
  --relayer-config-dir=./gadget/config \
- --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config_for_tests.toml \
- --light-client-relay-config-path=./eth2substrate-block-relay-rs/config_for_tests.toml
+ --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
+ --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
 ```
 
 ---
