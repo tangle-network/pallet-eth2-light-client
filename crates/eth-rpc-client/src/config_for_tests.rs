@@ -25,7 +25,7 @@ impl ConfigForTests {
 		dotenv().ok();
 
 		let api_key_string = env::var("ETH1_INFURA_API_KEY").unwrap();
-		config.eth1_endpoint = config.eth1_endpoint.replace("API_KEY", &api_key_string);
+		config.eth1_endpoint = config.eth1_endpoint.replace("ETH1_INFURA_API_KEY", &api_key_string);
 
 		config
 	}
