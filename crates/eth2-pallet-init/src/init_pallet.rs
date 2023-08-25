@@ -59,7 +59,7 @@ pub async fn init_pallet(
 	config: &Config,
 	eth_client_pallet: &mut EthClientPallet,
 ) -> anyhow::Result<()> {
-	info!(target: "relay", "=== Contract initialization ===");
+	info!(target: "relay", "=== Pallet initialization ===");
 	println!("config: {:?}", config);
 	if let EthNetwork::Mainnet = config.ethereum_network {
 		assert!(
