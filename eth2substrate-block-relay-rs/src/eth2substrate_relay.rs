@@ -267,7 +267,7 @@ impl Eth2SubstrateRelay {
 			info!(target: "relay", "Get headers block_number=[{}, {}]", min_block_number_in_batch, current_block_number);
 
 			let mut headers = skip_fail!(
-				self.get_execution_blocks_between(min_block_number_in_batch, current_block_number)
+				self.get_execution_blocks_between(current_block_number, min_block_number_in_batch)
 					.await,
 				"Network problems during fetching execution blocks",
 				self.sleep_time_on_sync_secs
