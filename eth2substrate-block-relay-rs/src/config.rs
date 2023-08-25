@@ -1,3 +1,4 @@
+use dotenvy::dotenv;
 use eth2_pallet_init::eth_network::EthNetwork;
 use eth_rpc_client::beacon_rpc_client::BeaconRPCVersion;
 use reqwest::Url;
@@ -74,7 +75,10 @@ impl Config {
 		let mut config = std::fs::File::open(path).expect("Error on parsing path to config");
 		let mut content = String::new();
 		config.read_to_string(&mut content).expect("Error on reading config");
-		let config = toml::from_str(content.as_str()).expect("Error on config parsing");
+		let mut config: Config = toml::from_str(content.as_str()).expect("Error on config parsing");
+		dotenv().ok();
+		let api_key_string = std::env::var("ETH1_INFURA_API_KEY").unwrap();
+		config.eth1_endpoint = config.eth1_endpoint.replace("ETH1_INFURA_API_KEY", &api_key_string);
 
 		Self::check_urls(&config);
 		config
