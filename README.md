@@ -102,9 +102,8 @@ export ETH1_INFURA_API_KEY="your_infura_key"
 cargo build --release -p node-template
 ```
 
-#### 4. Run light client
+#### 5. Run light client
 ```bash
-#terminal 1
 ./target/release/node-template --tmp --chain local --alice  \
   --rpc-cors all --rpc-external --rpc-methods=unsafe \
   --port 30433 \
@@ -112,40 +111,18 @@ cargo build --release -p node-template
   --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
   --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
   --rpc-port 9444
-
-#terminal 2
-./target/release/node-template --tmp --chain local --bob  \
-  --rpc-cors all --rpc-external --rpc-methods=unsafe \
-  --port 30405 \
-  --relayer-config-dir=./gadget/config \
-  --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
-  --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
-  --rpc-port 9445 --bootnodes /ip4/127.0.0.1/tcp/30433/p2p/12D3KooWCzqQx1oEPJ94uDPXPa2VdHqDD5ftpCFmSd5KPHgxMivK
-
-#terminal 3
-./target/release/node-template --tmp --chain local --charlie  \
-    --rpc-cors all --rpc-external \
-    --rpc-port 9448 \
-    --port 30408 \
-    --relayer-config-dir=./gadget/config \
-    --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
-    --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
-    --bootnodes /ip4/127.0.0.1/tcp/30433/p2p/12D3KooWCzqQx1oEPJ94uDPXPa2VdHqDD5ftpCFmSd5KPHgxMivK \
-    --unsafe-rpc-external --rpc-methods=unsafe
 ```
 
 ---
 
 ## Contributing
 
-Interested in contributing to the Webb Relayer Network? Thank you so much for your interest! We are always appreciative for contributions from the open-source community!
+Interested in contributing to the Webb Eth2 light client relayer? Thank you so much for your interest! We are always appreciative for contributions from the open-source community!
 
 If you have a contribution in mind, please check out our [Contribution Guide](./.github/CONTRIBUTING.md) for information on how to do so. We are excited for your first contribution!
 
 ## License
 
-Licensed under <a href="LICENSE">Apache 2.0 license</a>.
+Licensed under <a href="LICENSE">GNU General Public License v3.0</a>.
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in this crate by you, as defined in the Apache 2.0 license, shall
-be licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this crate by you, as defined in the GNU General Public License v3.0 license, shall be licensed as above, without any additional terms or conditions.
