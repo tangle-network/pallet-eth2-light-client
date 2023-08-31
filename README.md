@@ -104,6 +104,7 @@ cargo build --release -p node-template
 
 #### 5. Run light client
 ```bash
+#terminal 1
 ./target/release/node-template --tmp --chain local --alice  \
   --rpc-cors all --rpc-external --rpc-methods=unsafe \
   --port 30433 \
@@ -111,6 +112,26 @@ cargo build --release -p node-template
   --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
   --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
   --rpc-port 9444
+
+#terminal 2
+./target/release/node-template --tmp --chain local --bob  \
+  --rpc-cors all --rpc-external --rpc-methods=unsafe \
+  --port 30405 \
+  --relayer-config-dir=./gadget/config \
+  --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
+  --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
+  --rpc-port 9445 --bootnodes /ip4/127.0.0.1/tcp/30433/p2p/12D3KooWCzqQx1oEPJ94uDPXPa2VdHqDD5ftpCFmSd5KPHgxMivK
+
+#terminal 3
+./target/release/node-template --tmp --chain local --charlie  \
+    --rpc-cors all --rpc-external \
+    --rpc-port 9448 \
+    --port 30408 \
+    --relayer-config-dir=./gadget/config \
+    --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
+    --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
+    --bootnodes /ip4/127.0.0.1/tcp/30433/p2p/12D3KooWCzqQx1oEPJ94uDPXPa2VdHqDD5ftpCFmSd5KPHgxMivK \
+    --unsafe-rpc-external --rpc-methods=unsafe
 ```
 
 ---
