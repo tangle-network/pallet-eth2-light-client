@@ -27,6 +27,7 @@ use eth_types::{
 use log::{debug, info, trace, warn};
 use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
 use tokio::time::sleep;
+use min_max::*;
 
 const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
@@ -266,8 +267,9 @@ impl Eth2SubstrateRelay {
 				max(min_block_number, current_block_number - self.headers_batch_size + 1);
 			info!(target: "relay", "Get headers block_number=[{}, {}]", min_block_number_in_batch, current_block_number);
 
+			let min_max = min_max!(min_block_number_in_batch, current_block_number);
 			let mut headers = skip_fail!(
-				self.get_execution_blocks_between(current_block_number, min_block_number_in_batch)
+				self.get_execution_blocks_between(min_max.0, min_max.1)
 					.await,
 				"Network problems during fetching execution blocks",
 				self.sleep_time_on_sync_secs
