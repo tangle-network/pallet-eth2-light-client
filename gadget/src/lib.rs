@@ -70,11 +70,15 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 
 	tracing::info!(target: "relay", "=== Initializing relay ===");
 
-	if let Ok(is_initialized) = eth_pallet.is_initialized(init_pallet::get_typed_chain_id(&lc_init_config)).await {
+	if let Ok(is_initialized) = eth_pallet
+		.is_initialized(init_pallet::get_typed_chain_id(&lc_init_config))
+		.await
+	{
 		if !is_initialized {
 			match init_pallet::init_pallet(&lc_init_config, &mut eth_pallet).await {
 				Ok(_) => tracing::info!(target: "relay", "=== Pallet initialized ==="),
-				Err(e) => tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
+				Err(e) =>
+					tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e),
 			};
 		}
 	}

@@ -34,8 +34,8 @@ fn to_lighthouse_beacon_block_header(
 }
 
 pub fn is_correct_finality_update(
-	bellatrix_fork_epoch: Epoch,
-	bellatrix_fork_version: ForkVersion,
+	fork_epoch: Epoch,
+	fork_version: ForkVersion,
 	genesis_validators_root: [u8; 32],
 	light_client_update: &LightClientUpdate,
 	sync_committee: SyncCommittee,
@@ -53,12 +53,9 @@ pub fn is_correct_finality_update(
 
 	let participant_pubkeys =
 		get_participant_pubkeys(&sync_committee.pubkeys.0, &sync_committee_bits);
-	let fork_version = compute_fork_version_by_slot(
-		light_client_update.signature_slot,
-		bellatrix_fork_epoch,
-		bellatrix_fork_version,
-	)
-	.expect("Unsupported fork");
+	let fork_version =
+		compute_fork_version_by_slot(light_client_update.signature_slot, fork_epoch, fork_version)
+			.expect("Unsupported fork");
 	let domain =
 		compute_domain(DOMAIN_SYNC_COMMITTEE, fork_version, genesis_validators_root.into());
 
@@ -117,13 +114,13 @@ mod tests {
 
 		let network: NetworkConfig =
 			NetworkConfig::new(&Network::from_str(&config.network_name).unwrap());
-		let bellatrix_fork_epoch = network.bellatrix_fork_epoch;
-		let bellatrix_fork_version = network.bellatrix_fork_version;
+		let fork_epoch = network.bellatrix_fork_epoch;
+		let fork_version = network.bellatrix_fork_version;
 		let genesis_validators_root = network.genesis_validators_root;
 
 		assert!(is_correct_finality_update(
-			bellatrix_fork_epoch,
-			bellatrix_fork_version,
+			fork_epoch,
+			fork_version,
 			genesis_validators_root,
 			&light_client_updates[0],
 			current_sync_committee
@@ -131,8 +128,8 @@ mod tests {
 		.unwrap());
 
 		assert!(!is_correct_finality_update(
-			bellatrix_fork_epoch,
-			bellatrix_fork_version,
+			fork_epoch,
+			fork_version,
 			genesis_validators_root,
 			&light_client_updates[0],
 			next_sync_committee

@@ -25,9 +25,9 @@ use eth_types::{
 	BlockHeader,
 };
 use log::{debug, info, trace, warn};
+use min_max::*;
 use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
 use tokio::time::sleep;
-use min_max::*;
 
 const ONE_EPOCH_IN_SLOTS: u64 = 32;
 
@@ -88,8 +88,8 @@ pub struct Eth2SubstrateRelay {
 	eth1_rpc_client: Eth1RPCClient,
 	eth_client_pallet: Box<dyn EthClientPalletTrait>,
 	headers_batch_size: u64,
-	bellatrix_fork_epoch: Epoch,
-	bellatrix_fork_version: ForkVersion,
+	fork_epoch: Epoch,
+	fork_version: ForkVersion,
 	genesis_validators_root: [u8; 32],
 	interval_between_light_client_updates_submission_in_epochs: u64,
 	max_blocks_for_finalization: u64,
@@ -134,8 +134,8 @@ impl Eth2SubstrateRelay {
 			sleep_time_on_sync_secs: config.sleep_time_on_sync_secs,
 			sleep_time_after_submission_secs: config.sleep_time_after_submission_secs,
 			eth_client_pallet: eth_pallet,
-			bellatrix_fork_epoch: eth2_network.bellatrix_fork_epoch,
-			bellatrix_fork_version: eth2_network.bellatrix_fork_version,
+			fork_epoch: eth2_network.capella_fork_epoch,
+			fork_version: eth2_network.capella_fork_version,
 			genesis_validators_root: eth2_network.genesis_validators_root,
 			get_light_client_update_by_epoch: config
 				.get_light_client_update_by_epoch
@@ -269,8 +269,7 @@ impl Eth2SubstrateRelay {
 
 			let min_max = min_max!(min_block_number_in_batch, current_block_number);
 			let mut headers = skip_fail!(
-				self.get_execution_blocks_between(min_max.0, min_max.1)
-					.await,
+				self.get_execution_blocks_between(min_max.0, min_max.1).await,
 				"Network problems during fetching execution blocks",
 				self.sleep_time_on_sync_secs
 			);
@@ -396,8 +395,8 @@ impl Eth2SubstrateRelay {
 		};
 
 		finality_update_verify::is_correct_finality_update(
-			self.bellatrix_fork_epoch,
-			self.bellatrix_fork_version,
+			self.fork_epoch,
+			self.fork_version,
 			self.genesis_validators_root,
 			light_client_update,
 			sync_committee,
