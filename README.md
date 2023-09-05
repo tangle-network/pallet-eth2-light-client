@@ -102,7 +102,7 @@ export ETH1_INFURA_API_KEY="your_infura_key"
 cargo build --release -p node-template
 ```
 
-#### 4. Run light client
+#### 5. Run light client
 ```bash
 #terminal 1
 ./target/release/node-template --tmp --chain local --alice  \
@@ -138,14 +138,12 @@ cargo build --release -p node-template
 
 ## Contributing
 
-Interested in contributing to the Webb Relayer Network? Thank you so much for your interest! We are always appreciative for contributions from the open-source community!
+Interested in contributing to the Webb Eth2 light client relayer? Thank you so much for your interest! We are always appreciative for contributions from the open-source community!
 
 If you have a contribution in mind, please check out our [Contribution Guide](./.github/CONTRIBUTING.md) for information on how to do so. We are excited for your first contribution!
 
 ## License
 
-Licensed under <a href="LICENSE">Apache 2.0 license</a>.
+Licensed under <a href="LICENSE">GNU General Public License v3.0</a>.
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in this crate by you, as defined in the Apache 2.0 license, shall
-be licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this crate by you, as defined in the GNU General Public License v3.0 license, shall be licensed as above, without any additional terms or conditions.
