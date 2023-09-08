@@ -430,5 +430,5 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> anyhow::Result<Pair> {
 	}
 }
 
-#[subxt::subxt(runtime_metadata_path = "../../metadata/eth_light_client_runtime.scale")]
+#[subxt::subxt(runtime_metadata_path = "../../metadata/tangle-runtime.scale")]
 pub mod tangle {}
