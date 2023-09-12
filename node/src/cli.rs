@@ -9,7 +9,7 @@ pub struct Cli {
 	pub run: RunCmd,
 
 	#[clap(flatten)]
-	pub relayer_cmd: pallet_eth2_light_client_relayer_gadget_cli::RelayerCmd,
+	pub relayer_cmd: pallet_eth2_light_client_relayer_gadget_cli::LightClientRelayerCmd,
 }
 
 #[derive(Debug, clap::Subcommand)]
