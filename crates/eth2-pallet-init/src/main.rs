@@ -1,9 +1,8 @@
 use clap::Parser;
 use std::string::String;
+use subxt::{OnlineClient, PolkadotConfig};
 use webb_eth2_pallet_init::{
-	config::Config,
-	init_pallet::init_pallet,
-	substrate_pallet_client::{setup_api, EthClientPallet},
+	config::Config, init_pallet::init_pallet, substrate_pallet_client::EthClientPallet,
 };
 use webb_proposals::TypedChainId;
 
@@ -25,7 +24,10 @@ async fn main() -> anyhow::Result<()> {
 	let config =
 		Config::load_from_toml(args.config.clone().try_into().expect("Incorrect config path"));
 
-	let api = setup_api().await.unwrap();
+	let api = OnlineClient::<PolkadotConfig>::from_url(config.substrate_endpoint.clone())
+		.await
+		.expect("failed to connect to substrate node");
+
 	let mut eth_client_contract = EthClientPallet::new(api, TypedChainId::None);
 	init_pallet(&config, &mut eth_client_contract)
 		.await
