@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types = { git = "https://github.com/webb-tools/lighthouse.git" }
+types = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
 tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-features = false }
 merkle-proof = { package = "webb-merkle-proof",  path = "../merkle-proof", default-features = false }
 
