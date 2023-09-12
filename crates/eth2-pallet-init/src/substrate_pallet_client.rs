@@ -222,8 +222,8 @@ impl EthClientPallet {
 								subxt::Error::Runtime(DispatchError::Module(error)) => {
 									let details = error.details()?;
 									let pallet = details.pallet.name();
-									let error = &details.variant.name;
-									format!("Extrinsic failed with an error: {pallet}::{error}")
+									let error = &details.variant;
+									format!("Extrinsic failed with an error: {pallet}::{error:?}")
 								},
 								_ => {
 									format!("Extrinsic failed with an error: {}", err)
