@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2", "arbitrary"] }
 finality-update-verify = { package = "webb-finality-update-verify", path = "../finality-update-verify", features = ["arbitrary"] }
-types = { git = "https://github.com/webb-tools/lighthouse.git" }
-merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", features = ["arbitrary"] }
+types = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", features = ["arbitrary"], rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
 tree_hash = { version = "0.5.0", features = ["arbitrary"] }
 ethereum_hashing = { version = "1.0.0-beta.2" }
 ethereum_ssz = { version = "0.5.0", features = ["arbitrary"] }

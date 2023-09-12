@@ -59,9 +59,10 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 		},
 	};
 
-	let api = OnlineClient::from_url(lc_relay_config.substrate_endpoint.clone())
-		.await
-		.expect("failed to connect to substrate node");
+	let api =
+		OnlineClient::<subxt::PolkadotConfig>::from_url(lc_relay_config.substrate_endpoint.clone())
+			.await
+			.expect("failed to connect to substrate node");
 
 	let mut eth_pallet =
 		EthClientPallet::new(api, lc_relay_config.ethereum_network.as_typed_chain_id());
