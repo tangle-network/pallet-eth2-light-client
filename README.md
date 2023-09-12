@@ -106,7 +106,6 @@ cargo build --release -p node-template
 ./target/release/node-template --tmp --chain local --alice  \
   --rpc-cors all --rpc-external --rpc-methods=unsafe \
   --port 30433 \
-  --relayer-config-dir=./gadget/config \
   --light-client-init-pallet-config-path=./crates/eth2-pallet-init/config.toml \
   --light-client-relay-config-path=./eth2substrate-block-relay-rs/config.toml
   --rpc-port 9444
