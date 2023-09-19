@@ -196,8 +196,8 @@ mod tests {
 			.unwrap());
 	}
 
-	#[test]
-	fn test_beacon_block_body_root_matches_body_root_in_header() {
+	#[tokio::test]
+	async fn test_beacon_block_body_root_matches_body_root_in_header() {
 		let config = get_test_config();
 
 		let beacon_rpc_client = crate::beacon_rpc_client::BeaconRPCClient::new(
@@ -209,9 +209,11 @@ mod tests {
 
 		let beacon_block_body = beacon_rpc_client
 			.get_beacon_block_body_for_block_id(&format!("{}", config.first_slot))
+			.await
 			.unwrap();
 		let beacon_block_header = beacon_rpc_client
 			.get_beacon_block_header_for_block_id(&format!("{}", config.first_slot))
+			.await
 			.unwrap();
 
 		let beacon_block_body_merkle_tree =
