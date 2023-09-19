@@ -238,6 +238,7 @@ mod tests {
 
 		let last_finalized_slot_eth_network = beacon_rpc_client
 			.get_last_finalized_slot_number()
+			.await
 			.expect("Error on getting last finalized beacon block slot");
 
 		const MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS: u64 = 3;
