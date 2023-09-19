@@ -6,32 +6,16 @@ license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0"
+anyhow = { workspace = true }
 tracing = "0.1.37"
-ethereum-types = { version = "0.14.1" }
-subxt = "0.29.0"
-tokio = { version = "1.1", features = ["macros", "rt", "time"] }
-
-# Substrate
-sp-application-crypto = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-sp-keystore = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-sc-keystore = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-
-# Relayer
-webb-relayer = { git = "https://github.com/webb-tools/relayer", tag = "v0.5.7-dev" }
-webb-relayer-context = { git = "https://github.com/webb-tools/relayer", tag = "v0.5.7-dev" }
-webb-relayer-config = { git = "https://github.com/webb-tools/relayer", tag = "v0.5.7-dev" }
-webb-relayer-store = { git = "https://github.com/webb-tools/relayer", tag = "v0.5.7-dev" }
-webb-relayer-types = { git = "https://github.com/webb-tools/relayer", tag = "v0.5.7-dev" }
+ethereum-types = { workspace = true }
+subxt = { workspace = true }
+tokio = { workspace = true }
 
 # Eth2 Light Client
 pallet-eth2-light-client-relayer-gadget-cli = { path = "./cli" }
 eth2-to-substrate-relay = { path = "../eth2substrate-block-relay-rs" }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
-
-# DKG
-dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", tag = "v0.4.4", default-features = false }
 
 # Webb
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs", rev="a960eaf", features = ["scale", "evm"] }

@@ -4,51 +4,45 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types =  { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
+types =  { workspace = true }
 eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
 eth2_ssz =  { package = "ethereum_ssz", version = "0.5.0", features = ["arbitrary"] }
 
-webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
 eth-types = { path = "../crates/eth-types", features = ["eth2"] }
 tree-hash = { package = "webb-tree-hash",  path = "../crates/tree-hash" }
 merkle-proof = { package = "webb-merkle-proof",  path = "../crates/merkle-proof" }
 consensus-types = { package = "webb-consensus-types", path = "../crates/consensus-types" }
-# eth2-hashing = { package = "webb-eth2-hashing", path = "../crates/eth2-hashing" }
-# eth2-ssz = { package = "webb-eth2-ssz", path = "../crates/ssz" }
 eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-client" }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
 
-webb = { version = "0.5.17", features = [
-    "evm-runtime",
-    "substrate-runtime"
-]}
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git",rev="a960eaf", default-features = false, features = ["scale", "evm"] }
+webb = { workspace = true }
+webb-proposals = { workspace = true }
+webb-relayer-utils = { workspace = true }
 
-anyhow = "1.0"
-funty = "2.0.0"
-sp-keyring = { version = "18.0.0", default-features = false }
-sp-core = { version = "16.0.0" }
-log = { version = "0.4", features = ["std", "serde"] }
-serde_json = "1.0.74"
-serde = { version = "1.0", default-features = false, features = ["derive"] }
-ethereum-types = { version = "0.14.1" }
-reqwest = { version = "0.11", features = ["blocking", "json"] }
-clap = { version = "3.1.6", features = ["derive"] }
-tokio = { version = "1.1", features = ["macros", "rt", "time"] }
-env_logger = "0.9.0"
-futures = { version = "0.3.21", default-features = false }
-async-std ={ version = "1.12.0", default-features = false }
-async-trait = "0.1.72"
-hex = "*"
-toml = "0.5.9"
-atomic_refcell = "0.1.8"
-bitvec = "*"
-primitive-types = "0.12.1"
-
-prometheus = { version = "0.9", features = ["process"] }
-lazy_static = "1.4"
-warp = "0.2"
-thread = "*"
-dotenvy = "0.15.7"
-min-max = "0.1"
+anyhow = { workspace = true }
+funty = { workspace = true }
+sp-keyring = { workspace = true }
+sp-core = { workspace = true }
+log ={ workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+ethereum-types = { workspace = true }
+reqwest = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+env_logger = { workspace = true }
+futures = { workspace = true }
+async-std = { workspace = true }
+async-trait = { workspace = true }
+hex = { workspace = true }
+toml = { workspace = true }
+atomic_refcell =  { workspace = true }
+bitvec = { workspace = true }
+primitive-types = { workspace = true }
+prometheus = { workspace = true }
+lazy_static = { workspace = true }
+warp =  { workspace = true }
+thread = { workspace = true }
+dotenvy = { workspace = true }
+min-max =  { workspace = true }
