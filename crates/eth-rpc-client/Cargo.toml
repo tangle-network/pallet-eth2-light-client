@@ -12,25 +12,26 @@ tree_hash = { version = "0.5.0", features = ["arbitrary"] }
 ethereum_hashing = { version = "1.0.0-beta.2" }
 ethereum_ssz = { version = "0.5.0", features = ["arbitrary"] }
 
-ethereum-types = { version = "0.14.1", features = ["rlp", "serialize"] }
-funty = "2.0.0"
-anyhow = "1.0"
-log = { version = "0.4", features = ["std", "serde"] }
-serde_json = { version = "1.0.74", default-features = false }
-serde = { version = "1.0", features = ["derive"] }
-reqwest = { version = "0.11", features = ["blocking", "json"] }
-clap = { version = "3.1.6", features = ["derive"] }
-tokio = { version = "1.1", features = ["macros", "rt", "time"] }
-env_logger = "0.9.0"
-futures = { version = "0.3.21", default-features = false }
-async-std = { version = "1.12.0", default-features = false }
-hex = "*"
-toml = "0.5.9"
-atomic_refcell = "0.1.8"
-bitvec = "*"
-dotenv = "0.15.0"
+ethereum-types = { workspace = true, features = ["rlp", "serialize"] }
+funty =  { workspace = true }
+anyhow =  { workspace =true }
+log = { workspace = true, features = ["std", "serde"] }
+serde_json = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+reqwest = { workspace = true, features = ["blocking", "json"] }
+clap = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["macros", "rt", "time"] }
+env_logger = { workspace = true }
+futures = { workspace = true }
+async-std = { workspace = true }
+prometheus = { workspace = true, features = ["process"] }
+hex = { workspace = true }
+toml = { workspace = true }
+atomic_refcell = { workspace = true }
+bitvec = { workspace = true }
+dotenv = { workspace = true }
+lazy_static = { workspace = true }
+warp = { workspace = true }
+thread = { workspace = true }
 
-prometheus = { version = "0.9", features = ["process"] }
-lazy_static = "1.4"
-warp = "0.2"
-thread = "*"
+
