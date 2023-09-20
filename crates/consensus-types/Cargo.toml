@@ -8,7 +8,6 @@ edition = "2021"
 
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2"] }
 eth2-ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false }
-eth2-ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive", default-features = false }
 tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-features = false }
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
 merkle-proof = { package = "webb-merkle-proof", path = "../merkle-proof", default-features = false }

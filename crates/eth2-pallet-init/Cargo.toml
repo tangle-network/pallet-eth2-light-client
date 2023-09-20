@@ -21,8 +21,6 @@ toml = { workspace = true }
 async-trait = { workspace = true }
 sp-keyring = { version = "24.0.0", default-features = false }
 subxt = { workspace = true }
-webb-relayer-utils = { workspace = true }
-webb-relayer-types = { workspace = true }
 webb = { workspace = true }
 scale-info = { workspace = true }
 webb-proposals = { workspace = true, features = ["scale", "evm"] }

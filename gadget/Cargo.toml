@@ -13,12 +13,8 @@ subxt = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "time"] }
 
 # Eth2 Light Client
-pallet-eth2-light-client-relayer-gadget-cli = { path = "./cli" }
 eth2-to-substrate-relay = { path = "../eth2substrate-block-relay-rs" }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
-
-# DKG
-dkg-runtime-primitives = { workspace = true }
 
 # Webb
 webb-proposals = { workspace = true, features = ["scale", "evm"] }
