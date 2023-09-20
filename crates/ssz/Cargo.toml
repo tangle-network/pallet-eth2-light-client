@@ -10,9 +10,9 @@ license = "Apache-2.0"
 name = "ssz"
 
 [dependencies]
-ethereum-types = { version = "0.14.1", default-features = false }
-smallvec = { version = "1.6.1", features = ["const_generics"], default-features = false }
-itertools = { version = "0.10.3", default-features = false }
+ethereum-types = { workspace = true }
+smallvec = { workspace = true, features = ["const_generics"] }
+itertools = { workspace = true }
 
 [dev-dependencies]
 ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive" }

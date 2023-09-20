@@ -360,8 +360,8 @@ mod tests {
 	}
 
 	#[ignore]
-	#[test]
-	fn test_hand_made_finality_light_client_update() {
+	#[tokio::test]
+	async fn test_hand_made_finality_light_client_update() {
 		let config = get_test_config();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config.beacon_endpoint,
@@ -373,7 +373,7 @@ mod tests {
 		let light_client_period = BeaconRPCClient::get_period_for_slot(config.first_slot);
 
 		let light_client_update =
-			beacon_rpc_client.get_light_client_update(light_client_period).unwrap();
+			beacon_rpc_client.get_light_client_update(light_client_period).await.unwrap();
 
 		let attested_slot = light_client_update.attested_beacon_header.slot;
 
@@ -383,6 +383,7 @@ mod tests {
 				attested_slot,
 				true,
 			)
+			.await
 			.unwrap();
 
 		cmp_light_client_updates(&hand_made_light_client_update, &light_client_update);
@@ -393,8 +394,8 @@ mod tests {
 		)
 	}
 
-	#[test]
-	fn test_hand_made_finality_light_client_update_from_file() {
+	#[tokio::test]
+	async fn test_hand_made_finality_light_client_update_from_file() {
 		let config = get_test_config();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config.beacon_endpoint,
@@ -407,19 +408,21 @@ mod tests {
 				&beacon_rpc_client,
 				&config.path_to_attested_state_for_period,
 			)
+			.await
 			.unwrap();
 
 		let light_client_update = beacon_rpc_client
 			.light_client_update_from_json_str(
 				read_to_string(config.path_to_light_client_update_for_attested_slot).unwrap(),
 			)
+			.await
 			.unwrap();
 
 		cmp_light_client_updates(&hand_made_light_client_update, &light_client_update);
 	}
 
-	#[test]
-	fn test_hand_made_finality_light_client_update_from_file_with_next_sync_committee() {
+	#[tokio::test]
+	async fn test_hand_made_finality_light_client_update_from_file_with_next_sync_committee() {
 		let config = get_test_config();
 		let beacon_rpc_client = BeaconRPCClient::new(
 			&config.beacon_endpoint,
@@ -432,12 +435,15 @@ mod tests {
             HandMadeFinalityLightClientUpdate::get_light_client_update_from_file_with_next_sync_committee(
                 &beacon_rpc_client,
                 &config.path_to_attested_state_for_period,
-            ).unwrap();
+            )
+			.await
+			.unwrap();
 
 		let light_client_update = beacon_rpc_client
 			.light_client_update_from_json_str(
 				read_to_string(config.path_to_light_client_update_for_attested_slot).unwrap(),
 			)
+			.await
 			.unwrap();
 		cmp_light_client_updates(&hand_made_light_client_update, &light_client_update);
 

@@ -7,9 +7,9 @@ license = "Apache-2.0"
 description = "Hashing primitives used in Ethereum 2.0"
 
 [dependencies]
-lazy_static = { version = "1.4.0", optional = true, default-features = false, features = ["spin_no_std"] }
-ring = { version = "0.16.19", optional = true, default-features = false }
-sha2 = { version = "0.10.2", default-features = false }
+lazy_static = { workspace = true, optional = true,features = ["spin_no_std"] }
+ring = { workspace = true, optional = true }
+sha2 = { workspace = true }
 
 [dev-dependencies]
 rustc-hex = "2.1.0"

@@ -7,10 +7,10 @@ description = "Serialization and deserialization utilities useful for JSON repre
 license = "Apache-2.0"
 
 [dependencies]
-serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
-serde_json = { version = "1.0.58", default-features = false, features = ["alloc"], optional = true }
-hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
-ethereum-types = { version = "0.14.1", default-features = false, features = ["serialize"] }
+serde = { workspace = true, features = ["derive"], optional = true }
+serde_json = { workspace = true, features = ["alloc"], optional = true }
+hex = { workspace = true }
+ethereum-types = { workspace = true }
 
 [features]
 default = ["std"]

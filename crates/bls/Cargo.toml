@@ -10,15 +10,14 @@ tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-feature
 eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
 
-log = { version = "0.4.14", default-features = false }
-milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
-rand = { version = "0.7.3", default-features = false }
-rand_chacha = { version = "0.3.1", default-features = false }
-serde = { version = "1.0.152", features = ["derive"], default-features = false}
-
-hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
-ethereum-types = { version = "0.14.1", default-features = false }
-zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
+log = { workspace = true }
+milagro_bls = { workspace = true } 
+rand = { workspace = true }
+rand_chacha = { workspace = true }
+serde = { workspace = true }
+hex = { workspace = true }
+ethereum-types = { workspace = true }
+zeroize = { workspace = true }
 
 [features]
 default = ["std"]

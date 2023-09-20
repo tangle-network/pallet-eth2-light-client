@@ -5,10 +5,10 @@ authors = ["Michael Sproul <michael@sigmaprime.io>", "Webb Developers <hello@web
 edition = "2021"
 
 [dependencies]
-ethereum-types = { version = "0.14.1", default-features = false }
 eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
-lazy_static = { version = "1.4.0", features = ["spin_no_std"], default-features = false }
 safe-arith = { package = "webb-safe-arith", path = "../safe-arith", default-features = false }
+ethereum-types = { workspace = true }
+lazy_static = { workspace = true, features = ["spin_no_std"] }
 
 [dev-dependencies]
 quickcheck = "0.9.2"

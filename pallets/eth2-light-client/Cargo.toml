@@ -7,17 +7,6 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-log = { version = "0.4.14", default-features = false }
-serde = { version = "1.0.101", default-features = false, features = ["derive"], optional = true }
-codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "max-encoded-len"] }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", rev="a960eaf",default-features = false, features = ["scale", "evm", "substrate"] }
-ethereum-types = { version = "0.14.1", default-features = false }
-derive_more = { version = "^0.99.2", default-features = false }
-rlp = { version = "0.5.0", default-features = false }
-rlp-derive = { version = "0.1.0", default-features = false }
-tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
-bitvec = { version = "1.0.0", default-features = false, features = ["atomic", "alloc"] }
 
 eth-types = { path = "../../crates/eth-types", default-features = false, features = ["eth2"] }
 eth2-ssz = { package = "webb-eth2-ssz", path = "../../crates/ssz", default-features = false }
@@ -27,20 +16,32 @@ tree-hash = { package = "webb-tree-hash", path = "../../crates/tree-hash", defau
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../../crates/tree-hash-derive", default-features = false }
 consensus = { package = "webb-consensus-types", path = "../../crates/consensus-types", default-features = false }
 
-frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-sp-std = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-hex = { version = "0.4.2", default-features = false, features = ["alloc"] }
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+pallet-balances = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+sp-core = { workspace = true }
+
+log = { workspace = true }
+serde = { workspace = true, optional = true }
+codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+scale-info = { workspace = true }
+webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+ethereum-types =  { workspace = true }
+derive_more =  { workspace = true }
+rlp =  { workspace = true }
+rlp-derive =  { workspace = true }
+tiny-keccak = { workspace = true }
+bitvec = { workspace = true, features = ["atomic", "alloc"] }
+hex = { workspace = true }
 
 [dev-dependencies]
-anyhow = "1.0"
-lazy_static = "1.4.0"
-serde_json = { version = "1.0.58", default-features = false, features = ["alloc"] }
+anyhow = { workspace = true }
+lazy_static = { workspace = true }
+serde_json = { workspace = true }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../../crates/eth2-pallet-init" }
-async-trait = "0.1.72"
+async-trait = { workspace = true }
 
 [features]
 default = ["std"]
