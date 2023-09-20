@@ -17,7 +17,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 name = "node-template"
 
 [dependencies]
-clap = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
 futures = { workspace = true, features = ["thread-pool"]}
 rand = { workspace = true }
 
@@ -48,7 +48,7 @@ pallet-staking = { workspace = true }
 pallet-transaction-payment = { workspace = true }
 
 # These dependencies are used for the node template's RPCs
-jsonrpsee = { workspace = true }
+jsonrpsee = { workspace = true, features = ["server"] }
 sc-rpc = { workspace = true }
 sp-api = { workspace = true }
 sc-rpc-api = { workspace = true }
@@ -58,13 +58,11 @@ sc-basic-authorship = { workspace = true }
 substrate-frame-rpc-system = { workspace = true }
 pallet-transaction-payment-rpc = { workspace = true }
 
-
-# Local Dependencies
 webb-consensus-types = { path = "../crates/consensus-types" }
 pallet-eth2-light-client-relayer-gadget = { path = "../gadget" }
 pallet-eth2-light-client-relayer-gadget-cli = { path = "../gadget/cli" }
 node-template-runtime = { version = "4.0.0-dev", path = "../runtime" }
-webb-proposals = { workspace = true }
+webb-proposals = { workspace = true, features = ["scale", "evm"] }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { workspace = true }

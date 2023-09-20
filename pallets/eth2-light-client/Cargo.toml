@@ -7,17 +7,6 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-log = { workspace = true }
-serde = { workspace = true, optional = true }
-codec = { workspace = true, features = ["derive", "max-encoded-len"] }
-scale-info = { workspace = true }
-webb-proposals = { workspace = true }
-ethereum-types = { workspace = true }
-derive_more = { workspace = true }
-rlp = { workspace = true }
-rlp-derive = { workspace = true }
-tiny-keccak = { workspace = true }
-bitvec = { workspace = true, features = ["atomic", "alloc"] }
 
 eth-types = { path = "../../crates/eth-types", default-features = false, features = ["eth2"] }
 eth2-ssz = { package = "webb-eth2-ssz", path = "../../crates/ssz", default-features = false }
@@ -33,6 +22,18 @@ pallet-balances = { workspace = true }
 sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 sp-core = { workspace = true }
+
+log = { workspace = true }
+serde = { workspace = true, optional = true }
+codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+scale-info = { workspace = true }
+webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+ethereum-types =  { workspace = true }
+derive_more =  { workspace = true }
+rlp =  { workspace = true }
+rlp-derive =  { workspace = true }
+tiny-keccak = { workspace = true }
+bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
 
 [dev-dependencies]

@@ -5,6 +5,7 @@ authors = ["Webb Developers"]
 edition = "2021"
 
 [dependencies]
+
 eth-types = { path = "../eth-types", default-features = false, features = ["eth2"] }
 eth2-ssz = { package = "webb-eth2-ssz", path = "../ssz", default-features = false }
 eth2-ssz-derive = { package = "webb-eth2-ssz-derive", path = "../ssz-derive", default-features = false }
@@ -13,17 +14,16 @@ tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-der
 merkle-proof = { package = "webb-merkle-proof", path = "../merkle-proof", default-features = false }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false }
 
+bitvec = { workspace = true, features = ["atomic", "alloc"] }
+hex = { workspace = true }
+codec = { package = "parity-scale-codec", workspace = true }
+scale-info = { workspace = true }
 serde = { workspace = true }
 rlp = { workspace = true }
 rlp-derive = { workspace = true }
+ethereum-types = { workspace = true, features = ["codec", "rlp", "serialize"] }
 derive_more = { workspace = true }
 tiny-keccak = { workspace = true }
-hex = { workspace = true }
-codec = { workspace = true }
-scale-info = { workspace = true }
-ethereum-types = { workspace = true, features = ["codec", "rlp", "serialize"] }
-bitvec = { workspace = true, default-features = false, features = ["atomic", "alloc"] }
-
 
 [features]
 default = ["std"]

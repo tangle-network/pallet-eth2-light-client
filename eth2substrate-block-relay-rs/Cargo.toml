@@ -4,10 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-types =  { workspace = true }
-eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
-eth2_ssz =  { package = "ethereum_ssz", version = "0.5.0", features = ["arbitrary"] }
-
 eth-types = { path = "../crates/eth-types", features = ["eth2"] }
 tree-hash = { package = "webb-tree-hash",  path = "../crates/tree-hash" }
 merkle-proof = { package = "webb-merkle-proof",  path = "../crates/merkle-proof" }
@@ -16,33 +12,35 @@ eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-cl
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
 
-webb = { workspace = true }
-webb-proposals = { workspace = true }
+types =  { workspace = true }
+eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
+eth2_ssz =  { package = "ethereum_ssz", version = "0.5.0", features = ["arbitrary"] }
 webb-relayer-utils = { workspace = true }
-
+webb = { workspace = true }
+webb-proposals ={ workspace = true }
 anyhow = { workspace = true }
 funty = { workspace = true }
-sp-keyring = { workspace = true }
-sp-core = { workspace = true }
-log ={ workspace = true }
+sp-keyring = { version = "18.0.0", default-features = false }
+sp-core = { version = "16.0.0" }
+log = { workspace = true, features = ["std", "serde"] }
 serde_json = { workspace = true }
 serde = { workspace = true }
 ethereum-types = { workspace = true }
-reqwest = { workspace = true }
-clap = { workspace = true }
-tokio = { workspace = true }
+reqwest = { workspace = true, features = ["blocking", "json"] }
+clap = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["macros", "rt", "time"] }
 env_logger = { workspace = true }
 futures = { workspace = true }
 async-std = { workspace = true }
 async-trait = { workspace = true }
 hex = { workspace = true }
 toml = { workspace = true }
-atomic_refcell =  { workspace = true }
+atomic_refcell = { workspace = true }
 bitvec = { workspace = true }
 primitive-types = { workspace = true }
-prometheus = { workspace = true }
+prometheus = { workspace = true, features = ["process"] }
 lazy_static = { workspace = true }
-warp =  { workspace = true }
+warp = { workspace = true }
 thread = { workspace = true }
 dotenvy = { workspace = true }
-min-max =  { workspace = true }
+min-max = { workspace = true }

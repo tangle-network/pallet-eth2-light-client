@@ -10,8 +10,8 @@ tree-hash = { package = "webb-tree-hash", path = "../tree-hash", default-feature
 eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
 
-milagro_bls = { workspace = true }
 log = { workspace = true }
+milagro_bls = { workspace = true } 
 rand = { workspace = true }
 rand_chacha = { workspace = true }
 serde = { workspace = true }

@@ -7,7 +7,7 @@ license = "Apache-2.0"
 description = "Hashing primitives used in Ethereum 2.0"
 
 [dependencies]
-lazy_static = { workspace = true, optional = true, default-features = false, features = ["spin_no_std"] }
+lazy_static = { workspace = true, optional = true,features = ["spin_no_std"] }
 ring = { workspace = true, optional = true }
 sha2 = { workspace = true }
 

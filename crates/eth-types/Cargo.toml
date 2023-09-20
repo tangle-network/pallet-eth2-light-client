@@ -9,16 +9,15 @@ ssz = { package = "webb-eth2-ssz",  path = "../ssz", default-features = false }
 tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-features = false }
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
-
+hex = { workspace = true }
+codec = { package = "parity-scale-codec", workspace = true }
+scale-info = { workspace = true }
 serde = { workspace = true }
 rlp = { workspace = true }
 rlp-derive = { workspace = true }
-derive_more = { workspace = true }
-tiny-keccak = { workspace = true }
-codec = { workspace = true }
-scale-info = { workspace = true }
-hex = { workspace = true }
 ethereum-types = { workspace = true, features = ["codec", "rlp"] }
+derive_more = { workspace = true }
+tiny-keccak = { workspace = true, features = ["keccak"] }
 
 [features]
 default = ["eth2", "std"]
