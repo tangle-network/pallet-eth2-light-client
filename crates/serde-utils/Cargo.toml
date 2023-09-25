@@ -1,10 +1,12 @@
 [package]
 name = "webb-eth2-serde-utils"
-version = "0.1.1"
-authors = ["Paul Hauner <paul@paulhauner.com", "Michael Sproul <michael@sigmaprime.io>"]
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = ["Paul Hauner <paul@paulhauner.com", "Michael Sproul <michael@sigmaprime.io>", "Webb Developers <hello@webb.tools>"]
 description = "Serialization and deserialization utilities useful for JSON representations of Ethereum 2.0 types."
-license = "Apache-2.0"
+
+
 
 [dependencies]
 serde = { workspace = true, features = ["derive"], optional = true }

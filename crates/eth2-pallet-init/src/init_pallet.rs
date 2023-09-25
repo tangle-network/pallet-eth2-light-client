@@ -194,7 +194,7 @@ mod tests {
 			Config::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
 		let api = setup_api().await.unwrap();
-		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::Evm(1));
+		let mut eth_client_pallet = EthClientPallet::new(api.into(), TypedChainId::Evm(1));
 		config_for_test.validate_updates = Some(false);
 
 		init_pallet(&config_for_test, &mut eth_client_pallet).await.unwrap();
@@ -209,7 +209,7 @@ mod tests {
 			Config::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
 		let api = setup_api().await.unwrap();
-		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::Evm(1));
+		let mut eth_client_pallet = EthClientPallet::new(api.into(), TypedChainId::Evm(1));
 		config_for_test.trusted_signer_account_id = None;
 
 		init_pallet(&config_for_test, &mut eth_client_pallet).await.unwrap();
@@ -220,7 +220,7 @@ mod tests {
 		let config_for_test = Config::load_from_toml("config_for_tests.toml".try_into().unwrap());
 
 		let api = setup_api().await.unwrap();
-		let mut eth_client_pallet = EthClientPallet::new(api, TypedChainId::Evm(1));
+		let mut eth_client_pallet = EthClientPallet::new(api.into(), TypedChainId::Evm(1));
 
 		init_pallet(&config_for_test, &mut eth_client_pallet).await.unwrap();
 

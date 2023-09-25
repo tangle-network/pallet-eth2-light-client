@@ -1,3 +1,11 @@
+[workspace.package]
+version = "0.2.0-dev"
+authors = ["Webb Developers <hello@webb.tools>"]
+license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
+homepage = "https://webb.tools"
+repository = "https://github.com/webb-tools/pallet-eth2-light-client"
+edition = "2021"
+
 [workspace]
 members = [
     "pallets/*",
@@ -48,7 +56,7 @@ thread = "*"
 dotenvy = "0.15.7"
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
-
+backoff = { version = "0.4.0", features = ["tokio"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
 

@@ -1,5 +1,4 @@
 use crate::{
-	config::Config,
 	prometheus_metrics,
 	prometheus_metrics::{
 		CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_ETH,
@@ -24,6 +23,7 @@ use eth_types::{
 	primitives::FinalExecutionStatus,
 	BlockHeader,
 };
+use lc_relay_config::RelayConfig;
 use log::{debug, info, trace, warn};
 use min_max::*;
 use std::{cmp, str::FromStr, thread, time::Duration, vec::Vec};
@@ -101,7 +101,7 @@ pub struct Eth2SubstrateRelay {
 }
 
 impl Eth2SubstrateRelay {
-	pub async fn init(config: &Config, eth_pallet: Box<dyn EthClientPalletTrait>) -> Self {
+	pub async fn init(config: &RelayConfig, eth_pallet: Box<dyn EthClientPalletTrait>) -> Self {
 		info!(target: "relay", "=== Relay initialization === ");
 
 		let beacon_rpc_client = BeaconRPCClient::new(
@@ -193,27 +193,17 @@ impl Eth2SubstrateRelay {
 		Ok(last_finalized_slot_on_eth)
 	}
 
-	pub async fn run(&mut self, max_iterations: Option<u64>) {
+	pub async fn run(&mut self, max_iterations: Option<u64>) -> anyhow::Result<()> {
 		info!(target: "relay", "=== Relay running ===");
+
 		let mut iter_id = 0;
 		while !self.terminate {
 			iter_id += 1;
 			self.set_terminate(iter_id, max_iterations);
-			skip_fail!(
-				self.wait_for_synchronization().await,
-				"Fail to get sync status",
-				self.sleep_time_on_sync_secs
-			);
-
+			self.wait_for_synchronization().await?;
 			info!(target: "relay", "== New relay loop ==");
 			tokio::time::sleep(Duration::from_secs(12)).await;
-
-			let client_mode: ClientMode = skip_fail!(
-				self.eth_client_pallet.get_client_mode().await,
-				"Fail to get client mode",
-				self.sleep_time_on_sync_secs
-			);
-
+			let client_mode = self.eth_client_pallet.get_client_mode().await?;
 			let submitted_in_this_iteration = match client_mode {
 				ClientMode::SubmitLightClientUpdate => self.submit_light_client_update().await,
 				ClientMode::SubmitHeader => self.submit_headers().await,
@@ -224,6 +214,8 @@ impl Eth2SubstrateRelay {
 				sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
 			}
 		}
+
+		Ok(())
 	}
 
 	async fn submit_light_client_update(&mut self) -> bool {
@@ -298,7 +290,7 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn get_light_client_update_from_file(
-		config: &Config,
+		config: &RelayConfig,
 		beacon_rpc_client: &BeaconRPCClient,
 	) -> anyhow::Result<Option<LightClientUpdate>> {
 		let mut next_light_client_update: Option<LightClientUpdate> = None;

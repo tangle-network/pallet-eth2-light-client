@@ -1,7 +1,8 @@
 [package]
 name = "webb-safe-arith"
-version = "0.1.0"
 authors = ["Michael Sproul <michael@sigmaprime.io>"]
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 
 [dependencies]

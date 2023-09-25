@@ -1,0 +1,16 @@
+[package]
+name = "webb-lc-relayer-context"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = { workspace = true }
+
+
+[dependencies]
+# Eth2 Light Client
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../eth2-pallet-init" }
+lc-relay-config = { package = "webb-lc-relay-config", path = "../lc-relay-config" }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+subxt  = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "time"] }

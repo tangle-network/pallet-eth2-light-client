@@ -1,7 +1,9 @@
 [package]
 name = "eth2-to-substrate-relay"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = { workspace = true }
 
 [dependencies]
 eth-types = { path = "../crates/eth-types", features = ["eth2"] }
@@ -11,6 +13,8 @@ consensus-types = { package = "webb-consensus-types", path = "../crates/consensu
 eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-client" }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
+lc-relay-config = { package = "webb-lc-relay-config", path = "../crates/lc-relay-config" }
+lc-relayer-context = { package = "webb-lc-relayer-context", path = "../crates/lc-relayer-context" }
 
 types =  { workspace = true }
 eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
@@ -40,3 +44,5 @@ lazy_static = { workspace = true }
 warp = { workspace = true }
 dotenvy = { workspace = true }
 min-max = { workspace = true }
+backoff = { workspace = true }
+tracing = { workspace = true }

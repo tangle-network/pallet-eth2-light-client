@@ -1,9 +1,9 @@
 [package]
 name = "pallet-eth2-light-client-relayer-gadget"
-version = "0.0.1"
-authors = ["Webb Developers <hello@webb.tools>"]
-license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = { workspace = true}
 
 [dependencies]
 anyhow = { workspace = true }
@@ -11,10 +11,13 @@ tracing = { workspace = true }
 ethereum-types = { workspace = true }
 subxt = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "time"] }
+backoff = { workspace = true }
+async-trait =  { workspace = true }
 
 # Eth2 Light Client
 eth2-to-substrate-relay = { path = "../eth2substrate-block-relay-rs" }
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
-
+lc-relayer-context = { package = "webb-lc-relayer-context", path = "../crates/lc-relayer-context" }
+lc-relay-config = { package = "webb-lc-relay-config", path = "../crates/lc-relay-config" }
 # Webb
 webb-proposals = { workspace = true, features = ["scale", "evm"] }

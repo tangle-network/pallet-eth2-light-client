@@ -1,9 +1,9 @@
 [package]
 name = "webb-eth2-hashing"
-version = "0.3.0"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 authors = ["Paul Hauner <paul@paulhauner.com>, Webb Developers <hello@webb.tools>"]
-edition = "2021"
-license = "Apache-2.0"
 description = "Hashing primitives used in Ethereum 2.0"
 
 [dependencies]

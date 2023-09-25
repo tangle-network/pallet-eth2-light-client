@@ -1,0 +1,14 @@
+[package]
+name = "webb-lc-relay-config"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = { workspace = true }
+
+[dependencies]
+serde = { workspace = true }
+eth-rpc-client = { package = "webb-eth-rpc-client", path = "../eth-rpc-client" }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../eth2-pallet-init" }
+reqwest = { workspace = true, features = ["blocking", "json"] }
+dotenvy = { workspace = true }
+toml = { workspace = true }

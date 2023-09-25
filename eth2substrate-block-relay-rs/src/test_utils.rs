@@ -1,6 +1,5 @@
 use crate::{
-	config::Config, config_for_tests::ConfigForTests, eth2substrate_relay::Eth2SubstrateRelay,
-	test_utils,
+	config_for_tests::ConfigForTests, eth2substrate_relay::Eth2SubstrateRelay, test_utils,
 };
 use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,
@@ -16,6 +15,7 @@ use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientUpdate, SyncCommittee},
 	BlockHeader,
 };
+use lc_relay_config::RelayConfig;
 use std::time;
 use tree_hash::TreeHash;
 use webb_proposals::TypedChainId;
@@ -188,8 +188,8 @@ pub async fn init_pallet_from_specific_slot(
 	tokio::time::sleep(time::Duration::from_secs(30)).await;
 }
 
-pub fn get_config(config_for_test: &ConfigForTests) -> Config {
-	Config {
+pub fn get_config(config_for_test: &ConfigForTests) -> RelayConfig {
+	RelayConfig {
 		beacon_endpoint: config_for_test.beacon_endpoint.to_string(),
 		eth1_endpoint: config_for_test.eth1_endpoint.to_string(),
 		headers_batch_size: 8,
@@ -240,7 +240,7 @@ pub async fn get_client_pallet(
 ) -> Box<dyn EthClientPalletTrait> {
 	let api = setup_api().await.unwrap();
 	let typed_chain_id = get_typed_chain_id(config_for_test);
-	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
+	let mut eth_client_pallet = EthClientPallet::new(api.into(), typed_chain_id);
 
 	let config = get_init_config(config_for_test, &eth_client_pallet);
 
@@ -280,7 +280,7 @@ pub async fn get_relay_from_slot(
 	let config = get_config(config_for_test);
 	let api = setup_api().await.unwrap();
 	let typed_chain_id = get_typed_chain_id(config_for_test);
-	let mut eth_client_pallet = EthClientPallet::new(api, typed_chain_id);
+	let mut eth_client_pallet = EthClientPallet::new(api.into(), typed_chain_id);
 
 	init_pallet_from_specific_slot(&mut eth_client_pallet, slot, config_for_test).await;
 

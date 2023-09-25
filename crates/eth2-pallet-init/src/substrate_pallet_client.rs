@@ -8,6 +8,7 @@ use eth_types::{
 	BlockHeader, H256,
 };
 
+use std::sync::Arc;
 use subxt::{error::DispatchError, utils::AccountId32};
 use webb::substrate::{
 	scale::{Decode, Encode},
@@ -64,18 +65,18 @@ pub async fn setup_api() -> anyhow::Result<OnlineClient<PolkadotConfig>> {
 
 #[derive(Clone)]
 pub struct EthClientPallet {
-	api: OnlineClient<PolkadotConfig>,
+	api: Arc<OnlineClient<PolkadotConfig>>,
 	pair: Pair,
 	chain: TypedChainId,
 }
 
 impl EthClientPallet {
-	pub fn new(api: OnlineClient<PolkadotConfig>, typed_chain_id: TypedChainId) -> Self {
+	pub fn new(api: Arc<OnlineClient<PolkadotConfig>>, typed_chain_id: TypedChainId) -> Self {
 		Self::new_with_pair(api, sp_keyring::AccountKeyring::Alice.pair(), typed_chain_id)
 	}
 
 	pub fn new_with_pair(
-		api: OnlineClient<PolkadotConfig>,
+		api: Arc<OnlineClient<PolkadotConfig>>,
 		pair: Pair,
 		typed_chain_id: TypedChainId,
 	) -> Self {
@@ -83,7 +84,7 @@ impl EthClientPallet {
 	}
 
 	pub fn new_with_suri_key<T: AsRef<str>>(
-		api: OnlineClient<PolkadotConfig>,
+		api: Arc<OnlineClient<PolkadotConfig>>,
 		suri_key: T,
 		typed_chain_id: TypedChainId,
 	) -> anyhow::Result<Self> {

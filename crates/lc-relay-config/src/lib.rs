@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::{io::Read, path::PathBuf};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Config {
+pub struct RelayConfig {
 	// endpoint to a full node of Eth2 Beacon chain with Light Client API
 	pub beacon_endpoint: String,
 
@@ -70,12 +70,13 @@ pub struct Config {
 	pub get_light_client_update_by_epoch: Option<bool>,
 }
 
-impl Config {
+impl RelayConfig {
 	pub fn load_from_toml(path: PathBuf) -> Self {
 		let mut config = std::fs::File::open(path).expect("Error on parsing path to config");
 		let mut content = String::new();
 		config.read_to_string(&mut content).expect("Error on reading config");
-		let mut config: Config = toml::from_str(content.as_str()).expect("Error on config parsing");
+		let mut config: RelayConfig =
+			toml::from_str(content.as_str()).expect("Error on config parsing");
 		dotenv().ok();
 		let api_key_string = std::env::var("ETH1_INFURA_API_KEY").unwrap();
 		config.eth1_endpoint = config.eth1_endpoint.replace("ETH1_INFURA_API_KEY", &api_key_string);
@@ -96,8 +97,8 @@ impl Config {
 	}
 }
 
-impl From<Config> for eth2_pallet_init::config::Config {
-	fn from(val: Config) -> Self {
+impl From<RelayConfig> for eth2_pallet_init::config::Config {
+	fn from(val: RelayConfig) -> Self {
 		eth2_pallet_init::config::Config {
 			beacon_endpoint: val.beacon_endpoint,
 			eth1_endpoint: val.eth1_endpoint,

@@ -1,8 +1,9 @@
 [package]
 name = "webb-merkle-proof"
-version = "0.2.0"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 authors = ["Michael Sproul <michael@sigmaprime.io>", "Webb Developers <hello@webb.tools>"]
-edition = "2021"
 
 [dependencies]
 eth2-hashing = { package = "webb-eth2-hashing", path = "../eth2-hashing", default-features = false, features = ["zero_hash_cache"] }
