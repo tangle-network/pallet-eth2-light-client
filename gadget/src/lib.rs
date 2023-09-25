@@ -7,8 +7,8 @@ use std::path::PathBuf;
 use webb_proposals::TypedChainId;
 use tokio::signal::unix;
 use std::sync::Arc;
-use webb_lc_relayer_context::LightClientRelayerContext;
-
+use lc_relayer_context::LightClientRelayerContext;
+use lc_relay_config::RelayConfig;
 pub mod errors;
 
 /// Webb Relayer gadget initialization parameters.
@@ -129,8 +129,8 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 /// Loads the configuration for the light client
 fn loads_light_client_relayer_config(
 	config_path: &PathBuf,
-) -> anyhow::Result<eth2_to_substrate_relay::config::Config> {
-	Ok(eth2_to_substrate_relay::config::Config::load_from_toml(config_path.clone()))
+) -> anyhow::Result<RelayConfig> {
+	Ok(RelayConfig::load_from_toml(config_path.clone()))
 }
 
 /// Loads the configuration for the light client
