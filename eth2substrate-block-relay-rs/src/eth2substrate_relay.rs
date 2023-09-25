@@ -195,7 +195,7 @@ impl Eth2SubstrateRelay {
 
 	pub async fn run(&mut self, max_iterations: Option<u64>)->anyhow::Result<()> {
 		info!(target: "relay", "=== Relay running ===");
-		let mut iter_id = 0;x
+		let mut iter_id = 0;
 		while !self.terminate {
 			iter_id += 1;
 			self.set_terminate(iter_id, max_iterations);
