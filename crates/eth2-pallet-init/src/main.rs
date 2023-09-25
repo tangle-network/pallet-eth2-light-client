@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
 		.await
 		.expect("failed to connect to substrate node");
 
-	let mut eth_client_contract = EthClientPallet::new(api, TypedChainId::None);
+	let mut eth_client_contract = EthClientPallet::new(api.into(), TypedChainId::None);
 	init_pallet(&config, &mut eth_client_contract)
 		.await
 		.expect("Error on pallet initialization");

@@ -1,6 +1,5 @@
 use crate::{
-	config_for_tests::ConfigForTests, eth2substrate_relay::Eth2SubstrateRelay,
-	test_utils,
+	config_for_tests::ConfigForTests, eth2substrate_relay::Eth2SubstrateRelay, test_utils,
 };
 use eth2_pallet_init::{
 	eth_client_pallet_trait::EthClientPalletTrait,

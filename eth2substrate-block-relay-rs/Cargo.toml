@@ -14,6 +14,7 @@ eth-rpc-client = { package = "webb-eth-rpc-client", path = "../crates/eth-rpc-cl
 eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../crates/eth2-pallet-init" }
 finality-update-verify = { package = "webb-finality-update-verify", path = "../crates/finality-update-verify" }
 lc-relay-config = { package = "webb-lc-relay-config", path = "../crates/lc-relay-config" }
+lc-relayer-context = { package = "webb-lc-relayer-context", path = "../crates/lc-relayer-context" }
 
 types =  { workspace = true }
 eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
