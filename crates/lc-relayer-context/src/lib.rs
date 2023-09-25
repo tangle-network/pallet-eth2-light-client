@@ -1,12 +1,12 @@
 use eth2_pallet_init::config::Config as InitConfig;
-use eth2_to_substrate_relay::config::Config as RelayerConfig;
+use lc_relay_config::RelayConfig;
 use subxt::OnlineClient;
 use tokio::sync::broadcast;
 
 /// LightClientRelayerContext contains Relayer's configuration and shutdown signal.
 #[derive(Clone)]
 pub struct LightClientRelayerContext {
-	pub lc_relay_config : RelayerConfig,
+	pub lc_relay_config : RelayConfig,
 	pub lc_init_config : InitConfig,
 	/// Broadcasts a shutdown signal to all active connections.
     ///
@@ -21,7 +21,7 @@ pub struct LightClientRelayerContext {
 }
 
 impl LightClientRelayerContext {
-	pub fn new(lc_relay_config: RelayerConfig, lc_init_config: InitConfig ) -> Self{
+	pub fn new(lc_relay_config: RelayConfig, lc_init_config: InitConfig ) -> Self{
 		let (notify_shutdown, _) = broadcast::channel(2);
 		Self {
 			lc_relay_config,

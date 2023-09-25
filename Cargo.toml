@@ -56,7 +56,7 @@ thread = "*"
 dotenvy = "0.15.7"
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
-
+backoff = { version = "0.4.0", features = ["tokio"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
 
