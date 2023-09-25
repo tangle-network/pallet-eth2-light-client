@@ -1,8 +1,10 @@
 [package]
 name = "eth-types"
-version = "0.1.0"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
 authors = ["Near Inc <hello@nearprotocol.com>", "Webb Developers <hello@webb.tools>"]
-edition = "2021"
+
 
 [dependencies]
 ssz = { package = "webb-eth2-ssz",  path = "../ssz", default-features = false }

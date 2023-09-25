@@ -1,3 +1,11 @@
+[workspace.package]
+version = "0.2.0-dev"
+authors = ["Webb Developers <hello@webb.tools>"]
+license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
+homepage = "https://webb.tools"
+repository = "https://github.com/webb-tools/pallet-eth2-light-client"
+edition = "2021"
+
 [workspace]
 members = [
     "pallets/*",

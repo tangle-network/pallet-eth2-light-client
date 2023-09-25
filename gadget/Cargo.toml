@@ -1,9 +1,9 @@
 [package]
 name = "pallet-eth2-light-client-relayer-gadget"
-version = "0.0.1"
-authors = ["Webb Developers <hello@webb.tools>"]
-license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = { workspace = true}
 
 [dependencies]
 anyhow = { workspace = true }

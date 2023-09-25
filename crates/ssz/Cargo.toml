@@ -1,10 +1,10 @@
 [package]
 name = "webb-eth2-ssz"
-version = "0.4.1"
-authors = ["Paul Hauner <paul@sigmaprime.io>"]
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = ["Paul Hauner <paul@sigmaprime.io>", "Webb Developers <hello@webb.tools>"]
 description = "SimpleSerialize (SSZ) as used in Ethereum 2.0"
-license = "Apache-2.0"
 
 [lib]
 name = "ssz"

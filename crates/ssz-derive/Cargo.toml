@@ -1,10 +1,10 @@
 [package]
 name = "webb-eth2-ssz-derive"
-version = "0.3.0"
-authors = ["Paul Hauner <paul@sigmaprime.io>"]
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = ["Paul Hauner <paul@sigmaprime.io>",  "Webb Developers <hello@webb.tools>"]
 description = "Procedural derive macros to accompany the eth2_ssz crate."
-license = "Apache-2.0"
 
 [lib]
 name = "ssz_derive"

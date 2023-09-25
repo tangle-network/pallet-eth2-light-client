@@ -1,9 +1,9 @@
 [package]
 name = "webb-tree-hash"
-version = "0.4.1"
-authors = ["Paul Hauner <paul@paulhauner.com>"]
-edition = "2021"
-license = "Apache-2.0"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = ["Paul Hauner <paul@paulhauner.com>",  "Webb Developers <hello@webb.tools>"]
 description = "Efficient Merkle-hashing as used in Ethereum 2.0"
 
 [lib]
