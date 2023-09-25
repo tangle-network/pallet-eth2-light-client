@@ -89,9 +89,8 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 		},
 	};
 	let ctx = LightClientRelayerContext::new(lc_relay_config, lc_init_config);
-	ignite_lc_relayer(ctx.clone())
-		.await
-		.expect("failed to start light client relayer");
+	let lc_relayer_task = ignite_lc_relayer(ctx.clone());
+		
 	// watch for signals
 	let mut ctrlc_signal =
 		unix::signal(unix::SignalKind::interrupt()).expect("failed to register ctrlc handler");
@@ -108,6 +107,10 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 		tracing::info!("Clean Exit ..");
 	};
 	tokio::select! {
+		_ = lc_relayer_task => {
+			tracing::warn!(
+				"Light client relayer stopped ...");
+		},
 		_ = ctrlc_signal.recv() => {
 			tracing::warn!("Interrupted (Ctrl+C) ...");
 			shutdown();
