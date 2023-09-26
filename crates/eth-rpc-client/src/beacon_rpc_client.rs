@@ -96,14 +96,22 @@ impl BeaconRPCClient {
 			.build()
 			.expect("Error on building non-blocking client for regular rpc requests.");
 
-		let retry_client = WebbRetryClient::new(client, u32::MAX, 3000);
+		let retry_client = WebbRetryClient::builder()
+			.inner(client)
+			.timeout_retries(u32::MAX)
+			.initial_backoff(3000_u64)
+			.build();
 
 		let state_client = reqwest::Client::builder()
 			.timeout(Duration::from_secs(timeout_state_seconds))
 			.build()
 			.expect("Error on building non-blocking client for regular rpc requests.");
 
-		let retry_state_client = WebbRetryClient::new(state_client, u32::MAX, 3000);
+		let retry_state_client = WebbRetryClient::builder()
+			.inner(state_client)
+			.timeout_retries(u32::MAX)
+			.initial_backoff(3000_u64)
+			.build();
 
 		Self {
 			endpoint_url: endpoint_url.to_string(),
