@@ -14,8 +14,8 @@ use eth_types::{
 	},
 	H256,
 };
+use lc_relay_types::WebbRetryClient;
 use log::trace;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{string::String, time::Duration};
@@ -75,8 +75,8 @@ impl BeaconRPCRoutes {
 /// using Beacon RPC API (https://ethereum.github.io/beacon-APIs/)
 pub struct BeaconRPCClient {
 	endpoint_url: String,
-	client: Client,
-	client_state_request: Client,
+	client: WebbRetryClient,
+	client_state_request: WebbRetryClient,
 	routes: BeaconRPCRoutes,
 }
 
@@ -91,16 +91,32 @@ impl BeaconRPCClient {
 		timeout_state_seconds: u64,
 		version: Option<BeaconRPCVersion>,
 	) -> Self {
+		let client = reqwest::Client::builder()
+			.timeout(Duration::from_secs(timeout_seconds))
+			.build()
+			.expect("Error on building non-blocking client for regular rpc requests.");
+
+		let retry_client = WebbRetryClient::builder()
+			.inner(client)
+			.timeout_retries(u32::MAX)
+			.initial_backoff(3000_u64)
+			.build();
+
+		let state_client = reqwest::Client::builder()
+			.timeout(Duration::from_secs(timeout_state_seconds))
+			.build()
+			.expect("Error on building non-blocking client for regular rpc requests.");
+
+		let retry_state_client = WebbRetryClient::builder()
+			.inner(state_client)
+			.timeout_retries(u32::MAX)
+			.initial_backoff(3000_u64)
+			.build();
+
 		Self {
 			endpoint_url: endpoint_url.to_string(),
-			client: reqwest::Client::builder()
-				.timeout(Duration::from_secs(timeout_seconds))
-				.build()
-				.expect("Error on building non-blocking client for regular rpc requests."),
-			client_state_request: reqwest::Client::builder()
-				.timeout(Duration::from_secs(timeout_state_seconds))
-				.build()
-				.expect("Error on building non-blocking client for state request."),
+			client: retry_client,
+			client_state_request: retry_state_client,
 			routes: BeaconRPCRoutes::new(version.unwrap_or(BeaconRPCVersion::V1_1)),
 		}
 	}
@@ -338,9 +354,9 @@ impl BeaconRPCClient {
 		v["data"]["is_syncing"].as_bool().ok_or(ErrorOnJsonParse.into())
 	}
 
-	async fn get_json_from_client(client: &Client, url: &str) -> anyhow::Result<String> {
+	async fn get_json_from_client(client: &WebbRetryClient, url: &str) -> anyhow::Result<String> {
 		trace!(target: "relay", "Beacon chain request: {}", url);
-		let json_str = client.get(url).send().await?.text().await?;
+		let json_str = client.get(url).await?;
 		if serde_json::from_str::<Value>(&json_str).is_err() {
 			return Err(FailOnGettingJson { response: json_str }.into())
 		}
