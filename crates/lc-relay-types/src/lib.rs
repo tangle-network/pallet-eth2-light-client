@@ -14,24 +14,6 @@ pub struct WebbRetryClient {
 	initial_backoff: u64,
 }
 
-// impl WebbRetryClient {
-// 	pub fn new(inner: Client, timeout_retries: u32, initial_backoff: u64) -> Self {
-// 		Self { inner, timeout_retries, initial_backoff }
-// 	}
-// 	/// Sets the number of retries after a connection times out
-// 	///
-// 	/// **Note:** this will only be used for `request::Error::TimedOut`
-// 	pub fn timeout_retries(mut self, timeout_retries: u32) -> Self {
-// 		self.timeout_retries = timeout_retries;
-// 		self
-// 	}
-
-// 	/// Sets the duration to wait initially before retrying
-// 	pub fn initial_backoff(mut self, initial_backoff: u64) -> Self {
-// 		self.initial_backoff = initial_backoff;
-// 		self
-// 	}
-// }
 
 impl WebbRetryClient {
 	pub async fn get(&self, url: &str) -> anyhow::Result<String> {
