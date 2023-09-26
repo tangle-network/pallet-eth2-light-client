@@ -90,7 +90,7 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 	};
 	let ctx = LightClientRelayerContext::new(lc_relay_config, lc_init_config);
 	let lc_relayer_task = ignite_lc_relayer(ctx.clone());
-		
+
 	// watch for signals
 	let mut ctrlc_signal =
 		unix::signal(unix::SignalKind::interrupt()).expect("failed to register ctrlc handler");
