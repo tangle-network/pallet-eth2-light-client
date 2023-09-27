@@ -1,15 +1,21 @@
 use eth_types::BlockHeader;
-use reqwest::Client;
+use lc_relay_types::WebbRetryClient;
 use serde_json::{json, Value};
 
 pub struct Eth1RPCClient {
 	endpoint_url: String,
-	client: Client,
+	client: WebbRetryClient,
 }
 
 impl Eth1RPCClient {
 	pub fn new(endpoint_url: &str) -> Self {
-		Self { endpoint_url: endpoint_url.to_string(), client: reqwest::Client::new() }
+		let client = reqwest::Client::new();
+		let retry_client = WebbRetryClient::builder()
+			.inner(client)
+			.timeout_retries(u32::MAX)
+			.initial_backoff(3000_u64)
+			.build();
+		Self { endpoint_url: endpoint_url.to_string(), client: retry_client }
 	}
 
 	pub async fn get_block_header_by_number(&self, number: u64) -> anyhow::Result<BlockHeader> {
@@ -21,14 +27,7 @@ impl Eth1RPCClient {
 			"params": [hex_str_number, false]
 		});
 
-		let res = self
-			.client
-			.post(&self.endpoint_url)
-			.json(&json_value)
-			.send()
-			.await?
-			.text()
-			.await?;
+		let res = self.client.post(&self.endpoint_url, json_value).await?;
 
 		let val: Value = serde_json::from_str(&res)?;
 		let mut block_json = serde_json::to_string(&val["result"])?;
@@ -60,14 +59,7 @@ impl Eth1RPCClient {
             "params":[],
             "id":1});
 
-		let res = self
-			.client
-			.post(&self.endpoint_url)
-			.json(&json_value)
-			.send()
-			.await?
-			.text()
-			.await?;
+		let res = self.client.post(&self.endpoint_url, json_value).await?;
 
 		let val: Value = serde_json::from_str(&res)?;
 		let is_sync = val["result"].as_bool();
