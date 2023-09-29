@@ -121,10 +121,6 @@ use consensus::{
 	SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
 };
 
-pub mod traits;
-
-pub use traits::*;
-
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -959,7 +955,7 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> VerifyBlockHeaderExists for Pallet<T> {
+impl<T: Config> webb_light_client_primitives::traits::LightClientHandler for Pallet<T> {
 	fn verify_block_header_exists(
 		header: BlockHeader,
 		typed_chain_id: TypedChainId,

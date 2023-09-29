@@ -35,6 +35,7 @@ rlp-derive =  { workspace = true }
 tiny-keccak = { workspace = true }
 bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
+webb-light-client-primitives = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
