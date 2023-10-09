@@ -3,9 +3,9 @@ use super::*;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-use codec::{Decode, Encode, MaxEncodedLen};
+use codec::{Decode, Encode};
 use ethereum_types::Address;
-use frame_support::RuntimeDebug;
+
 use scale_info::TypeInfo;
 
 /// Represents a light proposal input.
