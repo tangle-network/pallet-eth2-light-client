@@ -1,519 +1,170 @@
-use crate::{
-	mock::{Eth2Client, RuntimeOrigin},
-	test_utils::*,
-};
-
-use bitvec::{bitarr, order::Lsb0};
-use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, H256, U256};
-use frame_support::{assert_err, assert_ok};
-use hex::FromHex;
+#![allow(clippy::unwrap_used)]
+use super::*;
+use crate::mock::*;
+use dkg_runtime_primitives::traits::OnSignedProposal;
+use ethereum_types::Address;
+use frame_support::{assert_err, assert_ok, bounded_vec, BoundedVec};
+use pallet_bridge_registry::{types::BridgeMetadata, Bridges, ResourceToBridgeIndex};
+use pallet_eth2_light_client::tests::{get_test_context, submit_and_check_execution_headers};
 use sp_runtime::AccountId32;
-use tree_hash::TreeHash;
-use webb_proposals::TypedChainId;
+use std::convert::TryFrom;
+use webb_proposals::{self, evm, FunctionSignature, Nonce, ProposalHeader};
 
-pub const MAINNET_CHAIN: TypedChainId = TypedChainId::Evm(1);
 pub const GOERLI_CHAIN: TypedChainId = TypedChainId::Evm(5);
 pub const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
 
-pub fn submit_and_check_execution_headers(
-	origin: RuntimeOrigin,
-	typed_chain_id: TypedChainId,
-	headers: Vec<&BlockHeader>,
-) {
-	for header in headers {
-		assert_ok!(Eth2Client::submit_execution_header(
-			origin.clone(),
-			typed_chain_id,
-			header.clone()
+// setup bridge registry pallets with defaults
+fn setup_bridge_registry() {
+	let target_chain = webb_proposals::TypedChainId::Evm(1);
+	let target_system = webb_proposals::TargetSystem::new_contract_address([1u8; 20]);
+	let target_resource_id = webb_proposals::ResourceId::new(target_system, target_chain);
+	// Create src info
+	let src_chain = GOERLI_CHAIN;
+	let src_target_system = webb_proposals::TargetSystem::new_contract_address([0u8; 20]);
+	let src_resource_id = webb_proposals::ResourceId::new(src_target_system, src_chain);
+	// Create mocked signed EVM anchor update proposals
+	let proposal = evm::AnchorUpdateProposal::new(
+		ProposalHeader::new(target_resource_id, FunctionSignature([0u8; 4]), Nonce(1)),
+		[1u8; 32],
+		src_resource_id,
+	);
+	let signed_proposal = Proposal::Signed {
+		kind: ProposalKind::AnchorUpdate,
+		data: proposal.into_bytes().to_vec().try_into().unwrap(),
+		signature: vec![].try_into().unwrap(),
+	};
+	// Handle signed proposal
+	assert_ok!(BridgeRegistry::on_signed_proposal(signed_proposal));
+	// Verify the storage system updates correctly
+	assert_eq!(ResourceToBridgeIndex::<Test>::get(target_resource_id), Some(1));
+	assert_eq!(ResourceToBridgeIndex::<Test>::get(src_resource_id), Some(1));
+	assert_eq!(
+		Bridges::<Test>::get(1).unwrap(),
+		BridgeMetadata {
+			resource_ids: bounded_vec![src_resource_id, target_resource_id],
+			info: Default::default()
+		}
+	);
+}
+
+#[test]
+fn test_light_light_proposal_flow() {
+	new_test_ext().execute_with(|| {
+		// setup bridge registry with defaults
+		setup_bridge_registry();
+
+		// prep light client pallet
+		let (headers, updates, _init_input) = get_test_context(None);
+		assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+			RuntimeOrigin::signed(ALICE),
+			GOERLI_CHAIN,
+			updates[1].clone()
 		));
-		assert!(Eth2Client::is_known_execution_header(typed_chain_id, header.number));
-	}
-}
 
-pub fn get_test_context(
-	init_options: Option<InitOptions<[u8; 32]>>,
-) -> (&'static Vec<Vec<BlockHeader>>, &'static Vec<LightClientUpdate>, InitInput<[u8; 32]>) {
-	let (headers, updates, init_input_0) = get_test_data(init_options);
-	let init_input = init_input_0.clone().map_into();
-
-	assert_ok!(Eth2Client::init(
-		RuntimeOrigin::signed(ALICE.clone()),
-		GOERLI_CHAIN,
-		Box::new(init_input)
-	));
-
-	assert_eq!(Eth2Client::last_block_number(GOERLI_CHAIN), headers[0][0].number);
-
-	(headers, updates, init_input_0)
-}
-
-mod generic_tests {
-	use consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
-
-	use super::*;
-	use crate::{
-		mock::{new_test_ext, Eth2Client, Test},
-		test_utils::read_beacon_header,
-		Error, Paused,
-	};
-
-	#[test]
-	pub fn test_header_root() {
-		let header =
-			read_beacon_header(format!("./src/data/goerli/beacon_header_{}.json", 5258752));
-		assert_eq!(
-			H256(header.tree_hash_root()),
-			Vec::from_hex("cd669c0007ab6ff261a02cc3335ba470088e92f0460bf1efac451009efb9ec0a")
-				.unwrap()
-				.into()
+		submit_and_check_execution_headers(
+			pallet_eth2_light_client::mock::RuntimeOrigin::signed(ALICE),
+			GOERLI_CHAIN,
+			headers[0].iter().skip(1).rev().collect(),
 		);
 
-		let header =
-			read_beacon_header(format!("./src/data/mainnet/beacon_header_{}.json", 4100000));
-		assert_eq!(
-			H256(header.tree_hash_root()),
-			Vec::from_hex("342ca1455e976f300cc96a209106bed2cbdf87243167fab61edc6e2250a0be6c")
-				.unwrap()
-				.into()
+		let mut header = headers[0][1].clone();
+		let block_hash = pallet_eth2_light_client::FinalizedExecutionBlocks::<Test>::get(
+			GOERLI_CHAIN,
+			header.number,
 		);
-	}
+		header.hash = block_hash;
 
-	#[test]
-	pub fn test_submit_update_two_periods() {
-		new_test_ext().execute_with(|| {
-			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[1].clone()
-			));
+		// setup light client payload
+		let light_proposal = LightProposalInputOf::<Test> {
+			block_header: header,
+			merkle_root: [0; 32],
+			merkle_root_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index: 0,
+			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			vanchor_address: Address::from([0; 20]),
+		};
 
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].iter().skip(1).rev().collect(),
-			);
-
-			for header in headers[0].iter().skip(1) {
-				let header_hash = header.calculate_hash();
-				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header_hash,
-					"Execution block hash is not finalized: {header_hash:?}"
-				);
-			}
-
-			assert_eq!(
-				Eth2Client::last_block_number(GOERLI_CHAIN),
-				headers[0].last().unwrap().number
-			);
-		})
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_execution_block_from_fork_chain() {
-		new_test_ext().execute_with(|| {
-			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[1].clone()
-			));
-
-			// Submit execution header with different hash
-			let mut fork_header = headers[0][1].clone();
-			// Difficulty is modified just in order to get a different header hash. Any other field
-			// would be suitable too
-			fork_header.difficulty = U256::from(ethereum_types::U256::from(99));
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					fork_header
-				),
-				Error::<Test>::BlockHashesDoNotMatch
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_gc_headers() {
-		new_test_ext().execute_with(|| {
-			let hashes_gc_threshold: usize = 9500;
-			let (headers, updates, _init_input) = get_test_context(Some(InitOptions {
-				validate_updates: true,
-				verify_bls_signatures: true,
-				hashes_gc_threshold: hashes_gc_threshold as u64,
-				trusted_signer: None,
-			}));
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[1].clone()
-			));
-
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].iter().skip(1).rev().collect(),
-			);
-
-			for header in headers[0].iter().skip(1) {
-				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header.calculate_hash(),
-					"Execution block hash is not finalized: {:?}",
-					header.calculate_hash()
-				);
-			}
-
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[2].clone()
-			));
-
-			submit_and_check_execution_headers(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[1].iter().rev().collect(),
-			);
-
-			assert_eq!(
-				Eth2Client::last_block_number(GOERLI_CHAIN),
-				headers[1].last().unwrap().number
-			);
-
-			for header in headers[1].iter() {
-				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header.calculate_hash(),
-					"Execution block hash is not finalized: {:?}",
-					header.calculate_hash()
-				);
-			}
-
-			for header in headers.concat().iter().rev().skip(hashes_gc_threshold + 2) {
-				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).is_none(),
-					"Execution block hash was not removed: {:?}",
-					header.calculate_hash()
-				);
-			}
-		})
-	}
-
-	#[test]
-	pub fn test_trusted_signer() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(Some(InitOptions {
-				validate_updates: true,
-				verify_bls_signatures: true,
-				hashes_gc_threshold: 7100,
-				trusted_signer: Some([2u8; 32]),
-			}));
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					updates[1].clone()
-				),
-				Error::<Test>::NotTrustedSigner,
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_invalid_finality_proof() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-			update.finality_update.finality_branch[5] = H256::from(
-				hex::decode("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-					.unwrap(),
-			);
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::InvalidFinalityProof,
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_empty_finality_proof() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-			update.finality_update.finality_branch = vec![];
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::InvalidFinalityProof,
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_invalid_execution_block_proof() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-			update.finality_update.header_update.execution_hash_branch[5] = H256::from(
-				hex::decode("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-					.unwrap(),
-			);
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::InvalidExecutionBlockHashProof
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_empty_execution_block_proof() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-			update.finality_update.header_update.execution_hash_branch = vec![];
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::InvalidExecutionBlockHashProof
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_skip_update_period() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-			update.finality_update.header_update.beacon_header.slot =
-				update.signature_slot + EPOCHS_PER_SYNC_COMMITTEE_PERIOD * SLOTS_PER_EPOCH * 10;
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::UpdateHeaderSlotLessThanFinalizedHeaderSlot
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_update_with_missing_execution_blocks() {
-		new_test_ext().execute_with(|| {
-			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[1].clone()
-			));
-
-			for (_index, header) in headers[0].iter().skip(1).take(5).enumerate() {
-				assert_err!(
-					Eth2Client::submit_execution_header(
-						RuntimeOrigin::signed(ALICE),
-						GOERLI_CHAIN,
-						header.clone()
-					),
-					Error::<Test>::BlockHashesDoNotMatch
-				);
-			}
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_same_execution_blocks() {
-		new_test_ext().execute_with(|| {
-			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[1].clone()
-			));
-			assert_ok!(Eth2Client::submit_execution_header(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				headers[0].last().unwrap().clone()
-			));
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					headers[0].last().unwrap().clone()
-				),
-				Error::<Test>::BlockHashesDoNotMatch
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_update_paused() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			Paused::<Test>::insert(GOERLI_CHAIN, true);
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					updates[1].clone()
-				),
-				Error::<Test>::LightClientUpdateNotAllowed
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_outdated_update() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					updates[0].clone()
-				),
-				Error::<Test>::ActiveHeaderSlotLessThanFinalizedSlot,
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_submit_blocks_with_unknown_parent() {
-		new_test_ext().execute_with(|| {
-			let (headers, updates, _init_input) = get_test_context(None);
-			assert_eq!(Eth2Client::last_block_number(GOERLI_CHAIN), headers[0][0].number);
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				updates[1].clone()
-			));
-
-			let tmp_headers: Vec<_> = headers[0].iter().skip(1).rev().collect();
-			assert_ok!(Eth2Client::submit_execution_header(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				tmp_headers[0].clone()
-			));
-			// Skip 2th block
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					tmp_headers[3].clone()
-				),
-				Error::<Test>::BlockHashesDoNotMatch
-			);
-		});
-	}
-
-	#[test]
-	// test_panic_on_submit_headers_in_worng_mode
-	pub fn test_panic_on_submit_headers_in_wrong_mode() {
-		new_test_ext().execute_with(|| {
-			let (headers, _updates, _init_input) = get_test_context(None);
-			assert_eq!(Eth2Client::last_block_number(GOERLI_CHAIN), headers[0][0].number);
-			assert_err!(
-				Eth2Client::submit_execution_header(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					headers[0][1].clone()
-				),
-				Error::<Test>::InvalidClientMode
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_sync_committee_bits_is_less_than_threshold() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-
-			let mut sync_committee_bits = bitarr![u8, Lsb0; 0; 512];
-
-			// The number of participants should satisfy the inequality:
-			// num_of_participants * 3 >= sync_committee_bits_size * 2
-			// If the sync_committee_bits_size = 512, then
-			// the minimum allowed value of num_of_participants is 342.
-
-			// Fill the sync_committee_bits with 341 participants to trigger panic
-			let num_of_participants = (((512.0 * 2.0 / 3.0) as f32).ceil() - 1.0) as usize;
-			sync_committee_bits.get_mut(0..num_of_participants).unwrap().fill(true);
-			update.sync_aggregate.sync_committee_bits =
-				sync_committee_bits.as_raw_mut_slice().to_vec().into();
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::SyncCommitteeBitsSumLessThanThreshold,
-			);
-		});
-	}
-
-	#[test]
-	pub fn test_panic_on_missing_sync_committee_update() {
-		new_test_ext().execute_with(|| {
-			let (_headers, updates, _init_input) = get_test_context(None);
-			let mut update = updates[1].clone();
-			update.sync_committee_update = None;
-
-			assert_err!(
-				Eth2Client::submit_beacon_chain_light_client_update(
-					RuntimeOrigin::signed(ALICE),
-					GOERLI_CHAIN,
-					update
-				),
-				Error::<Test>::SyncCommitteeUpdateNotPresent
-			);
-		});
-	}
+		assert_ok!(LightProposals::submit_proposal(
+			RuntimeOrigin::signed(ALICE),
+			GOERLI_CHAIN,
+			light_proposal
+		));
+	});
 }
 
-mod mainnet_tests {
-	use crate::{
-		mock::{new_test_ext, Test},
-		Error,
-	};
+#[test]
+fn test_light_light_should_reject_if_header_is_not_present() {
+	new_test_ext().execute_with(|| {
+		// setup bridge registry with defaults
+		setup_bridge_registry();
 
-	use super::*;
+		let (headers, updates, _init_input) = get_test_context(None);
 
-	#[test]
-	pub fn test_panic_on_init_in_trustless_mode_without_bls_on_mainnet() {
-		new_test_ext().execute_with(|| {
-			let (_headers, _updates, init_input) = get_test_data(Some(InitOptions {
-				validate_updates: true,
-				verify_bls_signatures: false,
-				hashes_gc_threshold: 500,
-				trusted_signer: None,
-			}));
+		// setup light client payload
+		let light_proposal = LightProposalInputOf::<Test> {
+			block_header: headers[0][1].clone(),
+			merkle_root: [0; 32],
+			merkle_root_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index: 0,
+			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			vanchor_address: Address::from([0; 20]),
+		};
 
-			assert_err!(
-				Eth2Client::init(
-					RuntimeOrigin::signed(ALICE),
-					MAINNET_CHAIN,
-					Box::new(init_input.map_into())
-				),
-				Error::<Test>::TrustlessModeError,
-			);
-		})
-	}
+		assert_err!(
+			LightProposals::submit_proposal(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				light_proposal
+			),
+			pallet_eth2_light_client::Error::<Test>::HeaderHashDoesNotExist
+		);
+	});
+}
+
+#[test]
+fn test_light_light_should_reject_if_proof_verification_fails() {
+	new_test_ext().execute_with(|| {
+		// setup bridge registry with defaults
+		setup_bridge_registry();
+
+		// prep light client pallet
+		let (headers, updates, _init_input) = get_test_context(None);
+		assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+			RuntimeOrigin::signed(ALICE),
+			GOERLI_CHAIN,
+			updates[1].clone()
+		));
+
+		submit_and_check_execution_headers(
+			pallet_eth2_light_client::mock::RuntimeOrigin::signed(ALICE),
+			GOERLI_CHAIN,
+			headers[0].iter().skip(1).rev().collect(),
+		);
+
+		let mut header = headers[0][1].clone();
+		let block_hash = pallet_eth2_light_client::FinalizedExecutionBlocks::<Test>::get(
+			GOERLI_CHAIN,
+			header.number,
+		);
+		header.hash = block_hash;
+
+		// setup light client payload
+		let light_proposal = LightProposalInputOf::<Test> {
+			block_header: header,
+			merkle_root: [0; 32],
+			merkle_root_proof: vec![123].try_into().unwrap(),
+			leaf_index: 0,
+			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			vanchor_address: Address::from([0; 20]),
+		};
+
+		assert_err!(
+			LightProposals::submit_proposal(
+				RuntimeOrigin::signed(ALICE),
+				GOERLI_CHAIN,
+				light_proposal
+			),
+			Error::<Test>::ProofVerificationFailed
+		);
+	});
 }

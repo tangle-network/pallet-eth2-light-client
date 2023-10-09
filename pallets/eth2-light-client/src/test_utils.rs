@@ -23,7 +23,7 @@ pub fn read_client_updates(
 	let mut updates = vec![];
 	for period_idx in start_period..=end_period {
 		let client_update = read_client_update(format!(
-			"./src/data/{network}/light_client_update_period_{period_idx}.json"
+			"../eth2-light-client/src/data/{network}/light_client_update_period_{period_idx}.json"
 		));
 		updates.push(client_update);
 	}
@@ -49,11 +49,11 @@ pub fn get_goerli_test_data(
 			read_client_updates(NETWORK.to_string(), 633, 635);
 		static ref HEADERS: Vec<Vec<BlockHeader>> = vec![
 			read_headers(format!(
-				"./src/data/{}/execution_blocks_{}_{}.json",
+				"../eth2-light-client/src/data/{}/execution_blocks_{}_{}.json",
 				NETWORK, 8652100, 8661554
 			)),
 			read_headers(format!(
-				"./src/data/{}/execution_blocks_{}_{}.json",
+				"../eth2-light-client/src/data/{}/execution_blocks_{}_{}.json",
 				NETWORK, 8661554, 8663908
 			))
 		];

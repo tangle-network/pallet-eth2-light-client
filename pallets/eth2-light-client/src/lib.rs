@@ -101,17 +101,17 @@ use frame_support::{sp_runtime::traits::AccountIdConversion, traits::Currency};
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-#[cfg(test)]
-mod mock;
+#[cfg(any(test, feature = "testing"))]
+pub mod mock;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 mod mocked_pallet_client;
 
-#[cfg(test)]
-mod tests;
+#[cfg(any(test, feature = "testing"))]
+pub mod tests;
 
-#[cfg(test)]
-mod test_utils;
+#[cfg(any(test, feature = "testing"))]
+pub mod test_utils;
 
 // pub mod consensus;
 use consensus::{
@@ -217,7 +217,7 @@ pub mod pallet {
 	/// `hashes_gc_threshold` entries. Execution block number -> execution block hash
 	#[pallet::storage]
 	#[pallet::getter(fn finalized_execution_blocks)]
-	pub(super) type FinalizedExecutionBlocks<T: Config> = StorageDoubleMap<
+	pub type FinalizedExecutionBlocks<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		TypedChainId,

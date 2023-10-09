@@ -36,8 +36,6 @@ tiny-keccak = { workspace = true }
 bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
 webb-light-client-primitives = { workspace = true }
-
-[dev-dependencies]
 anyhow = { workspace = true }
 lazy_static = { workspace = true }
 serde_json = { workspace = true }
@@ -70,6 +68,9 @@ std = [
 	"tree-hash/std",
 	"merkle-proof/std",
 	
+]
+testing = [
+	"std",
 ]
 
 try-runtime = ["frame-support/try-runtime"]

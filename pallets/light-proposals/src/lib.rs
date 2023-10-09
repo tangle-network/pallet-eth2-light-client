@@ -22,28 +22,25 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
 
-use eth_types::{
-	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
-	pallet::{ClientMode, ExecutionHeaderInfo, InitInput},
-	BlockHeader, H256,
+
+use dkg_runtime_primitives::{
+	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
 };
+
 use frame_support::{
-	pallet_prelude::{ensure, DispatchError},
+	pallet_prelude::{DispatchError},
 	traits::Get,
-	PalletId,
 };
+pub use pallet::*;
+use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
 use tree_hash::TreeHash;
-use webb_proposals::TypedChainId;
-use scale_info::TypeInfo;
-pub use pallet::*;
-
-use bitvec::prelude::{BitVec, Lsb0};
+use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
 
 use frame_support::{sp_runtime::traits::AccountIdConversion, traits::Currency};
 
-type BalanceOf<T> =
-	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+/// Function sig for anchor update
+pub const ANCHOR_UPDATE_FUNCTION_SIGNATURE: [u8; 4] = [0x26, 0x57, 0x88, 0x01];
 
 #[cfg(test)]
 mod mock;
@@ -51,31 +48,21 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-// pub mod consensus;
-use consensus::{
-	compute_domain, compute_signing_root, compute_sync_committee_period, convert_branch,
-	get_participant_pubkeys, validate_beacon_block_header_update, DOMAIN_SYNC_COMMITTEE,
-	FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX, MIN_SYNC_COMMITTEE_PARTICIPANTS,
-	SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
-};
-
-pub mod traits;
-
-pub use traits::*;
-
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use consensus::network_config::NetworkConfig;
-	use eth_types::{eth2::BeaconBlockHeader, pallet::ClientMode};
+	
+	use dkg_runtime_primitives::{ProposalHandlerTrait};
+	
 	use frame_support::{
-		dispatch::DispatchResultWithPostInfo,
-		pallet_prelude::{OptionQuery, ValueQuery, *},
-		Blake2_128Concat
+		dispatch::{fmt::Debug, DispatchResultWithPostInfo},
+		pallet_prelude::{ValueQuery, *},
 	};
-	use frame_support::dispatch::fmt::Debug;
 	use frame_system::pallet_prelude::*;
-	use webb_light_client_primitives::{types::LightProposalInput, traits::LightClientHandler};
+	use webb_light_client_primitives::{
+		traits::{LightClientHandler, StorageProofVerifier},
+		types::LightProposalInput,
+	};
 
 	pub type LightProposalInputOf<T> = LightProposalInput<<T as Config>::MaxProofSize>;
 
@@ -85,45 +72,56 @@ pub mod pallet {
 
 	#[pallet::config]
 	/// The module configuration trait.
-	pub trait Config: frame_system::Config + pallet_balances::Config {
+	pub trait Config: frame_system::Config + pallet_bridge_registry::Config {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-		type Currency: Currency<Self::AccountId>;
-
+		/// Light client interface for the pallet
 		type LightClient: LightClientHandler;
 
+		/// Storage proof verifier for the pallt
+		type StorageProofVerifier: StorageProofVerifier;
+
+		/// Proposer handler trait
+		type ProposalHandler: ProposalHandlerTrait<
+			MaxProposalLength = <Self as pallet::Config>::MaxProposalLength,
+		>;
+
+		/// Max length of submitted proof
+		#[pallet::constant]
 		type MaxProofSize: Get<u32> + TypeInfo + Clone + Debug + PartialEq + Eq;
+
+		/// Max length of a proposal
+		#[pallet::constant]
+		type MaxProposalLength: Get<u32>
+			+ Debug
+			+ Clone
+			+ Eq
+			+ PartialEq
+			+ PartialOrd
+			+ Ord
+			+ TypeInfo;
 	}
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		Init {
-			typed_chain_id: TypedChainId,
-			header_info: ExecutionHeaderInfo<T::AccountId>,
-		},
-		SubmitBeaconChainLightClientUpdate {
-			typed_chain_id: TypedChainId,
-			submitter: T::AccountId,
-			beacon_block_header: BeaconBlockHeader,
-		},
-		SubmitExecutionHeader {
-			typed_chain_id: TypedChainId,
-			header_info: Box<BlockHeader>,
-		},
-		UpdateTrustedSigner {
-			trusted_signer: T::AccountId,
-		},
+		ProposalSubmitted { typed_chain_id: TypedChainId, proposal: LightProposalInputOf<T> },
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn resource_id_to_nonce)]
+	/// Mapping of resource to nonce
+	pub type ResourceIdToNonce<T: Config> = StorageMap<_, Blake2_256, ResourceId, u32, ValueQuery>;
 
 	#[pallet::error]
 	pub enum Error<T> {
-		/// The light client is already initialized for the typed chain ID
-		AlreadyInitialized,
-		/// For attempting to update the light client
-		LightClientUpdateNotAllowed,
-
+		/// Cannot fetch bridge details
+		CannotFetchBridgeDetails,
+		/// Cannot fetch bridge metadata
+		CannotFetchBridgeMetadata,
+		/// Proof verification failed
+		ProofVerificationFailed,
 	}
 
 	#[pallet::hooks]
@@ -135,21 +133,130 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn submit_proposal(
 			origin: OriginFor<T>,
+			typed_chain_id: TypedChainId,
 			proposal: LightProposalInputOf<T>,
 		) -> DispatchResultWithPostInfo {
-			// // generate the block hash
-			// let block_hash = Self::generate_block_hash(proposal.block_header);
+			ensure_signed(origin)?;
 
-			// // validate the block hash against the eth-light-client storage
-			// ensure!(Self::is_block_hash_valid(block_hash), Error::<T>::InvalidBlock);
+			// validate the block header against light client storage
+			T::LightClient::verify_block_header_exists(
+				proposal.block_header.clone(),
+				typed_chain_id,
+			)?;
 
-			// // validate the merkle proofs
-			// ensure!(Self::validate_merkle_proof(proposal.proof), Error::<T>::InvalidProof);
+			// validate the merkle proofs
+			T::StorageProofVerifier::verify_storage_proof(
+				proposal.clone().block_header,
+				typed_chain_id,
+				proposal.clone().merkle_root_proof.to_vec(),
+				proposal.clone().leaf_index_proof.to_vec(),
+			)
+			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
 
-			// // prepare the proposal
-			// Self::prepare_proposal(proposal);
+			// prepare the proposals to all linked bridges
+			Self::submit_anchor_update_proposals(typed_chain_id, proposal.clone())?;
 
 			Ok(().into())
 		}
+	}
+}
+
+impl<T: Config> Pallet<T> {
+	/// Submits anchor update proposals for all registered bridges from bridge registry
+	///
+	/// This function takes a `TypedChainId` representing the chain ID and a `LightProposalInputOf`
+	/// type `proposal` containing the proposal details.
+	///
+	/// The function iterates through all registered bridges on the chain and creates an anchor
+	/// update proposal for each one.
+	///
+	/// # Arguments
+	///
+	/// * `typed_chain_id` - The typed chain ID.
+	/// * `proposal` - A `LightProposalInputOf<T>` containing the details of the proposal.
+	///
+	/// # Errors
+	///
+	/// Returns a `DispatchError` if there was an issue during proposal submission.
+	pub fn submit_anchor_update_proposals(
+		typed_chain_id: TypedChainId,
+		proposal: LightProposalInputOf<T>,
+	) -> Result<(), DispatchError> {
+		// Create src info
+		let src_target_system =
+			webb_proposals::TargetSystem::new_contract_address(proposal.vanchor_address);
+		let src_resource_id = webb_proposals::ResourceId::new(src_target_system, typed_chain_id);
+
+		// fetch bridge index for source_resource_id
+		let bridge_index = pallet_bridge_registry::ResourceToBridgeIndex::<T>::get(src_resource_id)
+			.ok_or(Error::<T>::CannotFetchBridgeDetails)?;
+
+		// get all connected resource_ids
+		let bridge_metadata = pallet_bridge_registry::Bridges::<T>::get(bridge_index)
+			.ok_or(Error::<T>::CannotFetchBridgeMetadata)?;
+
+		for resource_id in bridge_metadata.resource_ids.iter() {
+			// create AUP for resource_id
+			Self::create_and_submit_anchor_update_proposal(
+				proposal.clone(),
+				src_resource_id,
+				*resource_id,
+			)?;
+
+			// emit event
+			Self::deposit_event(Event::ProposalSubmitted {
+				typed_chain_id,
+				proposal: proposal.clone(),
+			});
+		}
+
+		Ok(())
+	}
+
+	/// Creates and submits an anchor update proposal.
+	///
+	/// This function takes a `LightProposalInputOf` type `proposal`, representing the proposal
+	/// details, `src_resource_id` representing the source resource ID, and `target_resource_id`
+	/// representing the target resource ID.
+	///
+	/// # Arguments
+	///
+	/// * `proposal` - A `LightProposalInputOf<T>` containing the details of the proposal.
+	/// * `src_resource_id` - The resource ID of the source.
+	/// * `target_resource_id` - The resource ID of the target.
+	///
+	/// # Errors
+	///
+	/// Returns a `DispatchError` if there was an issue during proposal submission.
+	pub fn create_and_submit_anchor_update_proposal(
+		proposal: LightProposalInputOf<T>,
+		src_resource_id: ResourceId,
+		target_resource_id: ResourceId,
+	) -> Result<(), DispatchError> {
+		// get the nonce used for target resrouce id
+		let nonce = ResourceIdToNonce::<T>::get(target_resource_id);
+		// update the nonce
+		ResourceIdToNonce::<T>::insert(target_resource_id, nonce.saturating_add(1u32));
+
+		// prep the proposal
+		let proposal = AnchorUpdateProposal::new(
+			ProposalHeader::new(
+				target_resource_id,
+				FunctionSignature::from(ANCHOR_UPDATE_FUNCTION_SIGNATURE),
+				Nonce(nonce),
+			),
+			proposal.merkle_root,
+			src_resource_id,
+		);
+
+		let unsigned_anchor_update_proposal = Proposal::Unsigned {
+			kind: ProposalKind::AnchorUpdate,
+			data: proposal.into_bytes().to_vec().try_into().unwrap(),
+		};
+
+		// submit the proposal
+		T::ProposalHandler::handle_unsigned_proposal(unsigned_anchor_update_proposal)?;
+
+		Ok(())
 	}
 }

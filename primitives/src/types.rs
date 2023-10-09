@@ -1,16 +1,30 @@
 use super::*;
 
 #[cfg(feature = "std")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use codec::{Encode, Decode, MaxEncodedLen};
-use scale_info::TypeInfo;
+use codec::{Decode, Encode, MaxEncodedLen};
+use ethereum_types::Address;
 use frame_support::RuntimeDebug;
+use scale_info::TypeInfo;
 
+/// Represents a light proposal input.
+///
+/// This struct contains information needed for a light proposal, including the Ethereum block
+/// header, the merkle root, various merkle proofs, leaf index, and the address of the vanchor.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct LightProposalInput<MaxProofSize : Get<u32>> {
-    pub block_header : eth_types::BlockHeader,
-    pub root_merkle_proof : BoundedVec<u8, MaxProofSize>,
-    pub storage_merkle_proof : BoundedVec<u8, MaxProofSize>,
-} 
+pub struct LightProposalInput<MaxProofSize: Get<u32>> {
+	/// The Ethereum block header associated with the proposal.
+	pub block_header: eth_types::BlockHeader,
+	/// The merkle root of the proposal
+	pub merkle_root: [u8; 32],
+	/// The merkle proof for the root
+	pub merkle_root_proof: BoundedVec<u8, MaxProofSize>,
+	/// The index of the leaf in the merkle tree
+	pub leaf_index: u32,
+	/// The merkle proof for the leaf index
+	pub leaf_index_proof: BoundedVec<u8, MaxProofSize>,
+	/// The address of the vanchor contract
+	pub vanchor_address: Address,
+}
