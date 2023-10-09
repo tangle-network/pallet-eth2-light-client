@@ -88,11 +88,11 @@ ethereum_ssz = { version = "0.5.0", features = ["arbitrary"] }
 
 
 # DKG Substrate Dependencies
-dkg-runtime-primitives = { path = "../dkg-substrate/dkg-runtime-primitives", default-features = false }
-pallet-dkg-metadata = { path = "../dkg-substrate/pallets/dkg-metadata", default-features = false }
-pallet-dkg-proposal-handler = { path = "../dkg-substrate/pallets/dkg-proposal-handler", default-features = false }
-pallet-dkg-proposals = { path = "../dkg-substrate/pallets/dkg-proposals", default-features = false }
-pallet-bridge-registry = { path = "../dkg-substrate/pallets/bridge-registry", default-features = false }
+dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "develop", default-features = false }
+pallet-dkg-metadata = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "develop", default-features = false }
+pallet-dkg-proposal-handler = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "develop", default-features = false }
+pallet-dkg-proposals = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "develop", default-features = false }
+pallet-bridge-registry = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "develop", default-features = false }
 
 sc-cli = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sc-offchain = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }

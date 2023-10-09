@@ -22,15 +22,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
 
-
 use dkg_runtime_primitives::{
 	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
 };
 
-use frame_support::{
-	pallet_prelude::{DispatchError},
-	traits::Get,
-};
+use frame_support::{pallet_prelude::DispatchError, traits::Get};
 pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
@@ -51,9 +47,9 @@ mod tests;
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	
-	use dkg_runtime_primitives::{ProposalHandlerTrait};
-	
+
+	use dkg_runtime_primitives::ProposalHandlerTrait;
+
 	use frame_support::{
 		dispatch::{fmt::Debug, DispatchResultWithPostInfo},
 		pallet_prelude::{ValueQuery, *},
