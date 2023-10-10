@@ -25,12 +25,12 @@
 use dkg_runtime_primitives::{
 	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
 };
-
 use frame_support::{pallet_prelude::DispatchError, traits::Get};
 pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
 use tree_hash::TreeHash;
+use webb_light_client_primitives::types::LightProposalInput;
 use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
 
 use frame_support::{sp_runtime::traits::AccountIdConversion, traits::Currency};
@@ -56,11 +56,9 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use webb_light_client_primitives::{
-		traits::{LightClientHandler, StorageProofVerifier},
+		traits::{LightClientHandler, ProofVerifier},
 		types::LightProposalInput,
 	};
-
-	pub type LightProposalInputOf<T> = LightProposalInput<<T as Config>::MaxProofSize>;
 
 	#[pallet::pallet]
 	#[pallet::without_storage_info]
@@ -76,7 +74,7 @@ pub mod pallet {
 		type LightClient: LightClientHandler;
 
 		/// Storage proof verifier for the pallt
-		type StorageProofVerifier: StorageProofVerifier;
+		type ProofVerifier: ProofVerifier;
 
 		/// Proposer handler trait
 		type ProposalHandler: ProposalHandlerTrait<
@@ -102,7 +100,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		ProposalSubmitted { typed_chain_id: TypedChainId, proposal: LightProposalInputOf<T> },
+		ProposalSubmitted { typed_chain_id: TypedChainId, proposal: LightProposalInput },
 	}
 
 	#[pallet::storage]
@@ -130,7 +128,7 @@ pub mod pallet {
 		pub fn submit_proposal(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
-			proposal: LightProposalInputOf<T>,
+			proposal: LightProposalInput,
 		) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 
@@ -141,10 +139,16 @@ pub mod pallet {
 			)?;
 
 			// validate the merkle proofs
-			T::StorageProofVerifier::verify_storage_proof(
+			T::ProofVerifier::verify_storage_proof(
 				proposal.clone().block_header,
-				typed_chain_id,
+				vec![],
 				proposal.clone().merkle_root_proof.to_vec(),
+			)
+			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
+
+			T::ProofVerifier::verify_storage_proof(
+				proposal.clone().block_header,
+				vec![],
 				proposal.clone().leaf_index_proof.to_vec(),
 			)
 			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
@@ -169,14 +173,14 @@ impl<T: Config> Pallet<T> {
 	/// # Arguments
 	///
 	/// * `typed_chain_id` - The typed chain ID.
-	/// * `proposal` - A `LightProposalInputOf<T>` containing the details of the proposal.
+	/// * `proposal` - A `LightProposalInput` containing the details of the proposal.
 	///
 	/// # Errors
 	///
 	/// Returns a `DispatchError` if there was an issue during proposal submission.
 	pub fn submit_anchor_update_proposals(
 		typed_chain_id: TypedChainId,
-		proposal: LightProposalInputOf<T>,
+		proposal: LightProposalInput,
 	) -> Result<(), DispatchError> {
 		// Create src info
 		let src_target_system =
@@ -217,7 +221,7 @@ impl<T: Config> Pallet<T> {
 	///
 	/// # Arguments
 	///
-	/// * `proposal` - A `LightProposalInputOf<T>` containing the details of the proposal.
+	/// * `proposal` - A `LightProposalInput` containing the details of the proposal.
 	/// * `src_resource_id` - The resource ID of the source.
 	/// * `target_resource_id` - The resource ID of the target.
 	///
@@ -225,7 +229,7 @@ impl<T: Config> Pallet<T> {
 	///
 	/// Returns a `DispatchError` if there was an issue during proposal submission.
 	pub fn create_and_submit_anchor_update_proposal(
-		proposal: LightProposalInputOf<T>,
+		proposal: LightProposalInput,
 		src_resource_id: ResourceId,
 		target_resource_id: ResourceId,
 	) -> Result<(), DispatchError> {

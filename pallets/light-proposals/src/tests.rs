@@ -75,12 +75,12 @@ fn test_light_light_proposal_flow() {
 		header.hash = block_hash;
 
 		// setup light client payload
-		let light_proposal = LightProposalInputOf::<Test> {
+		let light_proposal = LightProposalInput {
 			block_header: header,
 			merkle_root: [0; 32],
-			merkle_root_proof: vec![0; 32].try_into().unwrap(),
+			merkle_root_proof: vec![vec![0; 32]],
 			leaf_index: 0,
-			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index_proof: vec![vec![0; 32]],
 			vanchor_address: Address::from([0; 20]),
 		};
 
@@ -101,12 +101,12 @@ fn test_light_light_should_reject_if_header_is_not_present() {
 		let (headers, updates, _init_input) = get_test_context(None);
 
 		// setup light client payload
-		let light_proposal = LightProposalInputOf::<Test> {
+		let light_proposal = LightProposalInput {
 			block_header: headers[0][1].clone(),
 			merkle_root: [0; 32],
-			merkle_root_proof: vec![0; 32].try_into().unwrap(),
+			merkle_root_proof: vec![vec![0; 32]],
 			leaf_index: 0,
-			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index_proof: vec![vec![0; 32]],
 			vanchor_address: Address::from([0; 20]),
 		};
 
@@ -149,12 +149,12 @@ fn test_light_light_should_reject_if_proof_verification_fails() {
 		header.hash = block_hash;
 
 		// setup light client payload
-		let light_proposal = LightProposalInputOf::<Test> {
+		let light_proposal = LightProposalInput {
 			block_header: header,
 			merkle_root: [0; 32],
-			merkle_root_proof: vec![123].try_into().unwrap(),
+			merkle_root_proof: vec![vec![123]],
 			leaf_index: 0,
-			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index_proof: vec![vec![0; 32]],
 			vanchor_address: Address::from([0; 20]),
 		};
 

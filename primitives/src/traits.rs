@@ -21,27 +21,49 @@ pub trait LightClientHandler {
 	) -> Result<bool, DispatchError>;
 }
 
-/// A trait for verifying storage proof for Ethereum storage.
-pub trait StorageProofVerifier {
-	/// Verifies the storage proof for Ethereum storage.
+/// A trait for verifying proofs related to storage and transactions.
+pub trait ProofVerifier {
+	/// Verify a storage proof against the provided block header, key, and proof.
 	///
-	/// # Arguments
+	/// # Parameters
 	///
-	/// * `header` - The block header containing information about the block.
-	/// * `typed_chain_id` - The typed chain ID indicating the type of Ethereum chain.
-	/// * `root_merkle_proof` - The Merkle proof for the root of the storage trie.
-	/// * `storage_merkle_proof` - The Merkle proof for the requested storage item.
+	/// - `header`: The block header against which the proof will be verified.
+	/// - `key`: The key for which the proof is being verified.
+	/// - `proof`: The proof data to be verified.
 	///
 	/// # Returns
 	///
-	/// Returns `Ok(true)` if the storage proof is valid, indicating that the requested
-	/// storage item is present in the Ethereum state. Returns `Ok(false)` if the storage
-	/// proof is invalid or the item is not present. Returns an `Err` variant if there is
-	/// an error during the verification process.
+	/// Returns a `Result` where `Ok(true)` indicates that the proof is valid,
+	/// while `Ok(false)` indicates that the proof is invalid. If an error occurs
+	/// during the verification process, it will be returned as `Err`.
 	fn verify_storage_proof(
 		header: BlockHeader,
-		typed_chain_id: TypedChainId,
-		root_merkle_proof: Vec<u8>,
-		storage_merkle_proof: Vec<u8>,
+		key: Vec<u8>,
+		proof: Vec<Vec<u8>>,
 	) -> Result<bool, DispatchError>;
+
+	/// Verify a transaction proof against the provided block header, key, and proof.
+	///
+	/// # Parameters
+	///
+	/// - `header`: The block header against which the proof will be verified.
+	/// - `key`: The key for which the proof is being verified.
+	/// - `proof`: The proof data to be verified.
+	///
+	/// # Returns
+	///
+	/// Returns a `Result` where `Ok(true)` indicates that the proof is valid,
+	/// while `Ok(false)` indicates that the proof is invalid. If an error occurs
+	/// during the verification process, it will be returned as `Err`.
+	///
+	/// # Note
+	///
+	/// This method is currently a placeholder and needs to be implemented.
+	fn verify_transaction_proof(
+		header: BlockHeader,
+		key: Vec<u8>,
+		proof: Vec<Vec<u8>>,
+	) -> Result<bool, DispatchError> {
+		todo!()
+	}
 }

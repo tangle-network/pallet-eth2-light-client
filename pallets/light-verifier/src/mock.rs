@@ -1,12 +1,11 @@
 use super::*;
-use crate as pallet_light_proposals;
+use crate as pallet_light_verifier;
 
 use codec::{Decode, Encode};
 use consensus::network_config::{Network, NetworkConfig};
 use core::marker::PhantomData;
 use dkg_runtime_primitives::SignedProposalBatch;
-use eth_types::BlockHeader;
-use frame_support::{ensure, pallet_prelude::DispatchResult, parameter_types, sp_io, PalletId};
+use frame_support::{pallet_prelude::DispatchResult, parameter_types, sp_io, PalletId};
 use frame_system as system;
 use scale_info::TypeInfo;
 use sp_core::H256;
@@ -25,9 +24,8 @@ frame_support::construct_runtime!(
 	pub enum Test {
 		System: frame_system,
 		Balances: pallet_balances,
-		BridgeRegistry: pallet_bridge_registry,
 		Eth2Client: pallet_eth2_light_client,
-		LightProposals: pallet_light_proposals
+		LightProposals: pallet_light_verifier
 	}
 );
 
@@ -103,66 +101,8 @@ parameter_types! {
 	pub const MaxProposalLength : u32 = 10_000;
 }
 
-impl pallet_bridge_registry::Config for Test {
+impl pallet_light_verifier::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
-	type BridgeIndex = u32;
-	type MaxAdditionalFields = MaxAdditionalFields;
-	type MaxResources = MaxResources;
-	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-	type MaxProposalLength = MaxProposalLength;
-	type WeightInfo = ();
-}
-
-pub struct MockStorageProofVerifier;
-
-impl ProofVerifier for MockStorageProofVerifier {
-	fn verify_storage_proof(
-		header: BlockHeader,
-		key: Vec<u8>,
-		proof: Vec<Vec<u8>>,
-	) -> Result<bool, DispatchError> {
-		// test case
-		ensure!(proof != vec![vec![123]], Error::<Test>::ProofVerificationFailed);
-		Ok(true)
-	}
-}
-
-pub struct MockProposalHandler;
-
-impl ProposalHandlerTrait for MockProposalHandler {
-	type BatchId = u32;
-	type MaxProposalLength = MaxProposalLength;
-	type MaxProposals = ConstU32<100>;
-	type MaxSignatureLen = ConstU32<100>;
-
-	fn handle_unsigned_proposal(proposal: Proposal<Self::MaxProposalLength>) -> DispatchResult {
-		Ok(())
-	}
-
-	fn handle_signed_proposal_batch(
-		prop: SignedProposalBatch<
-			Self::BatchId,
-			Self::MaxProposalLength,
-			Self::MaxProposals,
-			Self::MaxSignatureLen,
-		>,
-	) -> DispatchResult {
-		Ok(())
-	}
-}
-
-parameter_types! {
-	#[derive(serde::Serialize, serde::Deserialize, Eq, PartialEq, Debug, Clone, Encode, Decode, TypeInfo)]
-	pub const MaxProofSize: u32 = 50;
-}
-
-impl pallet_light_proposals::Config for Test {
-	type RuntimeEvent = RuntimeEvent;
-	type LightClient = Eth2Client;
-	type ProofVerifier = MockStorageProofVerifier;
-	type ProposalHandler = MockProposalHandler;
-	type MaxProofSize = MaxProofSize;
-	type MaxProposalLength = MaxProposalLength;
 }
 
 // Build genesis storage according to the mock runtime.
@@ -190,12 +130,6 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 				NetworkConfig::new(&Network::Goerli),
 			),
 		],
-	}
-	.assimilate_storage(&mut storage);
-
-	let _ = pallet_bridge_registry::GenesisConfig::<Test> {
-		phantom: Default::default(),
-		bridges: vec![],
 	}
 	.assimilate_storage(&mut storage);
 

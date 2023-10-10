@@ -1,0 +1,84 @@
+[package]
+name = "pallet-light-verifier"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+
+eth-types = { path = "../../crates/eth-types", default-features = false, features = ["eth2"] }
+eth2-ssz = { package = "webb-eth2-ssz", path = "../../crates/ssz", default-features = false }
+merkle-proof = { package = "webb-merkle-proof", path = "../../crates/merkle-proof", default-features = false }
+bls = { package = "webb-bls", path = "../../crates/bls", default-features = false }
+tree-hash = { package = "webb-tree-hash", path = "../../crates/tree-hash", default-features = false }
+tree-hash-derive = { package = "webb-tree-hash-derive", path = "../../crates/tree-hash-derive", default-features = false }
+consensus = { package = "webb-consensus-types", path = "../../crates/consensus-types", default-features = false }
+
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+pallet-balances = { workspace = true }
+sp-runtime = { workspace = true }
+sp-std = { workspace = true }
+sp-core = { workspace = true }
+
+log = { workspace = true }
+serde = { workspace = true, optional = true }
+codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+scale-info = { workspace = true }
+webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+ethereum-types =  { workspace = true }
+ethereum = { version = "0.14", default-features = false, features = ["with-codec"] }
+derive_more =  { workspace = true }
+rlp =  { workspace = true }
+rlp-derive =  { workspace = true }
+tiny-keccak = { workspace = true }
+bitvec = { workspace = true, features = ["atomic", "alloc"] }
+hex = { workspace = true }
+webb-light-client-primitives = { workspace = true }
+dkg-runtime-primitives = { workspace = true }
+pallet-bridge-registry = { workspace = true }
+
+[dev-dependencies]
+anyhow = { workspace = true }
+lazy_static = { workspace = true }
+serde_json = { workspace = true }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../../crates/eth2-pallet-init" }
+async-trait = { workspace = true }
+pallet-eth2-light-client = { path = "../eth2-light-client", features = ["testing"] }
+array-bytes = { version = "4.1.0" }
+
+[features]
+default = ["std"]
+std = [
+	"serde/std",
+	"codec/std",
+	"scale-info/std",
+	"webb-proposals/std",
+	"ethereum-types/std",
+	"ethereum/std",
+	"rlp/std",
+	"bitvec/std",
+	"frame-support/std",
+	"frame-system/std",
+	"pallet-balances/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"sp-core/std",
+	"hex/std",
+	"dkg-runtime-primitives/std",
+	"pallet-bridge-registry/std",
+	"pallet-eth2-light-client/std",
+
+	# Local dependencies
+	"bls/std",
+	"consensus/std",
+	"eth-types/std",
+	"eth2-ssz/std",
+	"tree-hash/std",
+	"merkle-proof/std",
+	"webb-light-client-primitives/std"
+]
+
+try-runtime = ["frame-support/try-runtime"]
