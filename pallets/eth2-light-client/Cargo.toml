@@ -7,7 +7,6 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-
 eth-types = { path = "../../crates/eth-types", default-features = false, features = ["eth2"] }
 eth2-ssz = { package = "webb-eth2-ssz", path = "../../crates/ssz", default-features = false }
 merkle-proof = { package = "webb-merkle-proof", path = "../../crates/merkle-proof", default-features = false }
@@ -16,7 +15,7 @@ tree-hash = { package = "webb-tree-hash", path = "../../crates/tree-hash", defau
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../../crates/tree-hash-derive", default-features = false }
 consensus = { package = "webb-consensus-types", path = "../../crates/consensus-types", default-features = false }
 
-frame-support = { workspace = true }
+frame-support = { workspace = true, default-features = false }
 frame-system = { workspace = true }
 pallet-balances = { workspace = true }
 sp-runtime = { workspace = true }
