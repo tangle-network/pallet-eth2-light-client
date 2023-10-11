@@ -21,6 +21,7 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
+#![allow(clippy::large_enum_variant)]
 
 use dkg_runtime_primitives::{
 	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
@@ -30,10 +31,8 @@ use frame_support::{pallet_prelude::DispatchError, traits::Get};
 pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
-use tree_hash::TreeHash;
-use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
 
-use frame_support::{sp_runtime::traits::AccountIdConversion, traits::Currency};
+use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
 
 /// Function sig for anchor update
 pub const ANCHOR_UPDATE_FUNCTION_SIGNATURE: [u8; 4] = [0x26, 0x57, 0x88, 0x01];

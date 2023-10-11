@@ -3,9 +3,10 @@ use crate as pallet_light_proposals;
 
 use codec::{Decode, Encode};
 use consensus::network_config::{Network, NetworkConfig};
-use core::marker::PhantomData;
+
 use dkg_runtime_primitives::SignedProposalBatch;
-use frame_support::{pallet_prelude::DispatchResult, parameter_types, sp_io};
+use eth_types::BlockHeader;
+use frame_support::{ensure, pallet_prelude::DispatchResult, parameter_types, sp_io, PalletId};
 use frame_system as system;
 use scale_info::TypeInfo;
 use sp_core::H256;
@@ -116,10 +117,10 @@ pub struct MockStorageProofVerifier;
 
 impl StorageProofVerifier for MockStorageProofVerifier {
 	fn verify_storage_proof(
-		header: BlockHeader,
-		typed_chain_id: TypedChainId,
+		_header: BlockHeader,
+		_typed_chain_id: TypedChainId,
 		root_merkle_proof: Vec<u8>,
-		storage_merkle_proof: Vec<u8>,
+		_storage_merkle_proof: Vec<u8>,
 	) -> Result<bool, DispatchError> {
 		// test case
 		ensure!(root_merkle_proof != vec![123], Error::<Test>::ProofVerificationFailed);
@@ -135,12 +136,12 @@ impl ProposalHandlerTrait for MockProposalHandler {
 	type MaxProposals = ConstU32<100>;
 	type MaxSignatureLen = ConstU32<100>;
 
-	fn handle_unsigned_proposal(proposal: Proposal<Self::MaxProposalLength>) -> DispatchResult {
+	fn handle_unsigned_proposal(_proposal: Proposal<Self::MaxProposalLength>) -> DispatchResult {
 		Ok(())
 	}
 
 	fn handle_signed_proposal_batch(
-		prop: SignedProposalBatch<
+		_prop: SignedProposalBatch<
 			Self::BatchId,
 			Self::MaxProposalLength,
 			Self::MaxProposals,
