@@ -3,11 +3,11 @@ use super::*;
 use crate::mock::*;
 use dkg_runtime_primitives::traits::OnSignedProposal;
 use ethereum_types::Address;
-use frame_support::{assert_err, assert_ok, bounded_vec, BoundedVec};
+use frame_support::{assert_err, assert_ok, bounded_vec};
 use pallet_bridge_registry::{types::BridgeMetadata, Bridges, ResourceToBridgeIndex};
 use pallet_eth2_light_client::tests::{get_test_context, submit_and_check_execution_headers};
 use sp_runtime::AccountId32;
-use std::convert::TryFrom;
+
 use webb_proposals::{self, evm, FunctionSignature, Nonce, ProposalHeader};
 
 pub const GOERLI_CHAIN: TypedChainId = TypedChainId::Evm(5);
@@ -87,7 +87,7 @@ fn test_light_light_proposal_flow() {
 		assert_ok!(LightProposals::submit_proposal(
 			RuntimeOrigin::signed(ALICE),
 			GOERLI_CHAIN,
-			light_proposal
+			Box::new(light_proposal)
 		));
 	});
 }
@@ -98,7 +98,7 @@ fn test_light_light_should_reject_if_header_is_not_present() {
 		// setup bridge registry with defaults
 		setup_bridge_registry();
 
-		let (headers, updates, _init_input) = get_test_context(None);
+		let (headers, _updates, _init_input) = get_test_context(None);
 
 		// setup light client payload
 		let light_proposal = LightProposalInput {
@@ -114,7 +114,7 @@ fn test_light_light_should_reject_if_header_is_not_present() {
 			LightProposals::submit_proposal(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
-				light_proposal
+				Box::new(light_proposal)
 			),
 			pallet_eth2_light_client::Error::<Test>::HeaderHashDoesNotExist
 		);
@@ -162,7 +162,7 @@ fn test_light_light_should_reject_if_proof_verification_fails() {
 			LightProposals::submit_proposal(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
-				light_proposal
+				Box::new(light_proposal)
 			),
 			Error::<Test>::ProofVerificationFailed
 		);

@@ -21,6 +21,7 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
+#![allow(unused)]
 
 use dkg_runtime_primitives::{
 	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
@@ -29,14 +30,11 @@ use frame_support::{pallet_prelude::DispatchError, traits::Get};
 pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
-use tree_hash::TreeHash;
-use webb_light_client_primitives::types::LightProposalInput;
+
+use webb_light_client_primitives::{
+	types::LightProposalInput, ANCHOR_UPDATE_FUNCTION_SIGNATURE, LEAF_INDEX_KEY, MERKLE_ROOT_KEY,
+};
 use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
-
-use frame_support::{sp_runtime::traits::AccountIdConversion, traits::Currency};
-
-/// Function sig for anchor update
-pub const ANCHOR_UPDATE_FUNCTION_SIGNATURE: [u8; 4] = [0x26, 0x57, 0x88, 0x01];
 
 #[cfg(test)]
 mod mock;
@@ -100,7 +98,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		ProposalSubmitted { typed_chain_id: TypedChainId, proposal: LightProposalInput },
+		ProposalSubmitted { typed_chain_id: TypedChainId, proposal: Box<LightProposalInput> },
 	}
 
 	#[pallet::storage]
@@ -128,7 +126,7 @@ pub mod pallet {
 		pub fn submit_proposal(
 			origin: OriginFor<T>,
 			typed_chain_id: TypedChainId,
-			proposal: LightProposalInput,
+			proposal: Box<LightProposalInput>,
 		) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 
@@ -141,20 +139,20 @@ pub mod pallet {
 			// validate the merkle proofs
 			T::ProofVerifier::verify_storage_proof(
 				proposal.clone().block_header,
-				vec![],
+				MERKLE_ROOT_KEY.to_vec(),
 				proposal.clone().merkle_root_proof.to_vec(),
 			)
 			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
 
 			T::ProofVerifier::verify_storage_proof(
 				proposal.clone().block_header,
-				vec![],
+				LEAF_INDEX_KEY.to_vec(),
 				proposal.clone().leaf_index_proof.to_vec(),
 			)
 			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
 
 			// prepare the proposals to all linked bridges
-			Self::submit_anchor_update_proposals(typed_chain_id, proposal.clone())?;
+			Self::submit_anchor_update_proposals(typed_chain_id, *proposal.clone())?;
 
 			Ok(().into())
 		}
@@ -206,7 +204,7 @@ impl<T: Config> Pallet<T> {
 			// emit event
 			Self::deposit_event(Event::ProposalSubmitted {
 				typed_chain_id,
-				proposal: proposal.clone(),
+				proposal: Box::new(proposal.clone()),
 			});
 		}
 

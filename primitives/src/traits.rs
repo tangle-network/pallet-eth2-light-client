@@ -60,9 +60,9 @@ pub trait ProofVerifier {
 	///
 	/// This method is currently a placeholder and needs to be implemented.
 	fn verify_transaction_proof(
-		header: BlockHeader,
-		key: Vec<u8>,
-		proof: Vec<Vec<u8>>,
+		_header: BlockHeader,
+		_key: Vec<u8>,
+		_proof: Vec<Vec<u8>>,
 	) -> Result<bool, DispatchError> {
 		todo!()
 	}

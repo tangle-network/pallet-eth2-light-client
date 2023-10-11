@@ -1,6 +1,6 @@
 use super::*;
-use codec::Decode;
 use dkg_runtime_primitives::H256;
+use frame_support::ensure;
 use rlp::Rlp;
 
 /// A utility for working with trie proofs.
@@ -59,12 +59,12 @@ impl TrieProver {
 
 		if key_index == 0 {
 			// trie root is always a hash
-			assert_eq!(Self::keccak_256(raw_node), expected_root.as_slice());
+			ensure!(Self::keccak_256(raw_node) == expected_root.as_slice(), "Trie root mismatch!");
 		} else if raw_node.len() < 32 {
 			// if rlp < 32 bytes, then it is not hashed
-			assert_eq!(raw_node, expected_root);
+			ensure!(raw_node == expected_root, "Trie root mismatch!");
 		} else {
-			assert_eq!(Self::keccak_256(raw_node), expected_root.as_slice());
+			ensure!(Self::keccak_256(raw_node) == expected_root.as_slice(), "Trie root mismatch!");
 		}
 
 		let node = Rlp::new(raw_node);
@@ -72,7 +72,7 @@ impl TrieProver {
 		if node.iter().count() == 17 {
 			// Branch node
 			if key_index == key.len() {
-				assert_eq!(proof_index + 1, proof.len());
+				ensure!(proof_index + 1 == proof.len(), "Branch index mismatch");
 				Self::get_vec(&node, 16)
 			} else {
 				let new_expected_root = Self::get_vec(&node, key[key_index] as usize)?;
@@ -87,12 +87,12 @@ impl TrieProver {
 			}
 		} else {
 			// Leaf or extension node
-			assert_eq!(node.iter().count(), 2);
+			ensure!(node.iter().count() == 2, "leaf count unexpected!");
 			let path_u8 = Self::get_vec(&node, 0)?;
 
 			// Extract first nibble
 			let head = path_u8[0] / 16;
-			assert!(head <= 3);
+			ensure!(head <= 3, "leaf count unexpected!");
 
 			// Extract path
 			let mut path = vec![];
@@ -107,8 +107,8 @@ impl TrieProver {
 
 			if head >= 2 {
 				// Leaf node
-				assert_eq!(proof_index + 1, proof.len());
-				assert_eq!(key_index + path.len(), key.len());
+				ensure!(proof_index + 1 == proof.len(), "Branch index mismatch");
+				ensure!(key_index + path.len() == key.len(), "Branch index mismatch");
 				Self::get_vec(&node, 1)
 			} else {
 				// Extension node

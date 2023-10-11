@@ -3,18 +3,17 @@ use crate as pallet_light_verifier;
 
 use codec::{Decode, Encode};
 use consensus::network_config::{Network, NetworkConfig};
-use core::marker::PhantomData;
-use dkg_runtime_primitives::SignedProposalBatch;
-use frame_support::{pallet_prelude::DispatchResult, parameter_types, sp_io, PalletId};
+
+use dkg_runtime_primitives::TypedChainId;
+use frame_support::{parameter_types, sp_io, PalletId};
 use frame_system as system;
-use scale_info::TypeInfo;
+
 use sp_core::H256;
 use sp_runtime::{
-	traits::{BlakeTwo256, ConstU32, IdentifyAccount, IdentityLookup, Verify},
+	traits::{BlakeTwo256, IdentifyAccount, IdentityLookup, Verify},
 	AccountId32, BuildStorage, MultiSignature,
 };
 use sp_std::convert::{TryFrom, TryInto};
-use webb_light_client_primitives::traits::ProofVerifier;
 
 pub type Signature = MultiSignature;
 pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
