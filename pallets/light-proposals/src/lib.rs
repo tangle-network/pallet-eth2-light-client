@@ -21,21 +21,21 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(slice_pattern)]
-#![allow(clippy::large_enum_variant)]
+#![allow(unused)]
 
 use dkg_runtime_primitives::{
 	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
 };
-
 use frame_support::{pallet_prelude::DispatchError, traits::Get};
 pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
 
-use webb_proposals::{evm::AnchorUpdateProposal, Nonce};
-
-/// Function sig for anchor update
-pub const ANCHOR_UPDATE_FUNCTION_SIGNATURE: [u8; 4] = [0x26, 0x57, 0x88, 0x01];
+use webb::evm::{
+	contract::protocol_solidity::variable_anchor::v_anchor_contract, ethers::contract::EthCall,
+};
+use webb_light_client_primitives::{types::LightProposalInput, LEAF_INDEX_KEY, MERKLE_ROOT_KEY};
+use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
 
 #[cfg(test)]
 mod mock;
@@ -55,11 +55,9 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use webb_light_client_primitives::{
-		traits::{LightClientHandler, StorageProofVerifier},
+		traits::{LightClientHandler, ProofVerifier},
 		types::LightProposalInput,
 	};
-
-	pub type LightProposalInputOf<T> = LightProposalInput<<T as Config>::MaxProofSize>;
 
 	#[pallet::pallet]
 	#[pallet::without_storage_info]
@@ -75,7 +73,7 @@ pub mod pallet {
 		type LightClient: LightClientHandler;
 
 		/// Storage proof verifier for the pallt
-		type StorageProofVerifier: StorageProofVerifier;
+		type ProofVerifier: ProofVerifier;
 
 		/// Proposer handler trait
 		type ProposalHandler: ProposalHandlerTrait<
@@ -101,7 +99,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		ProposalSubmitted { proposal: LightProposalInputOf<T> },
+		ProposalSubmitted { proposal: LightProposalInput },
 	}
 
 	#[pallet::storage]
@@ -128,7 +126,7 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn submit_proposal(
 			origin: OriginFor<T>,
-			proposal: LightProposalInputOf<T>,
+			proposal: LightProposalInput,
 		) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
 
@@ -139,10 +137,16 @@ pub mod pallet {
 			)?;
 
 			// validate the merkle proofs
-			T::StorageProofVerifier::verify_storage_proof(
+			T::ProofVerifier::verify_storage_proof(
 				proposal.clone().block_header,
-				proposal.resource_id.typed_chain_id(),
+				MERKLE_ROOT_KEY.to_vec(),
 				proposal.clone().merkle_root_proof.to_vec(),
+			)
+			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
+
+			T::ProofVerifier::verify_storage_proof(
+				proposal.clone().block_header,
+				LEAF_INDEX_KEY.to_vec(),
 				proposal.clone().leaf_index_proof.to_vec(),
 			)
 			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
@@ -158,7 +162,7 @@ pub mod pallet {
 impl<T: Config> Pallet<T> {
 	/// Submits anchor update proposals for all registered bridges from bridge registry
 	///
-	/// This function takes a `TypedChainId` representing the chain ID and a `LightProposalInputOf`
+	/// This function takes a `TypedChainId` representing the chain ID and a `LightProposalInput`
 	/// type `proposal` containing the proposal details.
 	///
 	/// The function iterates through all registered bridges on the chain and creates an anchor
@@ -167,13 +171,13 @@ impl<T: Config> Pallet<T> {
 	/// # Arguments
 	///
 	/// * `typed_chain_id` - The typed chain ID.
-	/// * `proposal` - A `LightProposalInputOf<T>` containing the details of the proposal.
+	/// * `proposal` - A `LightProposalInput` containing the details of the proposal.
 	///
 	/// # Errors
 	///
 	/// Returns a `DispatchError` if there was an issue during proposal submission.
 	pub fn submit_anchor_update_proposals(
-		proposal: LightProposalInputOf<T>,
+		proposal: LightProposalInput,
 	) -> Result<(), DispatchError> {
 		let src_resource_id = proposal.resource_id;
 
@@ -202,13 +206,13 @@ impl<T: Config> Pallet<T> {
 
 	/// Creates and submits an anchor update proposal.
 	///
-	/// This function takes a `LightProposalInputOf` type `proposal`, representing the proposal
+	/// This function takes a `LightProposalInput` type `proposal`, representing the proposal
 	/// details, `src_resource_id` representing the source resource ID, and `target_resource_id`
 	/// representing the target resource ID.
 	///
 	/// # Arguments
 	///
-	/// * `proposal` - A `LightProposalInputOf<T>` containing the details of the proposal.
+	/// * `proposal` - A `LightProposalInput` containing the details of the proposal.
 	/// * `src_resource_id` - The resource ID of the source.
 	/// * `target_resource_id` - The resource ID of the target.
 	///
@@ -216,7 +220,7 @@ impl<T: Config> Pallet<T> {
 	///
 	/// Returns a `DispatchError` if there was an issue during proposal submission.
 	pub fn create_and_submit_anchor_update_proposal(
-		proposal: LightProposalInputOf<T>,
+		proposal: LightProposalInput,
 		src_resource_id: ResourceId,
 		target_resource_id: ResourceId,
 	) -> Result<(), DispatchError> {
@@ -224,12 +228,13 @@ impl<T: Config> Pallet<T> {
 		let nonce = ResourceIdToNonce::<T>::get(target_resource_id);
 		// update the nonce
 		ResourceIdToNonce::<T>::insert(target_resource_id, nonce.saturating_add(1u32));
+		let function_signature_bytes = v_anchor_contract::UpdateEdgeCall::selector();
 
 		// prep the proposal
 		let proposal = AnchorUpdateProposal::new(
 			ProposalHeader::new(
 				target_resource_id,
-				FunctionSignature::from(ANCHOR_UPDATE_FUNCTION_SIGNATURE),
+				FunctionSignature::from(function_signature_bytes),
 				Nonce(nonce),
 			),
 			proposal.merkle_root,
