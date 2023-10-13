@@ -1,17 +1,21 @@
 #![allow(clippy::unwrap_used)]
-use super::*;
-use crate::mock::*;
-use dkg_runtime_primitives::traits::OnSignedProposal;
+use crate::{mock::*, Error, LightProposalInputOf, Proposal, ProposalKind, ResourceId};
+use dkg_runtime_primitives::{traits::OnSignedProposal, TypedChainId};
 use ethereum_types::Address;
 use frame_support::{assert_err, assert_ok, bounded_vec};
+use lazy_static::lazy_static;
 use pallet_bridge_registry::{types::BridgeMetadata, Bridges, ResourceToBridgeIndex};
 use pallet_eth2_light_client::tests::{get_test_context, submit_and_check_execution_headers};
 use sp_runtime::AccountId32;
-
-use webb_proposals::{self, evm, FunctionSignature, Nonce, ProposalHeader};
+use webb_proposals::{self, evm, FunctionSignature, Nonce, ProposalHeader, TargetSystem};
 
 pub const GOERLI_CHAIN: TypedChainId = TypedChainId::Evm(5);
 pub const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
+
+lazy_static! {
+	static ref GOERLI_RESOURCE_ID: ResourceId =
+		ResourceId::new(TargetSystem::new_contract_address(Address::from([0; 20])), GOERLI_CHAIN);
+}
 
 // setup bridge registry pallets with defaults
 fn setup_bridge_registry() {
@@ -81,14 +85,10 @@ fn test_light_light_proposal_flow() {
 			merkle_root_proof: vec![0; 32].try_into().unwrap(),
 			leaf_index: 0,
 			leaf_index_proof: vec![0; 32].try_into().unwrap(),
-			vanchor_address: Address::from([0; 20]),
+			resource_id: *GOERLI_RESOURCE_ID,
 		};
 
-		assert_ok!(LightProposals::submit_proposal(
-			RuntimeOrigin::signed(ALICE),
-			GOERLI_CHAIN,
-			light_proposal
-		));
+		assert_ok!(LightProposals::submit_proposal(RuntimeOrigin::signed(ALICE), light_proposal));
 	});
 }
 
@@ -107,15 +107,11 @@ fn test_light_light_should_reject_if_header_is_not_present() {
 			merkle_root_proof: vec![0; 32].try_into().unwrap(),
 			leaf_index: 0,
 			leaf_index_proof: vec![0; 32].try_into().unwrap(),
-			vanchor_address: Address::from([0; 20]),
+			resource_id: *GOERLI_RESOURCE_ID,
 		};
 
 		assert_err!(
-			LightProposals::submit_proposal(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				light_proposal
-			),
+			LightProposals::submit_proposal(RuntimeOrigin::signed(ALICE), light_proposal),
 			pallet_eth2_light_client::Error::<Test>::HeaderHashDoesNotExist
 		);
 	});
@@ -155,15 +151,11 @@ fn test_light_light_should_reject_if_proof_verification_fails() {
 			merkle_root_proof: vec![123].try_into().unwrap(),
 			leaf_index: 0,
 			leaf_index_proof: vec![0; 32].try_into().unwrap(),
-			vanchor_address: Address::from([0; 20]),
+			resource_id: *GOERLI_RESOURCE_ID,
 		};
 
 		assert_err!(
-			LightProposals::submit_proposal(
-				RuntimeOrigin::signed(ALICE),
-				GOERLI_CHAIN,
-				light_proposal
-			),
+			LightProposals::submit_proposal(RuntimeOrigin::signed(ALICE), light_proposal),
 			Error::<Test>::ProofVerificationFailed
 		);
 	});

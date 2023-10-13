@@ -4,7 +4,7 @@ use crate as pallet_light_proposals;
 use codec::{Decode, Encode};
 use consensus::network_config::{Network, NetworkConfig};
 
-use dkg_runtime_primitives::SignedProposalBatch;
+use dkg_runtime_primitives::{SignedProposalBatch, TypedChainId};
 use eth_types::BlockHeader;
 use frame_support::{ensure, pallet_prelude::DispatchResult, parameter_types, sp_io, PalletId};
 use frame_system as system;

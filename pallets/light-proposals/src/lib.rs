@@ -32,7 +32,7 @@ pub use pallet::*;
 use scale_info::TypeInfo;
 use sp_std::{convert::TryInto, prelude::*};
 
-use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
+use webb_proposals::{evm::AnchorUpdateProposal, Nonce};
 
 /// Function sig for anchor update
 pub const ANCHOR_UPDATE_FUNCTION_SIGNATURE: [u8; 4] = [0x26, 0x57, 0x88, 0x01];
@@ -101,7 +101,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		ProposalSubmitted { typed_chain_id: TypedChainId, proposal: LightProposalInputOf<T> },
+		ProposalSubmitted { proposal: LightProposalInputOf<T> },
 	}
 
 	#[pallet::storage]
@@ -128,7 +128,6 @@ pub mod pallet {
 		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().reads_writes(1,1))]
 		pub fn submit_proposal(
 			origin: OriginFor<T>,
-			typed_chain_id: TypedChainId,
 			proposal: LightProposalInputOf<T>,
 		) -> DispatchResultWithPostInfo {
 			ensure_signed(origin)?;
@@ -136,20 +135,20 @@ pub mod pallet {
 			// validate the block header against light client storage
 			T::LightClient::verify_block_header_exists(
 				proposal.block_header.clone(),
-				typed_chain_id,
+				proposal.resource_id.typed_chain_id(),
 			)?;
 
 			// validate the merkle proofs
 			T::StorageProofVerifier::verify_storage_proof(
 				proposal.clone().block_header,
-				typed_chain_id,
+				proposal.resource_id.typed_chain_id(),
 				proposal.clone().merkle_root_proof.to_vec(),
 				proposal.clone().leaf_index_proof.to_vec(),
 			)
 			.map_err(|_| Error::<T>::ProofVerificationFailed)?;
 
 			// prepare the proposals to all linked bridges
-			Self::submit_anchor_update_proposals(typed_chain_id, proposal.clone())?;
+			Self::submit_anchor_update_proposals(proposal.clone())?;
 
 			Ok(().into())
 		}
@@ -174,13 +173,9 @@ impl<T: Config> Pallet<T> {
 	///
 	/// Returns a `DispatchError` if there was an issue during proposal submission.
 	pub fn submit_anchor_update_proposals(
-		typed_chain_id: TypedChainId,
 		proposal: LightProposalInputOf<T>,
 	) -> Result<(), DispatchError> {
-		// Create src info
-		let src_target_system =
-			webb_proposals::TargetSystem::new_contract_address(proposal.vanchor_address);
-		let src_resource_id = webb_proposals::ResourceId::new(src_target_system, typed_chain_id);
+		let src_resource_id = proposal.resource_id;
 
 		// fetch bridge index for source_resource_id
 		let bridge_index = pallet_bridge_registry::ResourceToBridgeIndex::<T>::get(src_resource_id)
@@ -197,13 +192,10 @@ impl<T: Config> Pallet<T> {
 				src_resource_id,
 				*resource_id,
 			)?;
-
-			// emit event
-			Self::deposit_event(Event::ProposalSubmitted {
-				typed_chain_id,
-				proposal: proposal.clone(),
-			});
 		}
+
+		// emit event
+		Self::deposit_event(Event::ProposalSubmitted { proposal: proposal.clone() });
 
 		Ok(())
 	}
