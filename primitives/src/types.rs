@@ -2,8 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 use codec::{Decode, Encode};
-use ethereum_types::Address;
-
+use webb_proposals::ResourceId;
 use scale_info::TypeInfo;
 
 /// Represents a light proposal input.
@@ -23,6 +22,6 @@ pub struct LightProposalInput {
 	pub leaf_index: u32,
 	/// The merkle proof for the leaf index
 	pub leaf_index_proof: Vec<Vec<u8>>,
-	/// The address of the vanchor contract
-	pub vanchor_address: Address,
+	/// The source resoure id
+	pub resource_id: ResourceId,
 }
