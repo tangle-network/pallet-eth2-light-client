@@ -7,9 +7,6 @@ use webb_proposals::TypedChainId;
 pub mod traits;
 pub mod types;
 
-/// Function sig for anchor update
-pub const ANCHOR_UPDATE_FUNCTION_SIGNATURE: [u8; 4] = [0x26, 0x57, 0x88, 0x01];
-
 // Fixed key for leaf index
 pub const LEAF_INDEX_KEY: &[u8] =
 	"0000001e0000000000000000c0ceba21bc4b08f134e1cbfdd75cb82a11f8b3fc".as_bytes();

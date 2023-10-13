@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used)]
-use crate::{mock::*, Error, LightProposalInputOf, Proposal, ProposalKind, ResourceId};
+use crate::{mock::*, Error, LightProposalInput, Proposal, ProposalKind, ResourceId};
 use dkg_runtime_primitives::{traits::OnSignedProposal, TypedChainId};
 use ethereum_types::Address;
 use frame_support::{assert_err, assert_ok, bounded_vec};
@@ -84,7 +84,7 @@ fn test_light_light_proposal_flow() {
 			merkle_root: [0; 32],
 			merkle_root_proof: vec![vec![0; 32]],
 			leaf_index: 0,
-			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index_proof: vec![vec![0; 32]],
 			resource_id: *GOERLI_RESOURCE_ID,
 		};
 
@@ -106,7 +106,7 @@ fn test_light_light_should_reject_if_header_is_not_present() {
 			merkle_root: [0; 32],
 			merkle_root_proof: vec![vec![0; 32]],
 			leaf_index: 0,
-			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index_proof: vec![vec![0; 32]],
 			resource_id: *GOERLI_RESOURCE_ID,
 		};
 
@@ -150,7 +150,7 @@ fn test_light_light_should_reject_if_proof_verification_fails() {
 			merkle_root: [0; 32],
 			merkle_root_proof: vec![vec![123]],
 			leaf_index: 0,
-			leaf_index_proof: vec![0; 32].try_into().unwrap(),
+			leaf_index_proof: vec![vec![0; 32]],
 			resource_id: *GOERLI_RESOURCE_ID,
 		};
 

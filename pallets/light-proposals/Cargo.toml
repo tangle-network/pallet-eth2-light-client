@@ -38,6 +38,7 @@ hex = { workspace = true }
 webb-light-client-primitives = { workspace = true }
 dkg-runtime-primitives = { workspace = true }
 pallet-bridge-registry = { workspace = true }
+webb = { workspace = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
