@@ -1,0 +1,30 @@
+[package]
+name = "webb-light-client-primitives"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+
+eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "arbitrary"] }
+frame-support = { workspace = true }
+webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+ethereum-types =  { workspace = true }
+log = { workspace = true }
+serde = { workspace = true, optional = true }
+codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+scale-info = { workspace = true }
+
+[features]
+default = ["std"]
+std = [
+	"webb-proposals/std",
+	"ethereum-types/std",
+	"frame-support/std",
+	"eth-types/std",
+	"serde"
+]
+
+try-runtime = ["frame-support/try-runtime"]

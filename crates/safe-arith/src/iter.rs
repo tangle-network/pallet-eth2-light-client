@@ -29,7 +29,7 @@ mod test {
 
 	#[test]
 	fn unsigned_sum_small() {
-		let v = vec![400u64, 401, 402, 403, 404, 405, 406];
+		let v = [400u64, 401, 402, 403, 404, 405, 406];
 		assert_eq!(v.iter().copied().safe_sum().unwrap(), v.iter().copied().sum());
 	}
 
@@ -59,7 +59,7 @@ mod test {
 
 	#[test]
 	fn signed_sum_almost_overflow() {
-		let v = vec![i64::MIN, 1, -1i64, i64::MAX, i64::MAX, 1];
+		let v = [i64::MIN, 1, -1i64, i64::MAX, i64::MAX, 1];
 		assert_eq!(v.iter().copied().safe_sum().unwrap(), v.iter().copied().sum());
 	}
 }

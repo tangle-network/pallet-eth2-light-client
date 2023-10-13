@@ -1,14 +1,13 @@
-use crate::{
-	mock::{Eth2Client, RuntimeOrigin},
-	test_utils::*,
-};
+use crate::{mock::*, test_utils::*, Error, Lsb0, Paused};
+use bitvec::bitarr;
+use consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
+use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, U256};
+use frame_support::assert_ok;
 
-use bitvec::{bitarr, order::Lsb0};
-use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, H256, U256};
-use frame_support::{assert_err, assert_ok};
-use hex::FromHex;
+use eth_types::H256;
+use frame_support::assert_err;
 use sp_runtime::AccountId32;
-use tree_hash::TreeHash;
+
 use webb_proposals::TypedChainId;
 
 pub const MAINNET_CHAIN: TypedChainId = TypedChainId::Evm(1);
@@ -48,15 +47,9 @@ pub fn get_test_context(
 }
 
 mod generic_tests {
-	use consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
-
 	use super::*;
-	use crate::{
-		mock::{new_test_ext, Eth2Client, Test},
-		test_utils::read_beacon_header,
-		Error, Paused,
-	};
-
+	use hex::FromHex;
+	use tree_hash::TreeHash;
 	#[test]
 	pub fn test_header_root() {
 		let header =
@@ -82,7 +75,7 @@ mod generic_tests {
 	pub fn test_submit_update_two_periods() {
 		new_test_ext().execute_with(|| {
 			let (headers, updates, _init_input) = get_test_context(None);
-			assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
+			frame_support::assert_ok!(Eth2Client::submit_beacon_chain_light_client_update(
 				RuntimeOrigin::signed(ALICE),
 				GOERLI_CHAIN,
 				updates[1].clone()
@@ -489,13 +482,7 @@ mod generic_tests {
 }
 
 mod mainnet_tests {
-	use crate::{
-		mock::{new_test_ext, Test},
-		Error,
-	};
-
 	use super::*;
-
 	#[test]
 	pub fn test_panic_on_init_in_trustless_mode_without_bls_on_mainnet() {
 		new_test_ext().execute_with(|| {

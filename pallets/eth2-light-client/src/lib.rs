@@ -101,17 +101,17 @@ use frame_support::{sp_runtime::traits::AccountIdConversion, traits::Currency};
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-#[cfg(test)]
-mod mock;
+#[cfg(any(test, feature = "testing"))]
+pub mod mock;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 mod mocked_pallet_client;
 
-#[cfg(test)]
-mod tests;
+#[cfg(any(test, feature = "testing"))]
+pub mod tests;
 
-#[cfg(test)]
-mod test_utils;
+#[cfg(any(test, feature = "testing"))]
+pub mod test_utils;
 
 // pub mod consensus;
 use consensus::{
@@ -120,10 +120,6 @@ use consensus::{
 	FINALITY_TREE_DEPTH, FINALITY_TREE_INDEX, MIN_SYNC_COMMITTEE_PARTICIPANTS,
 	SYNC_COMMITTEE_TREE_DEPTH, SYNC_COMMITTEE_TREE_INDEX,
 };
-
-pub mod traits;
-
-pub use traits::*;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -221,7 +217,7 @@ pub mod pallet {
 	/// `hashes_gc_threshold` entries. Execution block number -> execution block hash
 	#[pallet::storage]
 	#[pallet::getter(fn finalized_execution_blocks)]
-	pub(super) type FinalizedExecutionBlocks<T: Config> = StorageDoubleMap<
+	pub type FinalizedExecutionBlocks<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		TypedChainId,
@@ -959,7 +955,7 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> VerifyBlockHeaderExists for Pallet<T> {
+impl<T: Config> webb_light_client_primitives::traits::LightClientHandler for Pallet<T> {
 	fn verify_block_header_exists(
 		header: BlockHeader,
 		typed_chain_id: TypedChainId,
