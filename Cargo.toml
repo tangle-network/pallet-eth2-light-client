@@ -54,7 +54,6 @@ itertools = { version = "0.10.3", default-features = false }
 prometheus = { version = "0.9", features = ["process"] }
 lazy_static = { version = "1.4.0", default-features = false }
 warp = "0.2"
-thread = "*"
 dotenvy = "0.15.7"
 rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
