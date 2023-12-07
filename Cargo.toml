@@ -81,9 +81,9 @@ webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", rev="a960e
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
 types = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
 merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
-tree_hash = { version = "0.5.0", features = ["arbitrary"] }
-ethereum_hashing = { version = "1.0.0-beta.2" }
-ethereum_ssz = { version = "0.5.0", features = ["arbitrary"] }
+tree_hash = { version = "0.5.0", features = ["arbitrary"], default-features = false }
+ethereum_hashing = { version = "1.0.0-beta.2", default-features = false }
+ethereum_ssz = { version = "0.5.0", features = ["arbitrary"], default-features = false }
 
 
 # DKG Substrate Dependencies
@@ -164,4 +164,4 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 try-runtime-cli = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 
 # local deps
-webb-light-client-primitives = { path = "./primitives" }
+webb-light-client-primitives = { path = "./primitives", default-features = false }

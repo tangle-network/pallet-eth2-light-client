@@ -14,7 +14,7 @@ webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
 ethereum-types =  { workspace = true }
 log = { workspace = true }
 serde = { workspace = true, optional = true }
-codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+codec = { package = "parity-scale-codec", workspace = true, features = ["derive", "max-encoded-len"] }
 scale-info = { workspace = true }
 
 [features]

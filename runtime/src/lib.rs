@@ -574,10 +574,10 @@ impl pallet_utility::Config for Runtime {
 parameter_types! {
 	pub const DecayPercentage: Percent = Percent::from_percent(50);
 	pub const UnsignedPriority: u64 = 1 << 20;
-	 pub const UnsignedInterval: BlockNumber = 1;
-	 pub const SessionPeriod : BlockNumber = Period::get();
-	 #[derive(Default, Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd, codec::MaxEncodedLen)]
-	 pub const VoteLength: u32 = 64;
+	pub const UnsignedInterval: BlockNumber = 1;
+	pub const SessionPeriod : BlockNumber = Period::get();
+	#[derive(Default, Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd, codec::MaxEncodedLen)]
+	pub const VoteLength: u32 = 64;
 }
 
 impl pallet_dkg_metadata::Config for Runtime {
