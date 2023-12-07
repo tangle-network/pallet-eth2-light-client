@@ -15,12 +15,12 @@ members = [
     "gadget/cli",
     "node",
     "runtime",
-    "primitives"
+    "primitives",
 ]
 
 [patch]
 [patch.crates-io]
-arbitrary = { git = "https://github.com/michaelsproul/arbitrary", rev="a572fd8743012a4f1ada5ee5968b1b3619c427ba" }
+arbitrary = { git = "https://github.com/michaelsproul/arbitrary", rev = "a572fd8743012a4f1ada5ee5968b1b3619c427ba" }
 
 [workspace.dependencies]
 ethereum-types = { version = "0.14.1", default-features = false }
@@ -32,7 +32,7 @@ serde_json = { version = "1.0.74", default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "4.0.9", features = ["derive"] }
-tokio = { version = "1.1", features = ["macros", "rt", "time"] }
+tokio = { version = "1.1", features = ["macros", "rt", "time", "signal"] }
 env_logger = "0.9.0"
 futures = { version = "0.3.21", default-features = false }
 async-std = { version = "1.12.0", default-features = false }
@@ -59,15 +59,21 @@ rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 backoff = { version = "0.4.0", features = ["tokio"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
-scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = [
+    "derive",
+] }
 
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 derive_more = { version = "^0.99.2" }
-tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
+tiny-keccak = { version = "2.0", features = [
+    "keccak",
+], default-features = false }
 ring = { version = "0.16.19", default-features = false }
 sha2 = { version = "0.10.2", default-features = false }
-zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
+zeroize = { version = "1.4.2", features = [
+    "zeroize_derive",
+], default-features = false }
 
 subxt = "0.29.0"
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
@@ -75,12 +81,16 @@ webb-relayer-types = { git = "https://github.com/webb-tools/relayer.git" }
 webb = { version = "0.7.3", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
-]}
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", rev="a960eaf", default-features = false, features = ["scale", "evm"] }
+] }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", rev = "a960eaf", default-features = false, features = [
+    "scale",
+    "evm",
+    "serde",
+] }
 
-milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
-types = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
-merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
+milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev = "a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
+types = { git = "https://github.com/webb-tools/lighthouse.git", rev = "ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", rev = "ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
 tree_hash = { version = "0.5.0", features = ["arbitrary"] }
 ethereum_hashing = { version = "1.0.0-beta.2" }
 ethereum_ssz = { version = "0.5.0", features = ["arbitrary"] }
@@ -123,7 +133,9 @@ pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, 
 pallet-balances = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-grandpa = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-indices = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
-pallet-session = { version = "4.0.0-dev", features = ["historical"], default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+pallet-session = { version = "4.0.0-dev", features = [
+    "historical",
+], default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-staking-reward-curve = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-sudo = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-timestamp = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
