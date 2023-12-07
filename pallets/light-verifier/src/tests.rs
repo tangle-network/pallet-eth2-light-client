@@ -1,7 +1,7 @@
 use super::*;
 use crate as pallet_light_verifier;
 use crate::mock::{Test, *};
-use dkg_runtime_primitives::{TypedChainId, H256};
+use webb_proposals::TypedChainId;
 
 use frame_support::assert_ok;
 

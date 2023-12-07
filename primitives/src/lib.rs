@@ -3,6 +3,7 @@
 
 use eth_types::BlockHeader;
 use frame_support::pallet_prelude::DispatchError;
+use sp_std::vec::Vec;
 use webb_proposals::TypedChainId;
 pub mod traits;
 pub mod types;

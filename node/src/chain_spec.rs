@@ -204,12 +204,5 @@ fn testnet_genesis(
 			],
 			phantom: std::marker::PhantomData,
 		},
-		dkg: DKGConfig {
-			authorities: initial_authorities.iter().map(|(.., x)| x.clone()).collect::<_>(),
-			keygen_threshold: 2,
-			signature_threshold: 1,
-			authority_ids: initial_authorities.iter().map(|(x, ..)| x.clone()).collect::<_>(),
-		},
-		dkg_proposals: Default::default(),
 	}
 }

@@ -2,8 +2,9 @@
 use serde::{Deserialize, Serialize};
 
 use codec::{Decode, Encode};
-use webb_proposals::ResourceId;
 use scale_info::TypeInfo;
+use sp_std::vec::Vec;
+use webb_proposals::ResourceId;
 
 /// Represents a light proposal input.
 ///

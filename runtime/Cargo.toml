@@ -63,10 +63,7 @@ pallet-eth2-light-client = { path = "../pallets/eth2-light-client", default-feat
 pallet-eth2-light-client-runtime-api = { path = "../pallets/eth2-light-client/runtime-api", default-features = false }
 
 # DKG Substrate Dependencies
-dkg-runtime-primitives = { workspace = true }
-pallet-dkg-metadata = { workspace = true }
-pallet-dkg-proposal-handler = { workspace = true }
-pallet-dkg-proposals = { workspace = true }
+dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate.git", optional = true , branch = "polkadot-v1.0.0" }
@@ -121,9 +118,6 @@ std = [
 
     # DKG pallets
     "dkg-runtime-primitives/std",
-    "pallet-dkg-metadata/std",
-    "pallet-dkg-proposal-handler/std",
-    "pallet-dkg-proposals/std",
 ]
 runtime-benchmarks = [
     "frame-benchmarking/runtime-benchmarks",

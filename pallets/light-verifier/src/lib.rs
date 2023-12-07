@@ -120,7 +120,7 @@ impl<T: Config> ProofVerifier for Pallet<T> {
 		let storage_hash = header.calculate_hash();
 
 		TrieProver::verify_trie_proof(storage_hash.into(), key, proof)
-			.map_err(|_| Error::<T>::CannotVerifyStorageProof);
+			.map_err(|_| Error::<T>::CannotVerifyStorageProof)?;
 
 		Ok(true)
 	}

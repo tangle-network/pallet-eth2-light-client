@@ -572,90 +572,6 @@ impl pallet_utility::Config for Runtime {
 }
 
 parameter_types! {
-	pub const DecayPercentage: Percent = Percent::from_percent(50);
-	pub const UnsignedPriority: u64 = 1 << 20;
-	pub const UnsignedInterval: BlockNumber = 1;
-	pub const SessionPeriod : BlockNumber = Period::get();
-	#[derive(Default, Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd, codec::MaxEncodedLen)]
-	pub const VoteLength: u32 = 64;
-}
-
-impl pallet_dkg_metadata::Config for Runtime {
-	type DKGId = DKGId;
-	type RuntimeEvent = RuntimeEvent;
-	type OnAuthoritySetChangeHandler = DKGProposals;
-	type OnDKGPublicKeyChangeHandler = ();
-	type OffChainAuthId = dkg_runtime_primitives::offchain::crypto::OffchainAuthId;
-	type NextSessionRotation = pallet_dkg_metadata::DKGPeriodicSessions<Period, Offset, Runtime>;
-	type KeygenJailSentence = Period;
-	type SigningJailSentence = Period;
-	type DecayPercentage = DecayPercentage;
-	type Reputation = Reputation;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type UnsignedPriority = UnsignedPriority;
-	type SessionPeriod = SessionPeriod;
-	type UnsignedInterval = UnsignedInterval;
-	type AuthorityIdOf = pallet_dkg_metadata::AuthorityIdOf<Self>;
-	type ProposalHandler = DKGProposalHandler;
-	type MaxKeyLength = MaxKeyLength;
-	type MaxSignatureLength = MaxSignatureLength;
-	type MaxReporters = MaxReporters;
-	type MaxAuthorities = MaxAuthorities;
-	type VoteLength = VoteLength;
-	type MaxProposalLength = MaxProposalLength;
-	type WeightInfo = pallet_dkg_metadata::weights::WebbWeight<Runtime>;
-}
-
-parameter_types! {
-	pub const ChainIdentifier: TypedChainId = TypedChainId::Substrate(1081);
-	pub const ProposalLifetime: BlockNumber = HOURS / 5;
-	pub const DKGAccountId: PalletId = PalletId(*b"dw/dkgac");
-	pub const RefreshDelay: Permill = Permill::from_percent(90);
-	pub const TimeToRestart: BlockNumber = 3;
-	pub const UnsignedProposalExpiry: BlockNumber = 10;
-}
-
-impl pallet_dkg_proposal_handler::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type OffChainAuthId = dkg_runtime_primitives::offchain::crypto::OffchainAuthId;
-	type UnsignedProposalExpiry = UnsignedProposalExpiry;
-	type SignedProposalHandler = DKG;
-	type MaxProposalsPerBatch = dkg_runtime_primitives::CustomU32Getter<10>;
-	type BatchId = u32;
-	type ValidatorSet = Historical;
-	type ReportOffences = ();
-	type WeightInfo = pallet_dkg_proposal_handler::weights::WebbWeight<Runtime>;
-}
-
-parameter_types! {
-	#[derive(Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd)]
-	pub const MaxVotes : u32 = 100;
-	#[derive(Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd)]
-	pub const MaxResources : u32 = 1000;
-	#[derive(Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd)]
-	pub const MaxProposers : u32 = 1000;
-}
-
-impl pallet_dkg_proposals::Config for Runtime {
-	type AdminOrigin = frame_system::EnsureRoot<Self::AccountId>;
-	type DKGAuthorityToMerkleLeaf = pallet_dkg_proposals::DKGEcdsaToEthereumAddress;
-	type DKGId = DKGId;
-	type ChainIdentifier = ChainIdentifier;
-	type RuntimeEvent = RuntimeEvent;
-	type NextSessionRotation = pallet_dkg_metadata::DKGPeriodicSessions<Period, Offset, Runtime>;
-	type MaxProposalLength = MaxProposalLength;
-	type ProposalLifetime = ProposalLifetime;
-	type ProposalHandler = DKGProposalHandler;
-	type Period = Period;
-	type MaxVotes = MaxVotes;
-	type MaxResources = MaxResources;
-	type MaxProposers = MaxProposers;
-	type VotingKeySize = MaxKeyLength;
-	type WeightInfo = pallet_dkg_proposals::WebbWeight<Runtime>;
-}
-
-parameter_types! {
 	pub const StoragePricePerByte: u128 = 100;
 	pub const Eth2ClientPalletId: PalletId = PalletId(*b"py/eth2c");
 }
@@ -739,10 +655,6 @@ construct_runtime!(
 		Staking: pallet_staking,
 		Session: pallet_session,
 		Historical: pallet_session_historical,
-		// DKG / offchain worker
-		DKG: pallet_dkg_metadata,
-		DKGProposals: pallet_dkg_proposals,
-		DKGProposalHandler: pallet_dkg_proposal_handler,
 		// Eth2 light client
 		Eth2Client: pallet_eth2_light_client,
 	}

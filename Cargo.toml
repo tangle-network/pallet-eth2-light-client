@@ -85,14 +85,6 @@ tree_hash = { version = "0.5.0", features = ["arbitrary"], default-features = fa
 ethereum_hashing = { version = "1.0.0-beta.2", default-features = false }
 ethereum_ssz = { version = "0.5.0", features = ["arbitrary"], default-features = false }
 
-
-# DKG Substrate Dependencies
-dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
-pallet-dkg-metadata = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
-pallet-dkg-proposal-handler = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
-pallet-dkg-proposals = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
-pallet-bridge-registry = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
-
 sc-cli = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sc-offchain = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
@@ -164,4 +156,5 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 try-runtime-cli = { version = "0.10.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 
 # local deps
+pallet-eth2-light-client = { path = "./pallets/eth2-light-client", default-features = false }
 webb-light-client-primitives = { path = "./primitives", default-features = false }
