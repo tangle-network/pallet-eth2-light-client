@@ -1,7 +1,19 @@
 use node_template_runtime::{
-	opaque::SessionKeys, AccountId, Balance, BalancesConfig, DKGConfig, DKGId, Eth2ClientConfig,
-	IndicesConfig, MaxNominations, RuntimeGenesisConfig, SessionConfig, Signature, StakingConfig,
-	SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
+	opaque::SessionKeys,
+	AccountId,
+	Balance,
+	BalancesConfig,
+	// Eth2ClientConfig,
+	IndicesConfig,
+	MaxNominations,
+	RuntimeGenesisConfig,
+	SessionConfig,
+	Signature,
+	StakingConfig,
+	SudoConfig,
+	SystemConfig,
+	DOLLARS,
+	WASM_BINARY,
 };
 use pallet_staking::StakerStatus;
 use sc_service::ChainType;
@@ -39,18 +51,17 @@ where
 }
 
 /// Helper function to generate stash, controller and session key from seed
-pub fn authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, GrandpaId, AuraId, DKGId) {
+pub fn authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, GrandpaId, AuraId) {
 	(
 		get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", seed)),
 		get_account_id_from_seed::<sr25519::Public>(seed),
 		get_from_seed::<GrandpaId>(seed),
 		get_from_seed::<AuraId>(seed),
-		get_from_seed::<DKGId>(seed),
 	)
 }
 
-fn session_keys(grandpa: GrandpaId, aura: AuraId, dkg: DKGId) -> SessionKeys {
-	SessionKeys { grandpa, aura, dkg }
+fn session_keys(grandpa: GrandpaId, aura: AuraId) -> SessionKeys {
+	SessionKeys { grandpa, aura }
 }
 
 fn development_config_genesis() -> RuntimeGenesisConfig {
@@ -110,7 +121,7 @@ pub fn local_testnet_config() -> ChainSpec {
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
 	wasm_binary: &[u8],
-	initial_authorities: Vec<(AccountId, AccountId, GrandpaId, AuraId, DKGId)>,
+	initial_authorities: Vec<(AccountId, AccountId, GrandpaId, AuraId)>,
 	initial_nominators: Vec<AccountId>,
 	root_key: AccountId,
 	endowed_accounts: Option<Vec<AccountId>>,
@@ -177,9 +188,7 @@ fn testnet_genesis(
 		session: SessionConfig {
 			keys: initial_authorities
 				.iter()
-				.map(|x| {
-					(x.0.clone(), x.0.clone(), session_keys(x.2.clone(), x.3.clone(), x.4.clone()))
-				})
+				.map(|x| (x.0.clone(), x.0.clone(), session_keys(x.2.clone(), x.3.clone())))
 				.collect::<Vec<_>>(),
 		},
 		staking: StakingConfig {
@@ -197,12 +206,12 @@ fn testnet_genesis(
 			key: Some(root_key),
 		},
 		transaction_payment: Default::default(),
-		eth_2_client: Eth2ClientConfig {
-			networks: vec![
-				(TypedChainId::Evm(1), NetworkConfig::new(&Network::Mainnet)),
-				(TypedChainId::Evm(5), NetworkConfig::new(&Network::Goerli)),
-			],
-			phantom: std::marker::PhantomData,
-		},
+		// eth_2_client: Eth2ClientConfig {
+		// 	networks: vec![
+		// 		(TypedChainId::Evm(1), NetworkConfig::new(&Network::Mainnet)),
+		// 		(TypedChainId::Evm(5), NetworkConfig::new(&Network::Goerli)),
+		// 	],
+		// 	phantom: std::marker::PhantomData,
+		// },
 	}
 }

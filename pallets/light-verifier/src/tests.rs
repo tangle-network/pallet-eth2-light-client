@@ -6,8 +6,8 @@ use webb_proposals::TypedChainId;
 use frame_support::assert_ok;
 
 use pallet_eth2_light_client::tests::{get_test_context, submit_and_check_execution_headers};
+use sp_core::H256;
 use sp_runtime::AccountId32;
-
 use webb_proposals::{self};
 
 pub const GOERLI_CHAIN: TypedChainId = TypedChainId::Evm(5);
