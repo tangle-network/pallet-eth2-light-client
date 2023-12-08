@@ -6,6 +6,7 @@ use eth2_to_substrate_relay::eth2substrate_relay::Eth2SubstrateRelay;
 use lc_relay_config::RelayConfig;
 use lc_relayer_context::LightClientRelayerContext;
 use std::{path::PathBuf, sync::Arc};
+use subxt::ext::sp_core::Pair;
 use tokio::signal::unix;
 use webb_proposals::TypedChainId;
 pub mod errors;
@@ -33,10 +34,18 @@ pub async fn ignite_lc_relayer(ctx: LightClientRelayerContext) -> anyhow::Result
 			},
 		};
 		let api_client = Arc::new(api_client);
-		let mut eth_pallet = EthClientPallet::new(
-			api_client,
-			ctx.lc_relay_config.ethereum_network.as_typed_chain_id(),
-		);
+		let pair = std::fs::read_to_string(&ctx.lc_init_config.path_to_signer_secret_key)
+			.expect("failed to read secret key");
+		let pair = subxt::ext::sp_core::sr25519::Pair::from_string(&pair, None);
+		let network = ctx.lc_relay_config.ethereum_network.as_typed_chain_id();
+		let mut eth_pallet = if let Ok(pair) = pair {
+			tracing::info!(target: "relay", "=== Initializing client with signer ===");
+			EthClientPallet::new_with_pair(api_client, pair, network)
+		} else {
+			tracing::info!(target: "relay", "=== Initializing client without signer. Alice used as default ===");
+			EthClientPallet::new(api_client, network)
+		};
+
 		let mut relay =
 			Eth2SubstrateRelay::init(&ctx.lc_relay_config, Box::new(eth_pallet.clone())).await;
 		tracing::info!(target: "relay", "=== Initializing relay ===");
