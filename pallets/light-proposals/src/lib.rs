@@ -24,7 +24,7 @@
 #![allow(unused)]
 
 use dkg_runtime_primitives::{
-	FunctionSignature, Proposal, ProposalHandlerTrait, ProposalHeader, ProposalKind, ResourceId,
+	ProposalHandlerTrait,
 };
 use frame_support::{pallet_prelude::DispatchError, traits::Get};
 pub use pallet::*;
@@ -35,7 +35,7 @@ use webb::evm::{
 	contract::protocol_solidity::variable_anchor::v_anchor_contract, ethers::contract::EthCall,
 };
 use webb_light_client_primitives::{types::LightProposalInput, LEAF_INDEX_KEY, MERKLE_ROOT_KEY};
-use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId};
+use webb_proposals::{evm::AnchorUpdateProposal, Nonce, TypedChainId, FunctionSignature, ResourceId, ProposalHeader, ProposalKind, Proposal};
 
 #[cfg(test)]
 mod mock;
@@ -45,12 +45,14 @@ mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use super::*;
+	use core::fmt::Debug;
+
+use super::*;
 
 	use dkg_runtime_primitives::ProposalHandlerTrait;
 
 	use frame_support::{
-		dispatch::{fmt::Debug, DispatchResultWithPostInfo},
+		dispatch::DispatchResultWithPostInfo,
 		pallet_prelude::{ValueQuery, *},
 	};
 	use frame_system::pallet_prelude::*;
@@ -235,15 +237,15 @@ impl<T: Config> Pallet<T> {
 			ProposalHeader::new(
 				target_resource_id,
 				FunctionSignature::from(function_signature_bytes),
-				Nonce(nonce),
+				nonce.into(),
 			),
 			proposal.merkle_root,
 			src_resource_id,
 		);
 
-		let unsigned_anchor_update_proposal = Proposal::Unsigned {
+		let unsigned_anchor_update_proposal: Proposal<T::MaxProposalLength> = Proposal::Unsigned {
 			kind: ProposalKind::AnchorUpdate,
-			data: proposal.into_bytes().to_vec().try_into().unwrap(),
+			data: webb_proposals::to_vec(proposal).try_into().unwrap(),
 		};
 
 		// submit the proposal

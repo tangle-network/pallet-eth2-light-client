@@ -16,29 +16,29 @@ tree-hash = { package = "webb-tree-hash", path = "../../crates/tree-hash", defau
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../../crates/tree-hash-derive", default-features = false }
 consensus = { package = "webb-consensus-types", path = "../../crates/consensus-types", default-features = false }
 
-frame-support = { workspace = true }
-frame-system = { workspace = true }
-pallet-balances = { workspace = true }
-sp-runtime = { workspace = true }
-sp-std = { workspace = true }
-sp-core = { workspace = true }
+frame-support = { workspace = true, default-features = false  }
+frame-system = { workspace = true, default-features = false  }
+pallet-balances = { workspace = true, default-features = false  }
+sp-runtime = { workspace = true, default-features = false  }
+sp-std = { workspace = true, default-features = false  }
+sp-core = { workspace = true, default-features = false  }
 
-log = { workspace = true }
-serde = { workspace = true, optional = true }
+log = { workspace = true, default-features = false  }
+serde = { workspace = true, optional = true, default-features = false  }
 codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
-scale-info = { workspace = true }
-webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
-ethereum-types =  { workspace = true }
+scale-info = { workspace = true, default-features = false  }
+webb-proposals = { workspace = true, default-features = false, features = ["scale", "evm", "substrate"] }
+ethereum-types =  { workspace = true, default-features = false  }
 derive_more =  { workspace = true }
-rlp =  { workspace = true }
-rlp-derive =  { workspace = true }
-tiny-keccak = { workspace = true }
+rlp =  { workspace = true, default-features = false  }
+rlp-derive =  { workspace = true, default-features = false  }
+tiny-keccak = { workspace = true, default-features = false  }
 bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
 webb-light-client-primitives = { workspace = true }
 dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
 pallet-bridge-registry = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
-webb = { workspace = true }
+webb = { workspace = true, default-features = false }
 
 [dev-dependencies]
 anyhow = { workspace = true }

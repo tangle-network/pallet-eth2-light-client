@@ -4,7 +4,7 @@ use crate as pallet_light_verifier;
 use codec::{Decode, Encode};
 use consensus::network_config::{Network, NetworkConfig};
 
-use frame_support::{parameter_types, sp_io, PalletId};
+use frame_support::{parameter_types, PalletId};
 use frame_system as system;
 use webb_proposals::TypedChainId;
 

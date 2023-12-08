@@ -8,7 +8,8 @@ edition = "2021"
 
 [workspace]
 members = [
-    "pallets/*",
+    "pallets/eth2-light-client",
+    "pallets/light-verifier",
     "crates/*",
     "eth2substrate-block-relay-rs",
     "gadget",
@@ -76,7 +77,7 @@ webb = { version = "0.7.3", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
 ]}
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", rev="a960eaf", default-features = false, features = ["scale", "evm"] }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs.git", default-features = false, features = ["scale", "evm"] }
 
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
 types = { git = "https://github.com/webb-tools/lighthouse.git", rev="ef72e752eaf45f4b7eb64dd8dbb0fe088f955df8" }
