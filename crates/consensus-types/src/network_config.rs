@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub enum Network {
 	Mainnet,
 	Goerli,
+	Sepolia,
 }
 
 impl FromStr for Network {
@@ -17,6 +18,7 @@ impl FromStr for Network {
 		match input.to_lowercase().as_str() {
 			"mainnet" => Ok(Network::Mainnet),
 			"goerli" => Ok(Network::Goerli),
+			"sepolia" => Ok(Network::Sepolia),
 			_ => Err(alloc::format!("Unknown network: {input}")),
 		}
 	}
@@ -55,6 +57,17 @@ impl NetworkConfig {
 				bellatrix_fork_epoch: 112260,
 				capella_fork_version: [0x03, 0x00, 0x10, 0x20],
 				capella_fork_epoch: 162304,
+			},
+			Network::Sepolia => Self {
+				genesis_validators_root: [
+					0x91, 0x43, 0xaa, 0x7c, 0x61, 0x5a, 0x7f, 0x71, 0x15, 0xe2, 0xb6, 0xaa, 0xc3,
+					0x19, 0xc0, 0x35, 0x29, 0xdf, 0x82, 0x42, 0xae, 0x70, 0x5f, 0xba, 0x9d, 0xf3,
+					0x9b, 0x79, 0xc5, 0x9f, 0xa8, 0xb1,
+				],
+				bellatrix_fork_version: [144, 0, 0, 113],
+				bellatrix_fork_epoch: 100,
+				capella_fork_version: [144, 0, 0, 114],
+				capella_fork_epoch: 56832,
 			},
 		}
 	}
