@@ -10,7 +10,7 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpS
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 use webb_proposals::TypedChainId;
 
 /// The minimum period of blocks on which justifications will be
@@ -290,33 +290,17 @@ pub fn new_full(
 			.spawn_blocking("aura", Some("block-authoring"), aura);
 
 		// Start Eth2 Light client Relayer Gadget - (MAINNET RELAYER)
-		// task_manager.spawn_handle().spawn(
-		// 	"mainnet-relayer-gadget",
-		// 	None,
-		// 	pallet_eth2_light_client_relayer_gadget::start_gadget(
-		// 		pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
-		// 			lc_relay_config_path: relayer_cmd.light_client_relay_config_path.clone(),
-		// 			lc_init_config_path: relayer_cmd.light_client_init_pallet_config_path.clone(),
-		// 			eth2_chain_id: TypedChainId::Evm(1),
-		// 		},
-		// 	),
-		// );
-
-		// // Start Eth2 Light client Relayer Gadget - (GOERLI TESTNET RELAYER)
-		// task_manager.spawn_handle().spawn(
-		// 	"goerli-relayer-gadget",
-		// 	None,
-		// 	pallet_eth2_light_client_relayer_gadget::start_gadget(
-		// 		pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
-		// 			local_keystore: keystore_container.local_keystore(),
-		// 			ew_config_dir: relayer_cmd.relayer_config_dir,
-		// 			lc_config_path: relayer_cmd.light_client_config_path,
-		// 			database_path,
-		// 			rpc_addr,
-		// 			eth2_chain_id: TypedChainId::Evm(5),
-		// 		},
-		// 	),
-		// );
+		task_manager.spawn_handle().spawn(
+			"mainnet-relayer-gadget",
+			None,
+			pallet_eth2_light_client_relayer_gadget::start_gadget(
+				pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
+					lc_relay_config_path: relayer_cmd.light_client_relay_config_path.clone(),
+					lc_init_config_path: relayer_cmd.light_client_init_pallet_config_path.clone(),
+					eth2_chain_id: TypedChainId::Evm(1),
+				},
+			),
+		);
 	}
 
 	if enable_grandpa {

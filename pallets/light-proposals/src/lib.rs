@@ -245,7 +245,7 @@ impl<T: Config> Pallet<T> {
 
 		let unsigned_anchor_update_proposal: Proposal<T::MaxProposalLength> = Proposal::Unsigned {
 			kind: ProposalKind::AnchorUpdate,
-			data: webb_proposals::to_vec(proposal).try_into().unwrap(),
+			data: proposal.encode(),
 		};
 
 		// submit the proposal

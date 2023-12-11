@@ -62,7 +62,6 @@ frame-system-benchmarking = { workspace = true, optional = true }
 pallet-eth2-light-client = { path = "../pallets/eth2-light-client", default-features = false }
 pallet-eth2-light-client-runtime-api = { path = "../pallets/eth2-light-client/runtime-api", default-features = false }
 
-
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", optional = true , branch = "release-polkadot-v1.1.0" }
 
@@ -109,10 +108,9 @@ std = [
     "sp-transaction-pool/std",
     "sp-version/std",
     "substrate-wasm-builder",
-
     # # Local pallets
-    # "pallet-eth2-light-client/std",
-    # "pallet-eth2-light-client-runtime-api/std",
+    "pallet-eth2-light-client/std",
+    "pallet-eth2-light-client-runtime-api/std",
 ]
 runtime-benchmarks = [
     "frame-benchmarking/runtime-benchmarks",

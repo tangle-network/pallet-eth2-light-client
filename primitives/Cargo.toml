@@ -7,10 +7,10 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "arbitrary"] }
+eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2"] }
 frame-support = { workspace = true }
 sp-std = { workspace = true }
-webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+webb-proposals = { workspace = true }
 ethereum-types =  { workspace = true }
 log = { workspace = true }
 serde = { workspace = true, optional = true }

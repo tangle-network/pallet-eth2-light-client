@@ -3,7 +3,7 @@ use node_template_runtime::{
 	AccountId,
 	Balance,
 	BalancesConfig,
-	// Eth2ClientConfig,
+	Eth2ClientConfig,
 	IndicesConfig,
 	MaxNominations,
 	RuntimeGenesisConfig,
@@ -165,7 +165,6 @@ fn testnet_genesis(
 			let nominations = initial_authorities
 				.as_slice()
 				.choose_multiple(&mut rng, count)
-				.into_iter()
 				.map(|choice| choice.0.clone())
 				.collect::<Vec<_>>();
 			(x.clone(), x.clone(), STASH, StakerStatus::Nominator(nominations))
@@ -206,12 +205,12 @@ fn testnet_genesis(
 			key: Some(root_key),
 		},
 		transaction_payment: Default::default(),
-		// eth_2_client: Eth2ClientConfig {
-		// 	networks: vec![
-		// 		(TypedChainId::Evm(1), NetworkConfig::new(&Network::Mainnet)),
-		// 		(TypedChainId::Evm(5), NetworkConfig::new(&Network::Goerli)),
-		// 	],
-		// 	phantom: std::marker::PhantomData,
-		// },
+		eth_2_client: Eth2ClientConfig {
+			networks: vec![
+				(TypedChainId::Evm(1), NetworkConfig::new(&Network::Mainnet)),
+				(TypedChainId::Evm(5), NetworkConfig::new(&Network::Goerli)),
+			],
+			phantom: std::marker::PhantomData,
+		},
 	}
 }
