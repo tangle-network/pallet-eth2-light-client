@@ -41,6 +41,7 @@ pub fn get_typed_chain_id(config: &Config) -> TypedChainId {
 	match config.ethereum_network {
 		crate::eth_network::EthNetwork::Mainnet => TypedChainId::Evm(1),
 		crate::eth_network::EthNetwork::Goerli => TypedChainId::Evm(5),
+		crate::eth_network::EthNetwork::Sepolia => TypedChainId::Evm(11155111),
 	}
 }
 

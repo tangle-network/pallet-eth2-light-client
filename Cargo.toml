@@ -16,12 +16,12 @@ members = [
     "gadget/cli",
     "node",
     "runtime",
-    "primitives"
+    "primitives",
 ]
 
 [patch]
 [patch.crates-io]
-arbitrary = { git = "https://github.com/michaelsproul/arbitrary", rev="a572fd8743012a4f1ada5ee5968b1b3619c427ba" }
+arbitrary = { git = "https://github.com/michaelsproul/arbitrary", rev = "a572fd8743012a4f1ada5ee5968b1b3619c427ba" }
 
 [workspace.dependencies]
 ethereum-types = { version = "0.14.1", default-features = false }
@@ -33,7 +33,7 @@ serde_json = { version = "1.0.74", default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "4.0.9", features = ["derive"] }
-tokio = { version = "1.1", features = ["macros", "rt", "time"] }
+tokio = { version = "1.1", features = ["macros", "rt", "time", "signal"] }
 env_logger = "0.9.0"
 futures = { version = "0.3.21", default-features = false }
 async-std = { version = "1.12.0", default-features = false }
@@ -60,15 +60,21 @@ rand = { version = "0.7.3", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 backoff = { version = "0.4.0", features = ["tokio"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
-scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = [
+    "derive",
+] }
 
 rlp = { version = "0.5.0", default-features = false }
 rlp-derive = { version = "0.1.0", default-features = false }
 derive_more = { version = "^0.99.2" }
-tiny-keccak = { version = "2.0", features = ["keccak"], default-features = false }
+tiny-keccak = { version = "2.0", features = [
+    "keccak",
+], default-features = false }
 ring = { version = "0.16.19", default-features = false }
 sha2 = { version = "0.10.2", default-features = false }
-zeroize = { version = "1.4.2", features = ["zeroize_derive"], default-features = false }
+zeroize = { version = "1.4.2", features = [
+    "zeroize_derive",
+], default-features = false }
 
 subxt = "0.29.0"
 webb-relayer-utils = { git = "https://github.com/webb-tools/relayer.git" }
