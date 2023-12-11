@@ -25,7 +25,7 @@ sp-core = { workspace = true }
 
 log = { workspace = true }
 serde = { workspace = true, optional = true }
-codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+codec = { workspace = true, features = ["derive", "max-encoded-len"] }
 scale-info = { workspace = true }
 webb-proposals = { workspace = true, features = ["evm", "substrate"] }
 ethereum-types =  { workspace = true }

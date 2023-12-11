@@ -16,7 +16,7 @@ eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils",
 
 bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
-codec = { package = "parity-scale-codec", workspace = true }
+codec = { workspace = true }
 scale-info = { workspace = true }
 serde = { workspace = true }
 rlp = { workspace = true }
