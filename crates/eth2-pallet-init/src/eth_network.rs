@@ -10,7 +10,7 @@ use std::{
 pub enum EthNetwork {
 	Mainnet,
 	Goerli,
-	Sepolia
+	Sepolia,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -35,7 +35,7 @@ impl EthNetwork {
 		match self {
 			EthNetwork::Mainnet => "mainnet",
 			EthNetwork::Goerli => "goerli",
-			EthNetwork::Sepolia => "sepolia"
+			EthNetwork::Sepolia => "sepolia",
 		}
 	}
 
@@ -43,7 +43,7 @@ impl EthNetwork {
 		match self {
 			EthNetwork::Mainnet => webb_proposals::TypedChainId::Evm(1),
 			EthNetwork::Goerli => webb_proposals::TypedChainId::Evm(5),
-			EthNetwork::Sepolia => webb_proposals::TypedChainId::Evm(11155111)
+			EthNetwork::Sepolia => webb_proposals::TypedChainId::Evm(11155111),
 		}
 	}
 }
