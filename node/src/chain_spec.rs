@@ -1,19 +1,7 @@
 use node_template_runtime::{
-	opaque::SessionKeys,
-	AccountId,
-	Balance,
-	BalancesConfig,
-	Eth2ClientConfig,
-	IndicesConfig,
-	MaxNominations,
-	RuntimeGenesisConfig,
-	SessionConfig,
-	Signature,
-	StakingConfig,
-	SudoConfig,
-	SystemConfig,
-	DOLLARS,
-	WASM_BINARY,
+	opaque::SessionKeys, AccountId, Balance, BalancesConfig, Eth2ClientConfig, IndicesConfig,
+	MaxNominations, RuntimeGenesisConfig, SessionConfig, Signature, StakingConfig, SudoConfig,
+	SystemConfig, DOLLARS, WASM_BINARY,
 };
 use pallet_staking::StakerStatus;
 use sc_service::ChainType;
