@@ -7,19 +7,22 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-
-eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2", "arbitrary"] }
+eth-types = { path = "../crates/eth-types", default-features = false, features = ["eth2"] }
 frame-support = { workspace = true }
-webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+sp-std = { workspace = true }
+webb-proposals = { workspace = true }
 ethereum-types =  { workspace = true }
 log = { workspace = true }
 serde = { workspace = true, optional = true }
-codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+codec = { workspace = true, features = ["derive", "max-encoded-len"] }
 scale-info = { workspace = true }
 
 [features]
 default = ["std"]
 std = [
+	"sp-std/std",
+	"codec/std",
+	"scale-info/std",
 	"webb-proposals/std",
 	"ethereum-types/std",
 	"frame-support/std",

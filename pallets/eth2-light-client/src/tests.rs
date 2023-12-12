@@ -1,11 +1,8 @@
-use crate::{mock::*, test_utils::*, Error, Lsb0, Paused};
-use bitvec::bitarr;
-use consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
-use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader, U256};
+use crate::{mock::*, test_utils::*};
+
+use eth_types::{eth2::LightClientUpdate, pallet::InitInput, BlockHeader};
 use frame_support::assert_ok;
 
-use eth_types::H256;
-use frame_support::assert_err;
 use sp_runtime::AccountId32;
 
 use webb_proposals::TypedChainId;
@@ -48,8 +45,18 @@ pub fn get_test_context(
 
 mod generic_tests {
 	use super::*;
+	use crate::{
+		mock::new_test_ext,
+		tests::{get_test_context, GOERLI_CHAIN},
+		Error, Paused,
+	};
+	use bitvec::{bitarr, order::Lsb0};
+	use consensus::{EPOCHS_PER_SYNC_COMMITTEE_PERIOD, SLOTS_PER_EPOCH};
+	use eth_types::{H256, U256};
+	use frame_support::assert_err;
 	use hex::FromHex;
 	use tree_hash::TreeHash;
+
 	#[test]
 	pub fn test_header_root() {
 		let header =
@@ -483,6 +490,12 @@ mod generic_tests {
 
 mod mainnet_tests {
 	use super::*;
+	use crate::{
+		tests::{new_test_ext, ALICE, MAINNET_CHAIN},
+		Error,
+	};
+	use frame_support::assert_err;
+
 	#[test]
 	pub fn test_panic_on_init_in_trustless_mode_without_bls_on_mainnet() {
 		new_test_ext().execute_with(|| {

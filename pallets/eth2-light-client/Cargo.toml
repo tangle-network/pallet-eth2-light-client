@@ -18,15 +18,16 @@ consensus = { package = "webb-consensus-types", path = "../../crates/consensus-t
 frame-support = { workspace = true, default-features = false }
 frame-system = { workspace = true }
 pallet-balances = { workspace = true }
+sp-io = { workspace = true }
 sp-runtime = { workspace = true }
 sp-std = { workspace = true }
 sp-core = { workspace = true }
 
 log = { workspace = true }
 serde = { workspace = true, optional = true }
-codec = { package = "parity-scale-codec",workspace = true, features = ["derive", "max-encoded-len"] }
+codec = { workspace = true, features = ["derive", "max-encoded-len"] }
 scale-info = { workspace = true }
-webb-proposals = { workspace = true, features = ["scale", "evm", "substrate"] }
+webb-proposals = { workspace = true, features = ["evm", "substrate"] }
 ethereum-types =  { workspace = true }
 derive_more =  { workspace = true }
 rlp =  { workspace = true }
@@ -38,8 +39,8 @@ webb-light-client-primitives = { workspace = true }
 anyhow = { workspace = true }
 lazy_static = { workspace = true }
 serde_json = { workspace = true }
-eth2-pallet-init = { package = "webb-eth2-pallet-init", path = "../../crates/eth2-pallet-init" }
-async-trait = { workspace = true }
+eth2-pallet-init = { package = "webb-eth2-pallet-init", optional = true, path = "../../crates/eth2-pallet-init" }
+async-trait = { workspace = true, optional = true }
 
 [features]
 default = ["std"]
@@ -54,6 +55,7 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-balances/std",
+	"sp-io/std",
 	"sp-runtime/std",
 	"sp-std/std",
 	"sp-core/std",
@@ -66,6 +68,8 @@ std = [
 	"eth2-ssz/std",
 	"tree-hash/std",
 	"merkle-proof/std",
+	"async-trait",
+	"eth2-pallet-init",
 	
 ]
 testing = [

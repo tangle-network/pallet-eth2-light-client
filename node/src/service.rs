@@ -10,8 +10,12 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpS
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 use webb_proposals::TypedChainId;
+
+/// The minimum period of blocks on which justifications will be
+/// imported and generated.
+const GRANDPA_JUSTIFICATION_PERIOD: u32 = 512;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -45,7 +49,7 @@ pub fn new_partial(
 		FullClient,
 		FullBackend,
 		FullSelectChain,
-		sc_consensus::DefaultImportQueue<Block, FullClient>,
+		sc_consensus::DefaultImportQueue<Block>,
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
 			sc_consensus_grandpa::GrandpaBlockImport<
@@ -71,7 +75,7 @@ pub fn new_partial(
 		})
 		.transpose()?;
 
-	let executor = sc_service::new_native_or_wasm_executor(&config);
+	let executor = sc_service::new_native_or_wasm_executor(config);
 	let (client, backend, keystore_container, task_manager) =
 		sc_service::new_full_parts::<Block, RuntimeApi, _>(
 			config,
@@ -97,7 +101,8 @@ pub fn new_partial(
 
 	let (grandpa_block_import, grandpa_link) = sc_consensus_grandpa::block_import(
 		client.clone(),
-		&(client.clone() as Arc<_>),
+		GRANDPA_JUSTIFICATION_PERIOD,
+		&client,
 		select_chain.clone(),
 		telemetry.as_ref().map(|x| x.handle()),
 	)?;
@@ -296,22 +301,6 @@ pub fn new_full(
 				},
 			),
 		);
-
-		// // Start Eth2 Light client Relayer Gadget - (GOERLI TESTNET RELAYER)
-		// task_manager.spawn_handle().spawn(
-		// 	"goerli-relayer-gadget",
-		// 	None,
-		// 	pallet_eth2_light_client_relayer_gadget::start_gadget(
-		// 		pallet_eth2_light_client_relayer_gadget::Eth2LightClientParams {
-		// 			local_keystore: keystore_container.local_keystore(),
-		// 			ew_config_dir: relayer_cmd.relayer_config_dir,
-		// 			lc_config_path: relayer_cmd.light_client_config_path,
-		// 			database_path,
-		// 			rpc_addr,
-		// 			eth2_chain_id: TypedChainId::Evm(5),
-		// 		},
-		// 	),
-		// );
 	}
 
 	if enable_grandpa {
@@ -320,13 +309,12 @@ pub fn new_full(
 		let keystore = if role.is_authority() { Some(keystore_container.keystore()) } else { None };
 
 		let grandpa_config = sc_consensus_grandpa::Config {
-			// FIXME #1578 make this available through chainspec
-			gossip_duration: Duration::from_millis(333),
-			justification_period: 512,
+			gossip_duration: std::time::Duration::from_millis(333),
+			justification_generation_period: GRANDPA_JUSTIFICATION_PERIOD,
 			name: Some(name),
 			observer_enabled: false,
 			keystore,
-			local_role: role,
+			local_role: role.clone(),
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
 			protocol_name: grandpa_protocol_name,
 		};

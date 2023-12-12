@@ -7,11 +7,8 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use crate::opaque::SessionKeys;
 use codec::{Decode, Encode};
-pub use dkg_runtime_primitives::crypto::AuthorityId as DKGId;
-use dkg_runtime_primitives::{
-	MaxAuthorities, MaxKeyLength, MaxProposalLength, MaxReporters, MaxSignatureLength,
-};
 use frame_election_provider_support::{
+	bounds::{ElectionBounds, ElectionBoundsBuilder},
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
 use frame_support::{dispatch::DispatchClass, PalletId};
@@ -38,7 +35,7 @@ use sp_runtime::{
 		SaturatedConversion, StaticLookup, Verify,
 	},
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, MultiSignature, Percent,
+	ApplyExtrinsicResult, MultiSignature,
 };
 use sp_std::prelude::*;
 #[cfg(feature = "std")]
@@ -121,7 +118,6 @@ pub mod opaque {
 		pub struct SessionKeys {
 			pub aura: Aura,
 			pub grandpa: Grandpa,
-			pub dkg: DKG,
 		}
 	}
 }
@@ -281,6 +277,9 @@ parameter_types! {
 	pub HistoryDepth: u32 = 84;
 }
 
+/// Upper limit on the number of NPOS nominations.
+const MAX_QUOTA_NOMINATIONS: u32 = 16;
+
 pub struct StakingBenchmarkingConfig;
 impl pallet_staking::BenchmarkingConfig for StakingBenchmarkingConfig {
 	type MaxNominators = ConstU32<1000>;
@@ -288,7 +287,6 @@ impl pallet_staking::BenchmarkingConfig for StakingBenchmarkingConfig {
 }
 
 impl pallet_staking::Config for Runtime {
-	type MaxNominations = MaxNominations;
 	type Currency = Balances;
 	type CurrencyBalance = Balance;
 	type UnixTime = Timestamp;
@@ -313,6 +311,7 @@ impl pallet_staking::Config for Runtime {
 	type TargetList = pallet_staking::UseValidatorsMap<Self>;
 	type MaxUnlockingChunks = ConstU32<32>;
 	type HistoryDepth = HistoryDepth;
+	type NominationsQuota = pallet_staking::FixedNominationsQuota<MAX_QUOTA_NOMINATIONS>;
 	type EventListeners = ();
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
 	type BenchmarkingConfig = StakingBenchmarkingConfig;
@@ -326,9 +325,9 @@ parameter_types! {
 	pub const StakingUnsignedPriority: TransactionPriority = TransactionPriority::max_value();
 
 	// signed config
-	pub const SignedRewardBase: Balance = 1 * DOLLARS;
-	pub const SignedDepositBase: Balance = 1 * DOLLARS;
-	pub const SignedDepositByte: Balance = 1 * CENTS;
+	pub const SignedRewardBase: Balance = DOLLARS;
+	pub const SignedDepositBase: Balance = DOLLARS;
+	pub const SignedDepositByte: Balance = CENTS;
 
 	pub BetterUnsignedThreshold: Perbill = Perbill::from_rational(1u32, 10_000);
 
@@ -351,20 +350,26 @@ frame_election_provider_support::generate_solution_type!(
 		VoterIndex = u32,
 		TargetIndex = u16,
 		Accuracy = sp_runtime::PerU16,
-		MaxVoters = MaxElectingVoters,
+		MaxVoters = MaxElectingVotersSolution,
 	>(16)
 );
 
 parameter_types! {
 	pub MaxNominations: u32 = <NposSolution16 as frame_election_provider_support::NposSolution>::LIMIT as u32;
-	pub MaxElectingVoters: u32 = 40_000;
-	pub MaxElectableTargets: u16 = 10_000;
+	pub MaxElectingVotersSolution: u32 = 40_000;
 	// OnChain values are lower.
 	pub MaxOnChainElectingVoters: u32 = 5000;
 	pub MaxOnChainElectableTargets: u16 = 1250;
 	// The maximum winners that can be elected by the Election pallet which is equivalent to the
 	// maximum active validators the staking pallet can have.
 	pub MaxActiveValidators: u32 = 1000;
+
+	// Note: the EPM in this runtime runs the election on-chain. The election bounds must be
+	// carefully set so that an election round fits in one block.
+	pub ElectionBoundsMultiPhase: ElectionBounds = ElectionBoundsBuilder::default()
+		.voters_count(10_000.into()).targets_count(1_500.into()).build();
+	pub ElectionBoundsOnChain: ElectionBounds = ElectionBoundsBuilder::default()
+		.voters_count(5_000.into()).targets_count(1_250.into()).build();
 }
 
 /// The numbers configured here could always be more than the the maximum limits of staking pallet
@@ -416,8 +421,7 @@ impl onchain::Config for OnChainSeqPhragmen {
 	type DataProvider = <Runtime as pallet_election_provider_multi_phase::Config>::DataProvider;
 	type WeightInfo = frame_election_provider_support::weights::SubstrateWeight<Runtime>;
 	type MaxWinners = <Runtime as pallet_election_provider_multi_phase::Config>::MaxWinners;
-	type VotersBound = MaxOnChainElectingVoters;
-	type TargetsBound = MaxOnChainElectableTargets;
+	type Bounds = ElectionBoundsOnChain;
 }
 
 impl pallet_election_provider_multi_phase::MinerConfig for Runtime {
@@ -465,9 +469,8 @@ impl pallet_election_provider_multi_phase::Config for Runtime {
 	type GovernanceFallback = onchain::OnChainExecution<OnChainSeqPhragmen>;
 	type Solver = SequentialPhragmen<AccountId, SolutionAccuracyOf<Self>, OffchainRandomBalancing>;
 	type ForceOrigin = EnsureRoot<AccountId>;
-	type MaxElectableTargets = MaxElectableTargets;
 	type MaxWinners = MaxActiveValidators;
-	type MaxElectingVoters = MaxElectingVoters;
+	type ElectionBounds = ElectionBoundsMultiPhase;
 	type BenchmarkingConfig = ElectionProviderBenchmarkConfig;
 	type WeightInfo = pallet_election_provider_multi_phase::weights::SubstrateWeight<Self>;
 }
@@ -494,7 +497,7 @@ impl pallet_aura::Config for Runtime {
 }
 
 parameter_types! {
-	pub const IndexDeposit: Balance = 1 * DOLLARS;
+	pub const IndexDeposit: Balance = DOLLARS;
 }
 
 impl pallet_indices::Config for Runtime {
@@ -511,6 +514,7 @@ impl pallet_grandpa::Config for Runtime {
 	type WeightInfo = ();
 	type MaxAuthorities = ConstU32<32>;
 	type MaxSetIdSessionEntries = ConstU64<0>;
+	type MaxNominators = ConstU32<1000>;
 
 	type KeyOwnerProof = sp_core::Void;
 	type EquivocationReportSystem = ();
@@ -569,90 +573,6 @@ impl pallet_utility::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type PalletsOrigin = OriginCaller;
 	type WeightInfo = ();
-}
-
-parameter_types! {
-	pub const DecayPercentage: Percent = Percent::from_percent(50);
-	pub const UnsignedPriority: u64 = 1 << 20;
-	 pub const UnsignedInterval: BlockNumber = 1;
-	 pub const SessionPeriod : BlockNumber = Period::get();
-	 #[derive(Default, Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd, codec::MaxEncodedLen)]
-	 pub const VoteLength: u32 = 64;
-}
-
-impl pallet_dkg_metadata::Config for Runtime {
-	type DKGId = DKGId;
-	type RuntimeEvent = RuntimeEvent;
-	type OnAuthoritySetChangeHandler = DKGProposals;
-	type OnDKGPublicKeyChangeHandler = ();
-	type OffChainAuthId = dkg_runtime_primitives::offchain::crypto::OffchainAuthId;
-	type NextSessionRotation = pallet_dkg_metadata::DKGPeriodicSessions<Period, Offset, Runtime>;
-	type KeygenJailSentence = Period;
-	type SigningJailSentence = Period;
-	type DecayPercentage = DecayPercentage;
-	type Reputation = Reputation;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type UnsignedPriority = UnsignedPriority;
-	type SessionPeriod = SessionPeriod;
-	type UnsignedInterval = UnsignedInterval;
-	type AuthorityIdOf = pallet_dkg_metadata::AuthorityIdOf<Self>;
-	type ProposalHandler = DKGProposalHandler;
-	type MaxKeyLength = MaxKeyLength;
-	type MaxSignatureLength = MaxSignatureLength;
-	type MaxReporters = MaxReporters;
-	type MaxAuthorities = MaxAuthorities;
-	type VoteLength = VoteLength;
-	type MaxProposalLength = MaxProposalLength;
-	type WeightInfo = pallet_dkg_metadata::weights::WebbWeight<Runtime>;
-}
-
-parameter_types! {
-	pub const ChainIdentifier: TypedChainId = TypedChainId::Substrate(1081);
-	pub const ProposalLifetime: BlockNumber = HOURS / 5;
-	pub const DKGAccountId: PalletId = PalletId(*b"dw/dkgac");
-	pub const RefreshDelay: Permill = Permill::from_percent(90);
-	pub const TimeToRestart: BlockNumber = 3;
-	pub const UnsignedProposalExpiry: BlockNumber = 10;
-}
-
-impl pallet_dkg_proposal_handler::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type ForceOrigin = EnsureRoot<AccountId>;
-	type OffChainAuthId = dkg_runtime_primitives::offchain::crypto::OffchainAuthId;
-	type UnsignedProposalExpiry = UnsignedProposalExpiry;
-	type SignedProposalHandler = DKG;
-	type MaxProposalsPerBatch = dkg_runtime_primitives::CustomU32Getter<10>;
-	type BatchId = u32;
-	type ValidatorSet = Historical;
-	type ReportOffences = ();
-	type WeightInfo = pallet_dkg_proposal_handler::weights::WebbWeight<Runtime>;
-}
-
-parameter_types! {
-	#[derive(Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd)]
-	pub const MaxVotes : u32 = 100;
-	#[derive(Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd)]
-	pub const MaxResources : u32 = 1000;
-	#[derive(Clone, Encode, Decode, Debug, Eq, PartialEq, scale_info::TypeInfo, Ord, PartialOrd)]
-	pub const MaxProposers : u32 = 1000;
-}
-
-impl pallet_dkg_proposals::Config for Runtime {
-	type AdminOrigin = frame_system::EnsureRoot<Self::AccountId>;
-	type DKGAuthorityToMerkleLeaf = pallet_dkg_proposals::DKGEcdsaToEthereumAddress;
-	type DKGId = DKGId;
-	type ChainIdentifier = ChainIdentifier;
-	type RuntimeEvent = RuntimeEvent;
-	type NextSessionRotation = pallet_dkg_metadata::DKGPeriodicSessions<Period, Offset, Runtime>;
-	type MaxProposalLength = MaxProposalLength;
-	type ProposalLifetime = ProposalLifetime;
-	type ProposalHandler = DKGProposalHandler;
-	type Period = Period;
-	type MaxVotes = MaxVotes;
-	type MaxResources = MaxResources;
-	type MaxProposers = MaxProposers;
-	type VotingKeySize = MaxKeyLength;
-	type WeightInfo = pallet_dkg_proposals::WebbWeight<Runtime>;
 }
 
 parameter_types! {
@@ -739,11 +659,7 @@ construct_runtime!(
 		Staking: pallet_staking,
 		Session: pallet_session,
 		Historical: pallet_session_historical,
-		// DKG / offchain worker
-		DKG: pallet_dkg_metadata,
-		DKGProposals: pallet_dkg_proposals,
-		DKGProposalHandler: pallet_dkg_proposal_handler,
-		// Eth2 light client
+		// // Eth2 light client
 		Eth2Client: pallet_eth2_light_client,
 	}
 );

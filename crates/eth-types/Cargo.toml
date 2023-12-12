@@ -12,7 +12,7 @@ tree-hash = { package = "webb-tree-hash",  path = "../tree-hash", default-featur
 tree-hash-derive = { package = "webb-tree-hash-derive", path = "../tree-hash-derive", default-features = false }
 eth2-serde-utils = { package = "webb-eth2-serde-utils", path = "../serde-utils", default-features = false, optional = true }
 hex = { workspace = true }
-codec = { package = "parity-scale-codec", workspace = true }
+codec = { workspace = true }
 scale-info = { workspace = true }
 serde = { workspace = true }
 rlp = { workspace = true }

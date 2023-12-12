@@ -2,7 +2,7 @@ use super::*;
 use crate as pallet_eth2_light_client;
 
 use consensus::network_config::{Network, NetworkConfig};
-use frame_support::{parameter_types, sp_io};
+use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{

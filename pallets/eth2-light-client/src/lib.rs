@@ -529,7 +529,7 @@ pub mod pallet {
 				let unfinalized_head_execution_header =
 					UnfinalizedHeadExecutionHeader::<T>::get(typed_chain_id)
 						.ok_or(Error::<T>::UnfinalizedHeaderNotPresent)?;
-				frame_support::log::debug!(
+				log::debug!(
 					target: "light-client",
 					"Current finalized block number: {:?}, New finalized block number: {:?}",
 					finalized_execution_header.block_number,
@@ -559,7 +559,7 @@ pub mod pallet {
 				UnfinalizedTailExecutionHeader::<T>::insert(typed_chain_id, block_info);
 			}
 
-			frame_support::log::debug!(
+			log::debug!(
 				target: "light-client",
 				"Submitted header number {:?}, hash {:#?}",
 				block_header.number, block_hash
@@ -936,7 +936,7 @@ impl<T: Config> Pallet<T> {
 			NextSyncCommittee::<T>::insert(typed_chain_id, next_sync_committee);
 		}
 
-		frame_support::log::debug!(
+		log::debug!(
 			target: "light-client",
 			"Current finalized slot: {:?}, New finalized slot: {:?}",
 			finalized_beacon_header.header.slot,
