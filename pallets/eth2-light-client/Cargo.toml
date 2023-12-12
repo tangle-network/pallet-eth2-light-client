@@ -68,13 +68,12 @@ std = [
 	"eth2-ssz/std",
 	"tree-hash/std",
 	"merkle-proof/std",
-	"async-trait"
+	"async-trait",
+	"eth2-pallet-init",
 	
 ]
 testing = [
 	"std",
-	"eth2-pallet-init",
-	"async-trait",
 ]
 
 try-runtime = ["frame-support/try-runtime"]
