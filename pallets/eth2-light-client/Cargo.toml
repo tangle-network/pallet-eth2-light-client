@@ -68,6 +68,7 @@ std = [
 	"eth2-ssz/std",
 	"tree-hash/std",
 	"merkle-proof/std",
+	"async-trait"
 	
 ]
 testing = [
