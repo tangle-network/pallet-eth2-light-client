@@ -30,7 +30,7 @@ anyhow = "1.0"
 typed-builder = "0.16.0"
 log = { version = "0.4", default-features = false }
 serde_json = { version = "1.0.85", default-features = false, features = ["alloc"] }
-serde = { version = "1.0", features = ["derive"], default-features = false }
+serde = { version = "1.0.197", features = ["derive"], default-features = false }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 clap = { version = "4.0.9", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time", "signal"] }

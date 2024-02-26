@@ -43,7 +43,7 @@ sp-io = { workspace = true }
 sp-timestamp = { workspace = true }
 sp-inherents = { workspace = true }
 sp-keyring = { workspace = true }
-frame-system = { workspace = true }
+frame-system = { workspace = true, features = ["std"] }
 pallet-staking = { workspace = true }
 pallet-transaction-payment = { workspace = true }
 
