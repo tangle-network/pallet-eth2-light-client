@@ -1,7 +1,7 @@
 use super::*;
-use dkg_runtime_primitives::H256;
 use frame_support::ensure;
 use rlp::Rlp;
+use sp_core::H256;
 
 /// A utility for working with trie proofs.
 pub struct TrieProver;

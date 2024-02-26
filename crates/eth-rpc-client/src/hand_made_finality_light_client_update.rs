@@ -334,7 +334,7 @@ mod tests {
 	const TIMEOUT_STATE_SECONDS: u64 = 1000000;
 
 	fn get_test_config() -> ConfigForTests {
-		ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap())
+		ConfigForTests::load_from_toml("config_for_tests.toml".into())
 	}
 
 	fn cmp_light_client_updates(

@@ -52,6 +52,7 @@ impl system::Config for Test {
 	type SS58Prefix = SS58Prefix;
 	type SystemWeightInfo = ();
 	type Version = ();
+	type RuntimeTask = ();
 }
 
 parameter_types! {
@@ -68,10 +69,10 @@ impl pallet_balances::Config for Test {
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
 	type FreezeIdentifier = ();
-	type MaxHolds = ();
 	type MaxFreezes = ();
 	type WeightInfo = ();
 	type RuntimeHoldReason = RuntimeHoldReason;
+	type RuntimeFreezeReason = ();
 }
 
 parameter_types! {

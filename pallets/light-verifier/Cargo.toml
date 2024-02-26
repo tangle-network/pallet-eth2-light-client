@@ -38,7 +38,6 @@ tiny-keccak = { workspace = true }
 bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
 webb-light-client-primitives = { workspace = true }
-dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
 
 [dev-dependencies]
 anyhow = { workspace = true }
@@ -68,7 +67,6 @@ std = [
 	"sp-std/std",
 	"sp-core/std",
 	"hex/std",
-	"dkg-runtime-primitives/std",
 	"pallet-eth2-light-client/std",
 
 	# Local dependencies
