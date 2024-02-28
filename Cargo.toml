@@ -77,15 +77,15 @@ zeroize = { version = "1.4.2", features = [
 ], default-features = false }
 
 subxt = "0.29.0"
-webb = { version = "0.7.3", default-features = false, features = [
+webb = { version = "0.8.4", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
 ]}
 
 webb-proposals = { git = "https://github.com/webb-tools/webb-rs", default-features = false, features = ["scale", "evm"] }
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
-types = { git = "https://github.com/webb-tools/lighthouse.git", branch = "salman/update-sqlite-deps" }
-merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git", branch = "salman/update-sqlite-deps" }
+types = { git = "https://github.com/webb-tools/lighthouse.git" }
+merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git" }
 tree_hash = { version = "0.5.0", features = ["arbitrary"], default-features = false }
 ethereum_hashing = { version = "1.0.0-beta.2", default-features = false }
 ethereum_ssz = { version = "0.5.0", features = ["arbitrary"], default-features = false }
