@@ -76,6 +76,7 @@ pub fn development_config() -> ChainSpec {
 		None,
 		None,
 		Default::default(),
+		WASM_BINARY.unwrap(),
 	)
 }
 
@@ -103,6 +104,7 @@ pub fn local_testnet_config() -> ChainSpec {
 		None,
 		None,
 		Default::default(),
+		WASM_BINARY.unwrap(),
 	)
 }
 
@@ -164,7 +166,6 @@ fn testnet_genesis(
 	RuntimeGenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
-			code: wasm_binary.to_vec(),
 			..Default::default()
 		},
 		balances: BalancesConfig {

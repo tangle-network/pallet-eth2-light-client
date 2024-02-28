@@ -77,12 +77,12 @@ zeroize = { version = "1.4.2", features = [
 ], default-features = false }
 
 subxt = "0.29.0"
-webb = { version = "0.8.4", default-features = false, features = [
+webb = { version = "0.7.3", default-features = false, features = [
     "evm-runtime",
     "substrate-runtime",
 ]}
 
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs", default-features = false, features = ["scale", "evm"] }
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs", default-features = false, features = ["scale", "evm"], branch = "polkadot-v1.7.0" }
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
 types = { git = "https://github.com/webb-tools/lighthouse.git" }
 merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git" }
@@ -140,7 +140,7 @@ frame-election-provider-support = { default-features = false, git = "https://git
 pallet-election-provider-multi-phase = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
 
 # These dependencies are used for the node template's RPCs
-jsonrpsee = { version = "0.16.2", default-features = false }
+jsonrpsee = { version = "0.20.3", features = ["server"] }
 sc-rpc = { git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
 sp-api = { git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0", default-features = false }
 sc-rpc-api = { git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
