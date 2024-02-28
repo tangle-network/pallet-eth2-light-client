@@ -1,5 +1,3 @@
-use eth_types::eth2::LightClientUpdate;
-
 use eth_types::{eth2::*, pallet::InitInput, BlockHeader};
 use lazy_static::lazy_static;
 

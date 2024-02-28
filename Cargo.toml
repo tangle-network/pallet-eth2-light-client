@@ -107,7 +107,7 @@ sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk", branch = "r
 sc-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
 sp-consensus-grandpa = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
 sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
+sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0", features = ["serde"] }
 sp-io = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
 sp-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
 sp-inherents = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.7.0" }
