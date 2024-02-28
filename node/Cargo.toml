@@ -72,7 +72,7 @@ frame-benchmarking-cli = { workspace = true }
 try-runtime-cli = { workspace = true, optional = true }
 
 [build-dependencies]
-substrate-build-script-utils = { version = "3.0.0", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+substrate-build-script-utils = { version = "11.0.0", git = "https://github.com/paritytech/polkadot-sdk" }
 
 [features]
 default = []
