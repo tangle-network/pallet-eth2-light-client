@@ -1,4 +1,4 @@
-use webb::substrate::{scale::Encode, subxt::dynamic::Value};
+use tangle_subxt::{parity_scale_codec::Encode, subxt::dynamic::Value};
 
 pub trait AsValue: Encode {
 	fn as_value(&self) -> Value;

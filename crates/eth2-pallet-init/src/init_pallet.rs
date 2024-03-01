@@ -5,9 +5,9 @@ use eth_rpc_client::{
 };
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
+use tangle_subxt::subxt::utils::AccountId32;
 use tree_hash::TreeHash;
 use types::{ExecutionPayload, MainnetEthSpec};
-use webb::substrate::subxt::utils::AccountId32;
 use webb_proposals::TypedChainId;
 const CURRENT_SYNC_COMMITTEE_INDEX: u32 = 54;
 const CURRENT_SYNC_COMMITTEE_TREE_DEPTH: u32 =

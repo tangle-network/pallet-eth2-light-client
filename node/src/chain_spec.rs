@@ -53,9 +53,7 @@ fn session_keys(grandpa: GrandpaId, aura: AuraId) -> SessionKeys {
 }
 
 fn development_config_genesis() -> RuntimeGenesisConfig {
-	let wasm_binary = WASM_BINARY.unwrap();
 	testnet_genesis(
-		wasm_binary,
 		vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 		vec![],
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -65,6 +63,7 @@ fn development_config_genesis() -> RuntimeGenesisConfig {
 
 /// Development config (single validator Alice)
 pub fn development_config() -> ChainSpec {
+	let wasm_binary = WASM_BINARY.unwrap();
 	ChainSpec::from_genesis(
 		"Development",
 		"dev",
@@ -81,9 +80,7 @@ pub fn development_config() -> ChainSpec {
 }
 
 fn local_testnet_genesis() -> RuntimeGenesisConfig {
-	let wasm_binary = WASM_BINARY.unwrap();
 	testnet_genesis(
-		wasm_binary,
 		vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 		vec![],
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
@@ -93,6 +90,7 @@ fn local_testnet_genesis() -> RuntimeGenesisConfig {
 
 /// Local testnet config (multivalidator Alice + Bob)
 pub fn local_testnet_config() -> ChainSpec {
+	let wasm_binary = WASM_BINARY.unwrap();
 	ChainSpec::from_genesis(
 		"Local Testnet",
 		"local_testnet",
@@ -110,7 +108,6 @@ pub fn local_testnet_config() -> ChainSpec {
 
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
-	wasm_binary: &[u8],
 	initial_authorities: Vec<(AccountId, AccountId, GrandpaId, AuraId)>,
 	initial_nominators: Vec<AccountId>,
 	root_key: AccountId,

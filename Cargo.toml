@@ -18,6 +18,7 @@ members = [
     "runtime",
     "primitives",
 ]
+resolver = "2"
 
 [patch]
 [patch.crates-io]
@@ -31,7 +32,7 @@ typed-builder = "0.16.0"
 log = { version = "0.4", default-features = false }
 serde_json = { version = "1.0.85", default-features = false, features = ["alloc"] }
 serde = { version = "1.0.197", features = ["derive"], default-features = false }
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11.22", features = ["blocking", "json"] }
 clap = { version = "4.0.9", features = ["derive"] }
 tokio = { version = "1.1", features = ["macros", "rt", "time", "signal"] }
 env_logger = "0.9.0"
@@ -76,13 +77,10 @@ zeroize = { version = "1.4.2", features = [
     "zeroize_derive",
 ], default-features = false }
 
-subxt = "0.29.0"
-webb = { version = "0.7.3", default-features = false, features = [
-    "evm-runtime",
-    "substrate-runtime",
-]}
-
-webb-proposals = { git = "https://github.com/webb-tools/webb-rs", default-features = false, features = ["scale", "evm"], branch = "polkadot-v1.7.0" }
+subxt = "0.31.0"
+subxt-signer = "0.31.0"
+tangle-subxt = { git = "https://github.com/webb-tools/tangle" , rev = "8be20aa02a764422e1fd0ba30bc70b99d5f66887"} 
+webb-proposals = { git = "https://github.com/webb-tools/webb-rs", branch = "salman/polkadot-v1.7.0", default-features = false, features = ["scale", "evm"] }
 milagro_bls = { git = "https://github.com/Snowfork/milagro_bls", default-features = false, rev="a6d66e4eb89015e352fb1c9f7b661ecdbb5b2176" }
 types = { git = "https://github.com/webb-tools/lighthouse.git" }
 merkle_proof = { git = "https://github.com/webb-tools/lighthouse.git" }
