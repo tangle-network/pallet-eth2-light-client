@@ -328,8 +328,6 @@ parameter_types! {
 
 	// signed config
 	pub const SignedRewardBase: Balance = DOLLARS;
-	pub const SignedFixedDeposit: Balance = 1 * DOLLARS;
-	pub const SignedDepositIncreaseFactor: Percent = Percent::from_percent(10);
 	pub const SignedDepositByte: Balance = CENTS;
 
 	// miner configs

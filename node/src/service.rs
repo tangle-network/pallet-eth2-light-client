@@ -337,7 +337,6 @@ pub fn new_full(
 			shared_voter_state: SharedVoterState::empty(),
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
 			offchain_tx_pool_factory: OffchainTransactionPoolFactory::new(transaction_pool),
-			notification_service: grandpa_notification_service,
 		};
 
 		// the GRANDPA voter task is considered infallible, i.e.
