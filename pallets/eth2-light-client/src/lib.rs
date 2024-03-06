@@ -76,8 +76,6 @@
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(slice_pattern)]
-
 use eth_types::{
 	eth2::{ExtendedBeaconBlockHeader, LightClientState, LightClientUpdate, SyncCommittee},
 	pallet::{ClientMode, ExecutionHeaderInfo, InitInput},
@@ -395,8 +393,8 @@ pub mod pallet {
 
 			let finalized_execution_header_hash = args.finalized_execution_header.calculate_hash();
 			ensure!(
-				finalized_execution_header_hash ==
-					args.finalized_beacon_header.execution_block_hash,
+				finalized_execution_header_hash
+					== args.finalized_beacon_header.execution_block_hash,
 				// Invalid execution block
 				Error::<T>::InvalidExecutionBlock,
 			);
@@ -501,8 +499,8 @@ pub mod pallet {
 			if let Some(diff_between_unfinalized_head_and_tail) =
 				Self::get_diff_between_unfinalized_head_and_tail(typed_chain_id)
 			{
-				let header_number_to_remove = (finalized_execution_header.block_number +
-					diff_between_unfinalized_head_and_tail)
+				let header_number_to_remove = (finalized_execution_header.block_number
+					+ diff_between_unfinalized_head_and_tail)
 					.saturating_sub(HashesGcThreshold::<T>::get(typed_chain_id));
 
 				ensure!(
@@ -607,12 +605,13 @@ impl<T: Config> Pallet<T> {
 	/// Returns finalized execution block hash
 	pub fn block_hash_safe(typed_chain_id: TypedChainId, block_number: u64) -> Option<H256> {
 		match Self::finalized_execution_header(typed_chain_id) {
-			Some(header) =>
+			Some(header) => {
 				if header.block_number >= block_number {
 					Self::finalized_execution_blocks(typed_chain_id, block_number)
 				} else {
 					None
-				},
+				}
+			},
 			None => None,
 		}
 	}
@@ -686,12 +685,12 @@ impl<T: Config> Pallet<T> {
 			if Self::finalized_execution_blocks(typed_chain_id, header_number).is_some() {
 				FinalizedExecutionBlocks::<T>::remove(typed_chain_id, header_number);
 				if header_number == 0 {
-					break
+					break;
 				} else {
 					header_number -= 1;
 				}
 			} else {
-				break
+				break;
 			}
 		}
 	}
@@ -701,8 +700,8 @@ impl<T: Config> Pallet<T> {
 		typed_chain_id: TypedChainId,
 	) -> Result<(), DispatchError> {
 		ensure!(
-			ClientModeForChain::<T>::get(typed_chain_id) ==
-				Some(ClientMode::SubmitLightClientUpdate),
+			ClientModeForChain::<T>::get(typed_chain_id)
+				== Some(ClientMode::SubmitLightClientUpdate),
 			Error::<T>::InvalidClientMode
 		);
 		ensure!(!Paused::<T>::get(typed_chain_id), Error::<T>::LightClientUpdateNotAllowed);
@@ -780,8 +779,8 @@ impl<T: Config> Pallet<T> {
 		);
 
 		ensure!(
-			update.attested_beacon_header.slot >=
-				update.finality_update.header_update.beacon_header.slot,
+			update.attested_beacon_header.slot
+				>= update.finality_update.header_update.beacon_header.slot,
 			Error::<T>::UpdateHeaderSlotLessThanFinalizedHeaderSlot
 		);
 

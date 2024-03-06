@@ -45,10 +45,10 @@ pub fn is_correct_finality_update(
 
 	let sync_committee_bits_sum: u64 = sync_committee_bits.count_ones().try_into()?;
 	if sync_committee_bits_sum < MIN_SYNC_COMMITTEE_PARTICIPANTS {
-		return Ok(false)
+		return Ok(false);
 	}
 	if sync_committee_bits_sum * 3 < (sync_committee_bits.len() * 2).try_into()? {
-		return Ok(false)
+		return Ok(false);
 	}
 
 	let participant_pubkeys =
@@ -88,7 +88,7 @@ mod tests {
 	use eth_types::eth2::{LightClientUpdate, SyncCommittee};
 
 	fn get_config() -> ConfigForTests {
-		ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap())
+		ConfigForTests::load_from_toml("config_for_tests.toml".into())
 	}
 
 	#[test]

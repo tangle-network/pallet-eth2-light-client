@@ -6,7 +6,7 @@ use eth_types::{
 	BlockHeader, H256,
 };
 
-use webb::substrate::subxt::utils::AccountId32;
+use tangle_subxt::subxt::utils::AccountId32;
 
 pub type Balance = u128;
 

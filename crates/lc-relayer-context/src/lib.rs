@@ -74,7 +74,7 @@ impl Shutdown {
 		// If the shutdown signal has already been received, then return
 		// immediately.
 		if self.shutdown {
-			return
+			return;
 		}
 
 		// Cannot receive a "lag error" as only one value is ever sent.

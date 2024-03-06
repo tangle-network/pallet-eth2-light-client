@@ -64,7 +64,7 @@ impl Eth1RPCClient {
 		let val: Value = serde_json::from_str(&res)?;
 		let is_sync = val["result"].as_bool();
 		if let Some(is_sync_val) = is_sync {
-			return Ok(is_sync_val)
+			return Ok(is_sync_val);
 		}
 
 		Ok(true)
@@ -76,7 +76,7 @@ mod tests {
 	use crate::{config_for_tests::ConfigForTests, eth1_rpc_client::Eth1RPCClient};
 
 	fn get_test_config() -> ConfigForTests {
-		ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap())
+		ConfigForTests::load_from_toml("config_for_tests.toml".into())
 	}
 
 	#[tokio::test]

@@ -46,6 +46,7 @@ impl system::Config for Test {
 	type DbWeight = ();
 	type RuntimeEvent = RuntimeEvent;
 	type Hash = H256;
+	type RuntimeTask = ();
 	type Hashing = BlakeTwo256;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
@@ -73,7 +74,7 @@ impl pallet_balances::Config for Test {
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
 	type FreezeIdentifier = ();
-	type MaxHolds = ();
+	type RuntimeFreezeReason = ();
 	type MaxFreezes = ();
 	type WeightInfo = ();
 	type RuntimeHoldReason = RuntimeHoldReason;

@@ -196,7 +196,7 @@ where
 	/// Verify that `self` represents an aggregate signature where all `pubkeys` have signed `msg`.
 	pub fn fast_aggregate_verify(&self, msg: Hash256, pubkeys: &[&GenericPublicKey<Pub>]) -> bool {
 		if pubkeys.is_empty() {
-			return false
+			return false;
 		}
 
 		match self.point.as_ref() {
@@ -227,7 +227,7 @@ where
 	/// This function only exists for EF tests, it's presently not used in production.
 	pub fn aggregate_verify(&self, msgs: &[Hash256], pubkeys: &[&GenericPublicKey<Pub>]) -> bool {
 		if msgs.is_empty() || msgs.len() != pubkeys.len() {
-			return false
+			return false;
 		}
 
 		match self.point.as_ref() {

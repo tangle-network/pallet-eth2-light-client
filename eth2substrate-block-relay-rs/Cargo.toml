@@ -19,12 +19,12 @@ lc-relayer-context = { package = "webb-lc-relayer-context", path = "../crates/lc
 types =  { workspace = true }
 eth2_hashing =  { package = "ethereum_hashing", version = "1.0.0-beta.2" }
 eth2_ssz =  { package = "ethereum_ssz", version = "0.5.0", features = ["arbitrary"] }
-webb = { workspace = true }
+tangle-subxt = { workspace = true }
 webb-proposals ={ workspace = true }
 anyhow = { workspace = true }
 funty = { workspace = true }
-sp-keyring = { version = "18.0.0", default-features = false }
-sp-core = { version = "16.0.0" }
+sp-keyring = { workspace = true }
+sp-core = { workspace = true }
 log = { workspace = true, features = ["std", "serde"] }
 serde_json = { workspace = true }
 serde = { workspace = true }

@@ -24,7 +24,7 @@ impl<'de> Visitor<'de> for QuantityVisitor {
 		E: de::Error,
 	{
 		if !value.starts_with("0x") {
-			return Err(de::Error::custom("must start with 0x"))
+			return Err(de::Error::custom("must start with 0x"));
 		}
 
 		let stripped = value.trim_start_matches("0x");
@@ -68,7 +68,7 @@ where
 			"expected max {} bytes for array, got {}",
 			BYTES_LEN,
 			decoded.len()
-		)))
+		)));
 	}
 
 	let mut array = [0; BYTES_LEN];

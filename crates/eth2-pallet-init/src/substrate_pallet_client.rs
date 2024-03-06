@@ -8,53 +8,62 @@ use eth_types::{
 	BlockHeader, H256,
 };
 
+use codec::{Decode, Encode};
 use std::sync::Arc;
-use subxt::{error::DispatchError, utils::AccountId32};
-use webb::substrate::{
-	scale::{Decode, Encode},
-	subxt::{
-		self,
-		ext::sp_core::{sr25519::Pair, Pair as _},
-		storage::{address::Yes, StorageAddress},
-		tx::{PairSigner, TxPayload, TxStatus},
-		OnlineClient, PolkadotConfig,
-	},
+use subxt::{
+	self,
+	error::DispatchError,
+	ext::sp_core::{sr25519::Pair, Pair as _},
+	storage::{address::Yes, StorageAddress},
+	tx::{PairSigner, TxPayload, TxStatus},
+	utils::AccountId32,
+	OnlineClient, PolkadotConfig,
 };
-use webb_proposals::TypedChainId;
 
-use tangle::runtime_types::pallet_eth2_light_client;
+use tangle_subxt::tangle_runtime::{api as tangle, api::runtime_types::pallet_eth2_light_client};
+use webb_proposals::TypedChainId;
 
 pub fn convert_typed_chain_ids(
 	t: TypedChainId,
 ) -> tangle::runtime_types::webb_proposals::header::TypedChainId {
 	match t {
 		TypedChainId::None => tangle::runtime_types::webb_proposals::header::TypedChainId::None,
-		TypedChainId::Evm(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(id),
-		TypedChainId::Substrate(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Substrate(id),
-		TypedChainId::PolkadotParachain(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::PolkadotParachain(id),
-		TypedChainId::KusamaParachain(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::KusamaParachain(id),
-		TypedChainId::RococoParachain(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::RococoParachain(id),
-		TypedChainId::Cosmos(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Cosmos(id),
-		TypedChainId::Solana(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Solana(id),
-		TypedChainId::Ink(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Ink(id),
+		TypedChainId::Evm(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(id)
+		},
+		TypedChainId::Substrate(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Substrate(id)
+		},
+		TypedChainId::PolkadotParachain(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::PolkadotParachain(id)
+		},
+		TypedChainId::KusamaParachain(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::KusamaParachain(id)
+		},
+		TypedChainId::RococoParachain(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::RococoParachain(id)
+		},
+		TypedChainId::Cosmos(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Cosmos(id)
+		},
+		TypedChainId::Solana(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Solana(id)
+		},
+		TypedChainId::Ink(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Ink(id)
+		},
 		_ => unimplemented!("Unsupported chain id"),
 	}
 }
 
 pub fn convert_mode(t: tangle::runtime_types::eth_types::pallet::ClientMode) -> ClientMode {
 	match t {
-		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitLightClientUpdate =>
-			ClientMode::SubmitLightClientUpdate,
-		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitHeader =>
-			ClientMode::SubmitHeader,
+		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitLightClientUpdate => {
+			ClientMode::SubmitLightClientUpdate
+		},
+		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitHeader => {
+			ClientMode::SubmitHeader
+		},
 	}
 }
 
@@ -72,7 +81,7 @@ pub struct EthClientPallet {
 
 impl EthClientPallet {
 	pub fn new(api: Arc<OnlineClient<PolkadotConfig>>, typed_chain_id: TypedChainId) -> Self {
-		Self::new_with_pair(api, sp_keyring::AccountKeyring::Alice.pair(), typed_chain_id)
+		Self::new_with_pair(api, Pair::from_string("//Alice", None).unwrap(), typed_chain_id)
 	}
 
 	pub fn new_with_pair(
@@ -191,7 +200,7 @@ impl EthClientPallet {
 						std::io::ErrorKind::Other,
 						format!("Failed to get hash storage value: {err:?}"),
 					)
-					.into())
+					.into());
 				},
 			};
 
@@ -216,7 +225,7 @@ impl EthClientPallet {
 						Ok(events) => {
 							log::debug!("tx finalized");
 							let hash = events.extrinsic_hash();
-							return Ok(hash.0.into())
+							return Ok(hash.0.into());
 						},
 						Err(err) => {
 							let error_msg = match err {
@@ -235,7 +244,7 @@ impl EthClientPallet {
 								std::io::ErrorKind::Other,
 								format!("Tx failed : {error_msg}"),
 							)
-							.into())
+							.into());
 						},
 					}
 				},
@@ -310,7 +319,7 @@ impl EthClientPalletTrait for EthClientPallet {
 				std::io::ErrorKind::Other,
 				"Tried to submit empty headers".to_string(),
 			)
-			.into())
+			.into());
 		}
 
 		let mut txes = vec![];
@@ -321,8 +330,7 @@ impl EthClientPalletTrait for EthClientPallet {
 				typed_chain_id: decoded_tcid,
 				block_header: decoded_header,
 			};
-			let tx =
-				tangle::runtime_types::tangle_standalone_runtime::RuntimeCall::Eth2Client(call);
+			let tx = tangle::runtime_types::tangle_testnet_runtime::RuntimeCall::Eth2Client(call);
 			txes.push(tx);
 		}
 
@@ -441,6 +449,3 @@ fn get_sr25519_keys_from_suri<T: AsRef<str>>(suri: T) -> anyhow::Result<Pair> {
 		}
 	}
 }
-
-#[subxt::subxt(runtime_metadata_path = "./metadata/tangle-runtime.scale")]
-pub mod tangle {}

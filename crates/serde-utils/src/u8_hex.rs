@@ -20,7 +20,7 @@ where
 {
 	let bytes = deserializer.deserialize_str(PrefixedHexVisitor)?;
 	if bytes.len() != 1 {
-		return Err(D::Error::custom(format!("expected 1 byte for u8, got {}", bytes.len())))
+		return Err(D::Error::custom(format!("expected 1 byte for u8, got {}", bytes.len())));
 	}
 	Ok(bytes[0])
 }

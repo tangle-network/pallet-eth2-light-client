@@ -42,8 +42,9 @@ impl EnumBehaviour {
 		s.map(|s| match s.as_ref() {
 			ENUM_TRANSPARENT => EnumBehaviour::Transparent,
 			ENUM_UNION => EnumBehaviour::Union,
-			other =>
-				panic!("{} is an invalid enum_behaviour, use either {:?}", other, ENUM_VARIANTS),
+			other => {
+				panic!("{} is an invalid enum_behaviour, use either {:?}", other, ENUM_VARIANTS)
+			},
 		})
 	}
 }
@@ -114,8 +115,8 @@ fn cached_tree_hash_attr_metas(attrs: &[Attribute]) -> Vec<Meta> {
 /// The field attribute is: `#[tree_hash(skip_hashing)]`
 fn should_skip_hashing(field: &syn::Field) -> bool {
 	field.attrs.iter().any(|attr| {
-		attr.path.is_ident("tree_hash") &&
-			attr.tokens.to_string().replace(' ', "") == "(skip_hashing)"
+		attr.path.is_ident("tree_hash")
+			&& attr.tokens.to_string().replace(' ', "") == "(skip_hashing)"
 	})
 }
 

@@ -30,7 +30,7 @@ pub async fn ignite_lc_relayer(ctx: LightClientRelayerContext) -> anyhow::Result
 			Ok(client) => client,
 			Err(err) => {
 				tracing::error!("Failed to connect with substrate client, retrying...!");
-				return Err(backoff::Error::transient(err))
+				return Err(backoff::Error::transient(err));
 			},
 		};
 		let api_client = Arc::new(api_client);
@@ -59,7 +59,7 @@ pub async fn ignite_lc_relayer(ctx: LightClientRelayerContext) -> anyhow::Result
 					Ok(_) => tracing::info!(target: "relay", "=== Pallet initialized ==="),
 					Err(e) => {
 						tracing::error!(target: "relay", "=== Failed to initialize pallet: {:?} ===", e);
-						return Err(backoff::Error::permanent(e))
+						return Err(backoff::Error::permanent(e));
 					},
 				};
 			}
@@ -75,14 +75,15 @@ pub async fn ignite_lc_relayer(ctx: LightClientRelayerContext) -> anyhow::Result
 pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 	// Light Client Relayer
 	let lc_relay_config = match relayer_params.lc_relay_config_path.as_ref() {
-		Some(p) =>
-			loads_light_client_relayer_config(p).expect("failed to load light client config"),
+		Some(p) => {
+			loads_light_client_relayer_config(p).expect("failed to load light client config")
+		},
 		None => {
 			tracing::error!(
 				target: "light-client-gadget",
 				"Error: Not Starting ETH2 Light Client Relayer Gadget. No Config Directory Specified"
 			);
-			return
+			return;
 		},
 	};
 
@@ -94,7 +95,7 @@ pub async fn start_gadget(relayer_params: Eth2LightClientParams) {
 				target: "light-client-gadget",
 				"Error: Not Starting ETH2 Light Client Relayer Gadget. No Config Directory Specified"
 			);
-			return
+			return;
 		},
 	};
 	let ctx = LightClientRelayerContext::new(lc_relay_config, lc_init_config);

@@ -24,7 +24,7 @@ pub fn merkleize_standard(bytes: &[u8]) -> Hash256 {
 	if bytes.len() <= HASHSIZE {
 		let mut o = bytes.to_vec();
 		o.resize(HASHSIZE, 0);
-		return Hash256::from_slice(&o[0..HASHSIZE])
+		return Hash256::from_slice(&o[0..HASHSIZE]);
 	}
 
 	let leaves = num_sanitized_leaves(bytes.len());

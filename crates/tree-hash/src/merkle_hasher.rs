@@ -238,7 +238,7 @@ impl MerkleHasher {
 		let max_leaves = 1 << (self.depth + 1);
 
 		if self.next_leaf > max_leaves {
-			return Err(Error::MaximumLeavesExceeded { max_leaves })
+			return Err(Error::MaximumLeavesExceeded { max_leaves });
 		} else if self.next_leaf == 1 {
 			// A tree of depth one has a root that is equal to the first given leaf.
 			self.root = Some(Hash256::from_slice(leaf))
@@ -272,14 +272,14 @@ impl MerkleHasher {
 		// If the tree is incomplete, we must complete it by providing zero-hashes.
 		loop {
 			if let Some(root) = self.root {
-				break Ok(root)
+				break Ok(root);
 			} else if let Some(node) = self.half_nodes.last() {
 				let right_child = node.id * 2 + 1;
 				self.process_right_node(right_child, self.zero_hash(right_child));
 			} else if self.next_leaf == 1 {
 				// The next_leaf can only be 1 if the tree has a depth of one. If have been no
 				// leaves supplied, assume a root of zero.
-				break Ok(Hash256::zero())
+				break Ok(Hash256::zero());
 			} else {
 				// The only scenario where there are (a) no half nodes and (b) a tree of depth
 				// two or more is where no leaves have been supplied at all.
@@ -331,14 +331,14 @@ impl MerkleHasher {
 					);
 					if parent == 1 {
 						self.root = Some(Hash256::from_slice(preimage.as_bytes()));
-						break
+						break;
 					} else {
 						parent = get_parent(parent);
 					}
 				},
 				_ => {
 					self.half_nodes.push(HalfNode::new(parent, preimage));
-					break
+					break;
 				},
 			}
 		}

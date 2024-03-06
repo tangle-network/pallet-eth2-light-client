@@ -86,7 +86,7 @@ pub fn mix_in_length(root: &Hash256, length: usize) -> Hash256 {
 /// https://github.com/ethereum/consensus-specs/blob/v1.1.0-beta.3/ssz/simple-serialize.md#union
 pub fn mix_in_selector(root: &Hash256, selector: u8) -> Option<Hash256> {
 	if selector > MAX_UNION_SELECTOR {
-		return None
+		return None;
 	}
 
 	let mut chunk = [0; BYTES_PER_CHUNK];

@@ -250,7 +250,7 @@ impl RlpDecodable for BlockHeader {
 		);
 
 		if block_header.hash.unwrap() != keccak256(serialized.as_raw()).into() {
-			return Err(RlpDecoderError::RlpInconsistentLengthAndData)
+			return Err(RlpDecoderError::RlpInconsistentLengthAndData);
 		}
 
 		block_header.partial_hash = Some(

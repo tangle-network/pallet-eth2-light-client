@@ -74,11 +74,11 @@ impl NetworkConfig {
 
 	pub fn compute_fork_version(&self, epoch: Epoch) -> Option<ForkVersion> {
 		if epoch >= self.capella_fork_epoch {
-			return Some(self.capella_fork_version)
+			return Some(self.capella_fork_version);
 		}
 
 		if epoch >= self.bellatrix_fork_epoch {
-			return Some(self.bellatrix_fork_version)
+			return Some(self.bellatrix_fork_version);
 		}
 
 		None

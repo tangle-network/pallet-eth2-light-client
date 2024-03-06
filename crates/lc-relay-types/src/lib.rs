@@ -22,7 +22,7 @@ impl WebbRetryClient {
 			let err;
 
 			{
-				let resp = self.inner.get(url.clone()).send().await;
+				let resp = self.inner.get(url).send().await;
 				match resp {
 					Ok(val) => return Ok(val.text().await?),
 					Err(err_) => err = err_,
@@ -34,9 +34,9 @@ impl WebbRetryClient {
 			if timeout_retries < self.timeout_retries && err.is_timeout() {
 				timeout_retries += 1;
 				tracing::error!(err = ?err, "retrying due to spurious network");
-				continue
+				continue;
 			} else {
-				return Err(err.into())
+				return Err(err.into());
 			}
 		}
 	}
@@ -47,7 +47,7 @@ impl WebbRetryClient {
 			let err;
 
 			{
-				let resp = self.inner.post(url.clone()).json(&body).send().await;
+				let resp = self.inner.post(url).json(&body).send().await;
 				match resp {
 					Ok(val) => return Ok(val.text().await?),
 					Err(err_) => err = err_,
@@ -59,9 +59,9 @@ impl WebbRetryClient {
 			if timeout_retries < self.timeout_retries && err.is_timeout() {
 				timeout_retries += 1;
 				tracing::error!(err = ?err, "retrying due to spurious network");
-				continue
+				continue;
 			} else {
-				return Err(err.into())
+				return Err(err.into());
 			}
 		}
 	}

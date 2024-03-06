@@ -79,8 +79,8 @@ pub fn sanitize_offset(
 ) -> Result<usize, DecodeError> {
 	if num_fixed_bytes.map_or(false, |fixed_bytes| offset < fixed_bytes) {
 		Err(DecodeError::OffsetIntoFixedPortion(offset))
-	} else if previous_offset.is_none() &&
-		num_fixed_bytes.map_or(false, |fixed_bytes| offset != fixed_bytes)
+	} else if previous_offset.is_none()
+		&& num_fixed_bytes.map_or(false, |fixed_bytes| offset != fixed_bytes)
 	{
 		Err(DecodeError::OffsetSkipsVariableBytes(offset))
 	} else if offset > num_bytes {
@@ -217,8 +217,9 @@ impl<'a> SszDecoderBuilder<'a> {
 			// fixed-length bytes.
 			match first_offset.cmp(&self.items_index) {
 				Ordering::Less => return Err(DecodeError::OffsetIntoFixedPortion(first_offset)),
-				Ordering::Greater =>
-					return Err(DecodeError::OffsetSkipsVariableBytes(first_offset)),
+				Ordering::Greater => {
+					return Err(DecodeError::OffsetSkipsVariableBytes(first_offset))
+				},
 				Ordering::Equal => (),
 			}
 
@@ -241,7 +242,7 @@ impl<'a> SszDecoderBuilder<'a> {
 				return Err(DecodeError::InvalidByteLength {
 					len: self.bytes.len(),
 					expected: self.items_index,
-				})
+				});
 			}
 		}
 

@@ -475,14 +475,14 @@ pub fn decode_list_of_variable_length_items<T: Decode, Container: TryFromIter<T>
 	if bytes.is_empty() {
 		return Container::try_from_iter(iter::empty()).map_err(|e| {
 			DecodeError::BytesInvalid(format!("Error trying to collect empty list: {e:?}"))
-		})
+		});
 	}
 
 	let first_offset = read_offset(bytes)?;
 	sanitize_offset(first_offset, None, bytes.len(), Some(first_offset))?;
 
 	if first_offset % BYTES_PER_LENGTH_OFFSET != 0 || first_offset < BYTES_PER_LENGTH_OFFSET {
-		return Err(DecodeError::InvalidListFixedBytesLen(first_offset))
+		return Err(DecodeError::InvalidListFixedBytesLen(first_offset));
 	}
 
 	let num_items = first_offset / BYTES_PER_LENGTH_OFFSET;
@@ -490,7 +490,7 @@ pub fn decode_list_of_variable_length_items<T: Decode, Container: TryFromIter<T>
 	if max_len.map_or(false, |max| num_items > max) {
 		return Err(DecodeError::BytesInvalid(format!(
 			"Variable length list of {num_items} items exceeds maximum of {max_len:?}"
-		)))
+		)));
 	}
 
 	let mut offset = first_offset;

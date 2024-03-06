@@ -26,7 +26,8 @@ sp-core = { workspace = true }
 
 log = { workspace = true }
 serde = { workspace = true, optional = true }
-codec = { workspace = true, features = ["derive", "max-encoded-len"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "max-encoded-len"] }
+
 scale-info = { workspace = true }
 webb-proposals = { workspace = true, features = ["evm", "substrate"] }
 ethereum-types =  { workspace = true }
@@ -38,7 +39,6 @@ tiny-keccak = { workspace = true }
 bitvec = { workspace = true, features = ["atomic", "alloc"] }
 hex = { workspace = true }
 webb-light-client-primitives = { workspace = true }
-dkg-runtime-primitives = { git = "https://github.com/webb-tools/dkg-substrate.git", branch = "master", default-features = false }
 
 [dev-dependencies]
 anyhow = { workspace = true }
@@ -68,7 +68,6 @@ std = [
 	"sp-std/std",
 	"sp-core/std",
 	"hex/std",
-	"dkg-runtime-primitives/std",
 	"pallet-eth2-light-client/std",
 
 	# Local dependencies

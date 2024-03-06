@@ -93,7 +93,7 @@ macro_rules! four_byte_option_impl {
 						return Err(DecodeError::InvalidByteLength {
 							len: bytes.len(),
 							expected: BYTES_PER_LENGTH_OFFSET,
-						})
+						});
 					}
 
 					let (index_bytes, value_bytes) = bytes.split_at(BYTES_PER_LENGTH_OFFSET);

@@ -107,7 +107,7 @@ impl ExecutionBlockProof {
 		index: usize,
 	) -> Result<H256, IncorrectBranchLength> {
 		if branch.len() != depth {
-			return Err(IncorrectBranchLength)
+			return Err(IncorrectBranchLength);
 		}
 
 		let mut merkle_root = leaf.as_bytes().to_vec();
@@ -148,7 +148,7 @@ mod tests {
 	const TIMEOUT_STATE_SECONDS: u64 = 1000;
 
 	fn get_test_config() -> ConfigForTests {
-		ConfigForTests::load_from_toml("config_for_tests.toml".try_into().unwrap())
+		ConfigForTests::load_from_toml("config_for_tests.toml".into())
 	}
 
 	#[test]

@@ -26,7 +26,7 @@ impl<'de> Visitor<'de> for U256Visitor {
 		E: de::Error,
 	{
 		if !value.starts_with("0x") {
-			return Err(de::Error::custom("must start with 0x"))
+			return Err(de::Error::custom("must start with 0x"));
 		}
 		let stripped = &value[2..];
 		if stripped.is_empty() {

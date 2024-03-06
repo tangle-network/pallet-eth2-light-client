@@ -5,9 +5,9 @@ use eth_rpc_client::{
 };
 use eth_types::{eth2::ExtendedBeaconBlockHeader, BlockHeader};
 use log::info;
+use tangle_subxt::subxt::utils::AccountId32;
 use tree_hash::TreeHash;
 use types::{ExecutionPayload, MainnetEthSpec};
-use webb::substrate::subxt::utils::AccountId32;
 use webb_proposals::TypedChainId;
 const CURRENT_SYNC_COMMITTEE_INDEX: u32 = 54;
 const CURRENT_SYNC_COMMITTEE_TREE_DEPTH: u32 =
@@ -23,7 +23,7 @@ pub fn verify_light_client_snapshot(
 		format!("{:#x}", light_client_snapshot.beacon_header.tree_hash_root());
 
 	if block_root != expected_block_root {
-		return false
+		return false;
 	}
 
 	let branch =
@@ -136,14 +136,14 @@ pub async fn init_pallet(
 
 	info!(target: "relay", "init_block_root: {}", init_block_root);
 
-	if BeaconRPCClient::get_period_for_slot(light_client_snapshot.beacon_header.slot) !=
-		BeaconRPCClient::get_period_for_slot(finality_slot)
+	if BeaconRPCClient::get_period_for_slot(light_client_snapshot.beacon_header.slot)
+		!= BeaconRPCClient::get_period_for_slot(finality_slot)
 	{
 		panic!("Period for init_block_root different from current period. Please use snapshot for current period");
 	}
 
 	if !verify_light_client_snapshot(init_block_root, &light_client_snapshot) {
-		return Err(InvalidLightClientSnapshot.into())
+		return Err(InvalidLightClientSnapshot.into());
 	}
 
 	let mut trusted_signature: Option<AccountId32> = Option::None;
@@ -245,9 +245,9 @@ mod tests {
 		const MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS: u64 = 3;
 
 		assert!(
-			last_finalized_slot_eth_client +
-				ONE_EPOCH_IN_SLOTS * MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS >=
-				last_finalized_slot_eth_network.as_u64()
+			last_finalized_slot_eth_client
+				+ ONE_EPOCH_IN_SLOTS * MAX_GAP_IN_EPOCH_BETWEEN_FINALIZED_SLOTS
+				>= last_finalized_slot_eth_network.as_u64()
 		);
 	}
 }

@@ -164,8 +164,8 @@ impl Eth2SubstrateRelay {
 		{
 			CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.inc_by(cmp::max(
 				0,
-				last_block_number as i64 -
-					CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.get(),
+				last_block_number as i64
+					- CHAIN_FINALIZED_EXECUTION_BLOCK_HEIGHT_ON_SUBSTRATE.get(),
 			));
 		}
 
@@ -268,11 +268,11 @@ impl Eth2SubstrateRelay {
 			headers.reverse();
 
 			if !self.submit_execution_blocks(headers).await {
-				return false
+				return false;
 			}
 
 			if min_block_number_in_batch == min_block_number {
-				break
+				break;
 			}
 		}
 
@@ -280,8 +280,8 @@ impl Eth2SubstrateRelay {
 	}
 
 	async fn wait_for_synchronization(&self) -> anyhow::Result<()> {
-		while self.beacon_rpc_client.is_syncing().await? ||
-			self.eth1_rpc_client.is_syncing().await?
+		while self.beacon_rpc_client.is_syncing().await?
+			|| self.eth1_rpc_client.is_syncing().await?
 		{
 			info!(target: "relay", "Waiting for sync...");
 			tokio::time::sleep(Duration::from_secs(self.sleep_time_on_sync_secs)).await;
@@ -403,17 +403,17 @@ impl Eth2SubstrateRelay {
 		last_finalized_slot_on_substrate: u64,
 		last_finalized_slot_on_eth: u64,
 	) -> bool {
-		if (last_finalized_slot_on_eth as i64) - (last_finalized_slot_on_substrate as i64) <
-			(ONE_EPOCH_IN_SLOTS * self.interval_between_light_client_updates_submission_in_epochs)
+		if (last_finalized_slot_on_eth as i64) - (last_finalized_slot_on_substrate as i64)
+			< (ONE_EPOCH_IN_SLOTS * self.interval_between_light_client_updates_submission_in_epochs)
 				as i64
 		{
 			info!(target: "relay", "Light client update were send less then {} epochs ago. Skipping sending light client update", self.interval_between_light_client_updates_submission_in_epochs);
-			return false
+			return false;
 		}
 
 		if last_finalized_slot_on_eth <= last_finalized_slot_on_substrate {
 			info!(target: "relay", "Last finalized slot on Eth equal to last finalized slot on Substrate. Skipping sending light client update.");
-			return false
+			return false;
 		}
 
 		true
@@ -447,7 +447,7 @@ impl Eth2SubstrateRelay {
 				last_finalized_slot_on_eth,
 			)
 			.await;
-			return true
+			return true;
 		}
 
 		false
@@ -463,21 +463,22 @@ impl Eth2SubstrateRelay {
 		if self.is_shot_run_mode() {
 			info!(target: "relay", "Try sending light client update from file");
 			self.send_light_client_update_from_file().await;
-			return
+			return;
 		}
 
-		if self.get_light_client_update_by_epoch &&
-			self.send_regular_light_client_update_by_epoch(
-				last_finalized_slot_on_eth,
-				last_finalized_slot_on_near,
-			)
-			.await
+		if self.get_light_client_update_by_epoch
+			&& self
+				.send_regular_light_client_update_by_epoch(
+					last_finalized_slot_on_eth,
+					last_finalized_slot_on_near,
+				)
+				.await
 		{
-			return
+			return;
 		}
 
-		if last_finalized_slot_on_eth >=
-			last_finalized_slot_on_near + self.max_blocks_for_finalization
+		if last_finalized_slot_on_eth
+			>= last_finalized_slot_on_near + self.max_blocks_for_finalization
 		{
 			info!(target: "relay", "Too big gap between slot of finalized block on NEAR and ETH. Sending hand made light client update");
 			self.send_hand_made_light_client_update(last_finalized_slot_on_near).await;
@@ -562,10 +563,10 @@ impl Eth2SubstrateRelay {
                         "Error on getting light client update. Skipping sending light client update", false
                     );
 
-					break res
+					break res;
 				}
 
-				break res
+				break res;
 			}
 
 			warn!(target: "relay", "Error: {}", res.unwrap_err());
@@ -582,10 +583,10 @@ impl Eth2SubstrateRelay {
 		last_finalized_slot_on_substrate: u64,
 	) -> anyhow::Result<u64> {
 		const EXPECTED_EPOCHS_BETWEEN_HEAD_AND_FINALIZED_BLOCKS: u64 = 2;
-		let next_finalized_slot = last_finalized_slot_on_substrate +
-			self.interval_between_light_client_updates_submission_in_epochs * ONE_EPOCH_IN_SLOTS;
-		let attested_slot = next_finalized_slot +
-			EXPECTED_EPOCHS_BETWEEN_HEAD_AND_FINALIZED_BLOCKS * ONE_EPOCH_IN_SLOTS;
+		let next_finalized_slot = last_finalized_slot_on_substrate
+			+ self.interval_between_light_client_updates_submission_in_epochs * ONE_EPOCH_IN_SLOTS;
+		let attested_slot = next_finalized_slot
+			+ EXPECTED_EPOCHS_BETWEEN_HEAD_AND_FINALIZED_BLOCKS * ONE_EPOCH_IN_SLOTS;
 
 		let attested_slot: u64 = self
 			.beacon_rpc_client
@@ -605,8 +606,8 @@ impl Eth2SubstrateRelay {
 		);
 
 		let include_next_sync_committee =
-			BeaconRPCClient::get_period_for_slot(last_finalized_slot_on_substrate) !=
-				BeaconRPCClient::get_period_for_slot(attested_slot);
+			BeaconRPCClient::get_period_for_slot(last_finalized_slot_on_substrate)
+				!= BeaconRPCClient::get_period_for_slot(attested_slot);
 
 		loop {
 			let light_client_update = return_on_fail!(
@@ -631,12 +632,12 @@ impl Eth2SubstrateRelay {
 						.await,
 					"Error on getting attested slot"
 				);
-				continue
+				continue;
 			}
 
 			trace!(target: "relay", "Hand made light client update: {:?}", light_client_update);
 			self.send_specific_light_client_update(light_client_update).await;
-			return
+			return;
 		}
 	}
 
@@ -654,7 +655,7 @@ impl Eth2SubstrateRelay {
 			info!(target: "relay", "PASS bls signature verification!");
 		} else {
 			warn!(target: "relay", "NOT PASS bls signature verification. Skip sending this light client update");
-			return false
+			return false;
 		}
 
 		let execution_outcome = return_val_on_fail_and_sleep!(

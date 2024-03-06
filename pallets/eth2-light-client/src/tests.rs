@@ -43,6 +43,7 @@ pub fn get_test_context(
 	(headers, updates, init_input_0)
 }
 
+#[cfg(test)]
 mod generic_tests {
 	use super::*;
 	use crate::{
@@ -97,8 +98,8 @@ mod generic_tests {
 			for header in headers[0].iter().skip(1) {
 				let header_hash = header.calculate_hash();
 				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header_hash,
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default()
+						== header_hash,
 					"Execution block hash is not finalized: {header_hash:?}"
 				);
 			}
@@ -160,8 +161,8 @@ mod generic_tests {
 
 			for header in headers[0].iter().skip(1) {
 				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header.calculate_hash(),
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default()
+						== header.calculate_hash(),
 					"Execution block hash is not finalized: {:?}",
 					header.calculate_hash()
 				);
@@ -186,8 +187,8 @@ mod generic_tests {
 
 			for header in headers[1].iter() {
 				assert!(
-					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default() ==
-						header.calculate_hash(),
+					Eth2Client::block_hash_safe(GOERLI_CHAIN, header.number).unwrap_or_default()
+						== header.calculate_hash(),
 					"Execution block hash is not finalized: {:?}",
 					header.calculate_hash()
 				);
@@ -488,6 +489,7 @@ mod generic_tests {
 	}
 }
 
+#[cfg(test)]
 mod mainnet_tests {
 	use super::*;
 	use crate::{
