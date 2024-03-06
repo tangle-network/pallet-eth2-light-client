@@ -34,9 +34,9 @@ impl WebbRetryClient {
 			if timeout_retries < self.timeout_retries && err.is_timeout() {
 				timeout_retries += 1;
 				tracing::error!(err = ?err, "retrying due to spurious network");
-				continue
+				continue;
 			} else {
-				return Err(err.into())
+				return Err(err.into());
 			}
 		}
 	}
@@ -59,9 +59,9 @@ impl WebbRetryClient {
 			if timeout_retries < self.timeout_retries && err.is_timeout() {
 				timeout_retries += 1;
 				tracing::error!(err = ?err, "retrying due to spurious network");
-				continue
+				continue;
 			} else {
-				return Err(err.into())
+				return Err(err.into());
 			}
 		}
 	}

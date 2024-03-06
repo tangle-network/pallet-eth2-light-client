@@ -64,7 +64,7 @@ impl Eth1RPCClient {
 		let val: Value = serde_json::from_str(&res)?;
 		let is_sync = val["result"].as_bool();
 		if let Some(is_sync_val) = is_sync {
-			return Ok(is_sync_val)
+			return Ok(is_sync_val);
 		}
 
 		Ok(true)

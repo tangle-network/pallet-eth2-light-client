@@ -249,8 +249,9 @@ impl BeaconRPCClient {
 		let light_client_snapshot_json_str = self.get_json_from_raw_request(&url).await?;
 		let parsed_json: Value = serde_json::from_str(&light_client_snapshot_json_str)?;
 		let beacon_header: BeaconBlockHeader = match self.routes.version {
-			BeaconRPCVersion::V1_5 =>
-				serde_json::from_value(parsed_json["data"]["header"]["beacon"].clone())?,
+			BeaconRPCVersion::V1_5 => {
+				serde_json::from_value(parsed_json["data"]["header"]["beacon"].clone())?
+			},
 			_ => serde_json::from_value(parsed_json["data"]["header"].clone())?,
 		};
 
@@ -358,7 +359,7 @@ impl BeaconRPCClient {
 		trace!(target: "relay", "Beacon chain request: {}", url);
 		let json_str = client.get(url).await?;
 		if serde_json::from_str::<Value>(&json_str).is_err() {
-			return Err(FailOnGettingJson { response: json_str }.into())
+			return Err(FailOnGettingJson { response: json_str }.into());
 		}
 
 		Ok(json_str)
@@ -453,13 +454,13 @@ impl BeaconRPCClient {
 								.sync_committee_signature
 						) == serde_json::to_string(&sync_aggregate.sync_committee_signature)?
 						{
-							break
+							break;
 						}
 					}
 
 					signature_slot += 1;
 					if signature_slot - attested_header.slot > CHECK_SLOTS_FORWARD_LIMIT {
-						return Err(SignatureSlotNotFoundError.into())
+						return Err(SignatureSlotNotFoundError.into());
 					}
 				}
 
@@ -584,7 +585,7 @@ impl BeaconRPCClient {
 		if parse_json.is_object() {
 			if let Some(msg_str) = parse_json["message"].as_str() {
 				if msg_str.contains("No block found for") {
-					return Err(NoBlockForSlotError.into())
+					return Err(NoBlockForSlotError.into());
 				}
 			}
 		}

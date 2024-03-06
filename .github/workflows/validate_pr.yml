@@ -8,24 +8,21 @@ on:
 
 jobs:
   test:
+    concurrency:
+        group: clippy-${{ github.ref }}
+        cancel-in-progress: true
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: nightly
-          components: clippy
-          override: true
     
     - name: Install toolchain
       id: toolchain
       uses: actions-rs/toolchain@master
       with:
         profile: minimal
-        toolchain: nightly
+        toolchain: stable
         target: wasm32-unknown-unknown
 
     - name: Install protobuf-compiler
@@ -37,5 +34,44 @@ jobs:
     - name: Test workspace
       run: cargo test --package pallet-eth2-light-client
 
-    - name: Clippy
-      run: cargo clippy --package pallet-eth2-light-client -- -D warnings
+  rustfmt:
+    concurrency:
+      group: rustfmt-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install latest stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Rustfmt check
+        run: cargo fmt --all -- --check
+
+  clippy:
+    concurrency:
+      group: clippy-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install toolchain
+        id: toolchain
+        uses: actions-rs/toolchain@master
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1.3.0
+      
+      - name: Install Protobuf
+        run: sudo apt-get install protobuf-compiler
+
+      - name: Run clippy
+        run: cargo clippy --package pallet-eth2-light-client -- -D warnings

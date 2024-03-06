@@ -28,32 +28,42 @@ pub fn convert_typed_chain_ids(
 ) -> tangle::runtime_types::webb_proposals::header::TypedChainId {
 	match t {
 		TypedChainId::None => tangle::runtime_types::webb_proposals::header::TypedChainId::None,
-		TypedChainId::Evm(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(id),
-		TypedChainId::Substrate(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Substrate(id),
-		TypedChainId::PolkadotParachain(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::PolkadotParachain(id),
-		TypedChainId::KusamaParachain(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::KusamaParachain(id),
-		TypedChainId::RococoParachain(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::RococoParachain(id),
-		TypedChainId::Cosmos(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Cosmos(id),
-		TypedChainId::Solana(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Solana(id),
-		TypedChainId::Ink(id) =>
-			tangle::runtime_types::webb_proposals::header::TypedChainId::Ink(id),
+		TypedChainId::Evm(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Evm(id)
+		},
+		TypedChainId::Substrate(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Substrate(id)
+		},
+		TypedChainId::PolkadotParachain(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::PolkadotParachain(id)
+		},
+		TypedChainId::KusamaParachain(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::KusamaParachain(id)
+		},
+		TypedChainId::RococoParachain(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::RococoParachain(id)
+		},
+		TypedChainId::Cosmos(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Cosmos(id)
+		},
+		TypedChainId::Solana(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Solana(id)
+		},
+		TypedChainId::Ink(id) => {
+			tangle::runtime_types::webb_proposals::header::TypedChainId::Ink(id)
+		},
 		_ => unimplemented!("Unsupported chain id"),
 	}
 }
 
 pub fn convert_mode(t: tangle::runtime_types::eth_types::pallet::ClientMode) -> ClientMode {
 	match t {
-		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitLightClientUpdate =>
-			ClientMode::SubmitLightClientUpdate,
-		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitHeader =>
-			ClientMode::SubmitHeader,
+		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitLightClientUpdate => {
+			ClientMode::SubmitLightClientUpdate
+		},
+		tangle::runtime_types::eth_types::pallet::ClientMode::SubmitHeader => {
+			ClientMode::SubmitHeader
+		},
 	}
 }
 
@@ -190,7 +200,7 @@ impl EthClientPallet {
 						std::io::ErrorKind::Other,
 						format!("Failed to get hash storage value: {err:?}"),
 					)
-					.into())
+					.into());
 				},
 			};
 
@@ -215,7 +225,7 @@ impl EthClientPallet {
 						Ok(events) => {
 							log::debug!("tx finalized");
 							let hash = events.extrinsic_hash();
-							return Ok(hash.0.into())
+							return Ok(hash.0.into());
 						},
 						Err(err) => {
 							let error_msg = match err {
@@ -234,7 +244,7 @@ impl EthClientPallet {
 								std::io::ErrorKind::Other,
 								format!("Tx failed : {error_msg}"),
 							)
-							.into())
+							.into());
 						},
 					}
 				},
@@ -309,7 +319,7 @@ impl EthClientPalletTrait for EthClientPallet {
 				std::io::ErrorKind::Other,
 				"Tried to submit empty headers".to_string(),
 			)
-			.into())
+			.into());
 		}
 
 		let mut txes = vec![];

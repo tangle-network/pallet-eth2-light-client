@@ -57,7 +57,7 @@ impl MerkleTree {
 		use MerkleTree::*;
 
 		if leaves.is_empty() {
-			return Zero(depth)
+			return Zero(depth);
 		}
 
 		match depth {
@@ -92,7 +92,7 @@ impl MerkleTree {
 		use MerkleTree::*;
 
 		if depth == 0 {
-			return Err(MerkleTreeError::DepthTooSmall)
+			return Err(MerkleTreeError::DepthTooSmall);
 		}
 
 		match self {
@@ -256,7 +256,7 @@ mod tests {
 	#[quickcheck]
 	fn quickcheck_create_and_verify(int_leaves: Vec<u64>, depth: usize) -> TestResult {
 		if depth > MAX_TREE_DEPTH || int_leaves.len() > 2usize.pow(depth as u32) {
-			return TestResult::discard()
+			return TestResult::discard();
 		}
 
 		let leaves: Vec<_> = int_leaves.into_iter().map(H256::from_low_u64_be).collect();
@@ -274,7 +274,7 @@ mod tests {
 	#[quickcheck]
 	fn quickcheck_push_leaf_and_verify(int_leaves: Vec<u64>, depth: usize) -> TestResult {
 		if depth == 0 || depth > MAX_TREE_DEPTH || int_leaves.len() > 2usize.pow(depth as u32) {
-			return TestResult::discard()
+			return TestResult::discard();
 		}
 
 		let leaves_iter = int_leaves.into_iter().map(H256::from_low_u64_be);

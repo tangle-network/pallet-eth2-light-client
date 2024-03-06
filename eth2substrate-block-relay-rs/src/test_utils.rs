@@ -77,7 +77,7 @@ pub async fn init_pallet_from_files(
 	for header in &execution_blocks {
 		if header.hash.unwrap() == finalized_hash {
 			finalized_execution_header = Some(header.clone());
-			break
+			break;
 		}
 	}
 

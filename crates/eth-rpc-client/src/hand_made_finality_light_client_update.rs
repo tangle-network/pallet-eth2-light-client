@@ -116,12 +116,12 @@ impl HandMadeFinalityLightClientUpdate {
 				sync_committee_bits.into_iter().map(|x| x.count_ones()).sum();
 			if sync_committee_bits_sum * 3 < (64 * 8 * 2) {
 				current_attested_slot = signature_slot;
-				continue
+				continue;
 			}
 
 			if signature_beacon_body.attestations().is_empty() {
 				current_attested_slot = signature_slot;
-				continue
+				continue;
 			}
 
 			let mut attested_slots: Vec<u64> = signature_beacon_body
@@ -132,8 +132,8 @@ impl HandMadeFinalityLightClientUpdate {
 			attested_slots.sort();
 
 			for i in (0..attested_slots.len()).rev() {
-				if (i == attested_slots.len() - 1 || attested_slots[i + 1] != attested_slots[i]) &&
-					attested_slots[i] >= attested_slot
+				if (i == attested_slots.len() - 1 || attested_slots[i + 1] != attested_slots[i])
+					&& attested_slots[i] >= attested_slot
 				{
 					current_attested_slot = attested_slots[i];
 
@@ -142,10 +142,10 @@ impl HandMadeFinalityLightClientUpdate {
 						.await
 					{
 						if err.downcast_ref::<NoBlockForSlotError>().is_none() {
-							return Err(err)
+							return Err(err);
 						}
 					} else {
-						return Ok((current_attested_slot, signature_slot))
+						return Ok((current_attested_slot, signature_slot));
 					}
 				}
 			}

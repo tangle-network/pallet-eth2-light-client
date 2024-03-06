@@ -96,8 +96,8 @@ macro_rules! test_suite {
 		#[test]
 		fn partial_eq_infinity_agg_sig_and_real_agg_sig() {
 			assert!(
-				AggregateSignature::infinity() !=
-					AggregateSignatureTester::new_with_single_msg(1).sig
+				AggregateSignature::infinity()
+					!= AggregateSignatureTester::new_with_single_msg(1).sig
 			)
 		}
 

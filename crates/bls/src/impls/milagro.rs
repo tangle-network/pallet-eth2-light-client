@@ -32,7 +32,7 @@ pub fn verify_signature_sets<'a>(
 	seed: [u8; 32],
 ) -> bool {
 	if signature_sets.len() == 0 {
-		return false
+		return false;
 	}
 
 	signature_sets
@@ -46,7 +46,7 @@ pub fn verify_signature_sets<'a>(
 			}
 
 			if signature_set.signature.point().is_none() {
-				return Err(())
+				return Err(());
 			}
 
 			Ok((signature_set.signature.as_ref(), aggregate, signature_set.message))

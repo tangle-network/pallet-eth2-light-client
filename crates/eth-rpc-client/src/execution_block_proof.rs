@@ -107,7 +107,7 @@ impl ExecutionBlockProof {
 		index: usize,
 	) -> Result<H256, IncorrectBranchLength> {
 		if branch.len() != depth {
-			return Err(IncorrectBranchLength)
+			return Err(IncorrectBranchLength);
 		}
 
 		let mut merkle_root = leaf.as_bytes().to_vec();

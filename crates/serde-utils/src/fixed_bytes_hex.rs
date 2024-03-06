@@ -36,7 +36,7 @@ macro_rules! bytes_hex {
 					"expected {} bytes for array, got {}",
 					BYTES_LEN,
 					decoded.len()
-				)))
+				)));
 			}
 
 			let mut array = [0; BYTES_LEN];

@@ -49,7 +49,7 @@ pub fn compute_fork_version(
 	fork_version: ForkVersion,
 ) -> Option<ForkVersion> {
 	if epoch >= bellatrix_epoch {
-		return Some(fork_version)
+		return Some(fork_version);
 	}
 
 	None
@@ -66,7 +66,7 @@ pub fn compute_fork_version_by_slot(
 // Compute floor of log2 of a u32.
 pub const fn floorlog2(x: u32) -> u32 {
 	if x == 0 {
-		return 0
+		return 0;
 	}
 	31 - x.leading_zeros()
 }
@@ -119,7 +119,7 @@ pub fn convert_branch(branch: &[H256]) -> Vec<ethereum_types::H256> {
 pub fn validate_beacon_block_header_update(header_update: &HeaderUpdate) -> bool {
 	let branch = convert_branch(&header_update.execution_hash_branch);
 	if branch.len() != EXECUTION_PROOF_SIZE {
-		return false
+		return false;
 	}
 
 	let l2_proof = &branch[0..L2_EXECUTION_PAYLOAD_PROOF_SIZE];

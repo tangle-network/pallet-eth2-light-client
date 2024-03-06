@@ -53,8 +53,9 @@ impl EnumBehaviour {
 		s.map(|s| match s.as_ref() {
 			ENUM_TRANSPARENT => EnumBehaviour::Transparent,
 			ENUM_UNION => EnumBehaviour::Union,
-			other =>
-				panic!("{} is an invalid enum_behaviour, use either {:?}", other, ENUM_VARIANTS),
+			other => {
+				panic!("{} is an invalid enum_behaviour, use either {:?}", other, ENUM_VARIANTS)
+			},
 		})
 	}
 }
@@ -133,7 +134,7 @@ fn ssz_encode_derive_struct(derive_input: &DeriveInput, struct_data: &DataStruct
 
 	for (ty, ident, field_opts) in parse_ssz_fields(struct_data) {
 		if field_opts.skip_serializing {
-			continue
+			continue;
 		}
 
 		if let Some(module) = field_opts.with {
@@ -427,7 +428,7 @@ fn ssz_decode_derive_struct(item: &DeriveInput, struct_data: &DataStruct) -> Tok
 				let #ident = <_>::default();
 			});
 
-			continue
+			continue;
 		}
 
 		let is_ssz_fixed_len;

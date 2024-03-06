@@ -38,7 +38,7 @@ pub fn merkleize_padded(bytes: &[u8], min_leaves: usize) -> Hash256 {
 	if bytes.len() <= BYTES_PER_CHUNK && min_leaves <= 1 {
 		let mut o = bytes.to_vec();
 		o.resize(BYTES_PER_CHUNK, 0);
-		return Hash256::from_slice(&o)
+		return Hash256::from_slice(&o);
 	}
 
 	assert!(

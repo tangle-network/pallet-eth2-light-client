@@ -63,6 +63,7 @@ fn development_config_genesis() -> RuntimeGenesisConfig {
 
 /// Development config (single validator Alice)
 pub fn development_config() -> ChainSpec {
+	#[allow(deprecated)]
 	ChainSpec::from_genesis(
 		"Development",
 		"dev",
@@ -89,6 +90,7 @@ fn local_testnet_genesis() -> RuntimeGenesisConfig {
 
 /// Local testnet config (multivalidator Alice + Bob)
 pub fn local_testnet_config() -> ChainSpec {
+	#[allow(deprecated)]
 	ChainSpec::from_genesis(
 		"Local Testnet",
 		"local_testnet",
